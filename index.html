@@ -45,11 +45,11 @@
         }
         input[type="number"].module-user-input, 
         input[type="number"].discount-input,
-        input[type="number"].implementation-fee-input {
+        input[type="number"].implementation-fee-input { /* Added implementation-fee-input here */
             border: 1px solid #cbd5e0;
             padding: 0.35rem 0.5rem;
             border-radius: 0.375rem;
-            width: 80px; /* Increased width slightly for better usability */
+            width: 80px; 
             text-align: center;
             color: #000000; 
         }
@@ -63,14 +63,20 @@
             color: #FFFFFF; 
             border-left: none; 
         }
-        .summary-panel h3 {
+        .summary-panel h3.summary-section-header { 
             color: #FFFFFF; 
+            font-size: 1.125rem; 
+            font-weight: 600; 
+            margin-bottom: 0.75rem; 
+            padding-bottom: 0.5rem; 
+            border-bottom: 1px solid #4A5563; 
+            text-align: center;
         }
         .summary-item {
             display: grid; 
             grid-template-columns: 2fr 1fr 1fr; 
             gap: 0.5rem; 
-            padding: 0.75rem 0; 
+            padding: 0.65rem 0; 
             border-bottom: 1px solid #4A5563; 
             font-size: 0.875rem;
             align-items: center;
@@ -104,11 +110,11 @@
              color: #0BE6C7 !important;
         }
 
-        .discreet-discount-input { /* Specific styling for discount input */
+        .discreet-discount-input { 
             border: 1px solid #e2e8f0; 
-            background-color: #f9fafb; /* Tailwind gray-50, very light gray */
+            background-color: #f9fafb; 
             color: #a0aec0; 
-            width: 70px; /* Keep it small */
+            width: 70px; 
         }
         .peer:checked + span { 
             background-color: #0BE6C7 !important; 
@@ -118,7 +124,7 @@
         .ce-platform-section {
             border: 2px solid #e2e8f0;
             border-radius: 0.5rem;
-            padding: 1.5rem;
+            padding: 1.25rem; 
             position: relative;
         }
         .ce-platform-section.selected {
@@ -127,14 +133,14 @@
         }
         .ce-tier-selector {
             display: flex;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem; 
             border: 1px solid #D1D5DB; 
             border-radius: 0.375rem; 
             overflow: hidden;
         }
         .ce-tier-button {
             flex: 1;
-            padding: 0.75rem 1rem;
+            padding: 0.65rem 1rem; 
             text-align: center;
             background-color: #FFFFFF;
             color: #374151; 
@@ -152,12 +158,12 @@
         }
         .ce-tier-button .tier-name {
             display: block;
-            font-size: 1rem;
+            font-size: 0.9rem; 
             font-weight: 600;
         }
         .ce-tier-button .tier-recommendation {
             display: block;
-            font-size: 0.75rem;
+            font-size: 0.7rem; 
             color: #6B7280; 
         }
         .ce-tier-button.active .tier-recommendation {
@@ -171,13 +177,13 @@
         .ce-feature-list {
             list-style: none;
             padding-left: 0;
-            font-size: 0.875rem;
+            font-size: 0.8rem; 
             color: #374151; 
         }
         .ce-feature-list li {
             padding-left: 1.25rem;
             position: relative;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.25rem; 
         }
         .ce-feature-list li::before {
             content: '✓';
@@ -189,21 +195,21 @@
         .ce-price-display {
             text-align: right;
             flex-shrink: 0; 
-            margin-left: 2rem; 
+            margin-left: 1.5rem; 
         }
         .ce-price-display .price {
-            font-size: 2.25rem; 
+            font-size: 2rem; 
             font-weight: 800; 
             color: #000000;
             line-height: 1;
         }
         .ce-price-display .price-term {
-            font-size: 0.875rem;
+            font-size: 0.8rem; 
             color: #6B7280; 
             display: block;
         }
          .ce-price-display .implementation-note {
-            font-size: 0.75rem;
+            font-size: 0.7rem; 
             color: #6B7280;
             margin-top: 0.25rem;
         }
@@ -212,56 +218,59 @@
         /* Module Card Styling */
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
+            gap: 1rem; 
         }
         .module-card, .addon-card { 
             background-color: #FFFFFF;
             border: 1px solid #e2e8f0; 
             border-radius: 0.5rem;
-            padding: 1.5rem;
+            padding: 1.25rem; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out; 
-            cursor: pointer; /* Make card clickable */
+            cursor: pointer; 
+        }
+        .addon-card { 
+            padding: 0.75rem;
         }
         .module-card-header, .addon-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem; 
         }
         .module-card-title, .addon-card-title {
-            font-size: 1.125rem; 
+            font-size: 1.05rem; 
             font-weight: 700; 
             color: #000000;
         }
         .module-card-price {
-            font-size: 1.5rem; 
+            font-size: 1.35rem; 
             font-weight: 700; 
             color: #000000;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem; 
             line-height: 1.2;
         }
         .module-card-price-term {
-            font-size: 0.75rem;
+            font-size: 0.7rem; 
             color: #6B7280;
             display: block;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem; 
         }
         .module-feature-list {
             list-style: none;
             padding-left: 0;
-            font-size: 0.875rem;
+            font-size: 0.8rem; 
             color: #4A5568; 
-            margin-bottom: 1.5rem; 
+            margin-bottom: 1rem; 
             flex-grow: 1; 
         }
         .module-feature-list li {
             padding-left: 1.25rem;
             position: relative;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.25rem; 
         }
         .module-feature-list li::before {
             content: '✓';
@@ -274,23 +283,23 @@
             justify-content: space-between;
             align-items: center;
             margin-top: auto; 
-            padding-top: 1rem; 
+            padding-top: 0.75rem; 
             border-top: 1px solid #e2e8f0;
         }
         .addon-card-description {
-            font-size: 0.75rem; 
+            font-size: 0.7rem; 
             color: #4A5568; 
-            margin-bottom: 0.75rem; 
+            margin-bottom: 0.25rem; 
         }
         .addon-card-pricing {
-            font-size: 0.875rem; 
+            font-size: 0.8rem; 
             color: #374151; 
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.25rem; 
         }
         .base-package-item, .adjustment-item { 
              border-bottom: 1px solid #e2e8f0;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+            padding-top: 0.75rem; 
+            padding-bottom: 0.75rem; 
         }
         .base-package-item:last-child, .adjustment-item:last-child {
             border-bottom: none;
@@ -300,15 +309,14 @@
 </head>
 <body class="canopy-main-text">
 
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-10">
-            <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; console.error('Logo image not found.')">
-            <h1 class="text-3xl md:text-4xl font-bold canopy-main-text">Canopy Pricing</h1>
+    <div class="w-full max-w-screen-2xl mx-auto p-4 md:p-6"> 
+        <header class="text-center mb-8"> 
+            <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-16 mb-3" onerror="this.style.display='none'; console.error('Logo image not found.')">
         </header>
 
-        <div class="flex flex-col lg:flex-row gap-8">
-            <div class="lg:w-2/3 bg-white p-6 md:p-8 rounded-lg shadow-xl">
-                <div class="flex justify-center items-center mb-10">
+        <div class="flex flex-col lg:flex-row gap-6"> 
+            <div class="lg:w-3/5 bg-white p-4 md:p-6 rounded-lg shadow-xl"> 
+                <div class="flex justify-center items-center mb-8"> 
                     <span id="monthlyLabel" class="billing-label canopy-secondary-text mr-3 text-sm md:text-base font-medium active">Monthly <span class="text-xs text-gray-500">(+20% Premium)</span></span>
                     <label for="billingToggleInput" class="relative inline-block w-12 h-6 billing-toggle-bg rounded-full cursor-pointer">
                         <input type="checkbox" id="billingToggleInput" class="sr-only peer">
@@ -318,7 +326,7 @@
                     </span>
                 </div>
 
-                <div class="mb-10"> <h3 class="text-xl font-semibold canopy-main-text mb-4">Client Engagement Platform</h3>
+                <div class="mb-8"> <h3 class="text-lg font-semibold canopy-main-text mb-3">Client Engagement Platform</h3> 
                     <div class="ce-tier-selector">
                         <div id="ceTierStandardButton" class="ce-tier-button active">
                             <span class="tier-name">STANDARD</span>
@@ -330,7 +338,6 @@
                         </div>
                     </div>
                     <div id="clientEngagementDetails" class="ce-platform-section selected"> 
-                        {/* Content will be injected by JS */}
                     </div>
                      <div class="hidden">
                         <input type="radio" name="clientEngagementTier" id="clientEngagementTierStandard" value="standard" checked>
@@ -339,57 +346,44 @@
                 </div>
 
 
-                <div class="mb-10">
-                    <h3 class="text-xl font-semibold canopy-main-text mb-4">Modules</h3>
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold canopy-main-text mb-3">Modules</h3> 
                     <div id="selectableModulesContainer" class="modules-grid"></div>
                 </div>
-
-                <div class="mb-10">
-                    <h3 class="text-xl font-semibold canopy-main-text mb-4">Add-ons</h3>
-                    <div id="addonsContainer" class="space-y-4"></div> 
-                </div>
                 
-                <div class="mb-6">
-                    <h3 class="text-xl font-semibold canopy-main-text mb-3 border-b pb-2">Implementation & Onboarding</h3>
-                    <div class="base-package-item" style="border-bottom: none;"> 
+                <div class="mb-5"> 
+                    <h3 class="text-lg font-semibold canopy-main-text mb-2 border-b pb-1">Implementation & Onboarding</h3> 
+                    <div class="base-package-item" style="border-bottom: none; padding-top: 0.5rem; padding-bottom: 0.5rem;"> 
                          <div class="flex justify-between items-center">
                             <label for="implementationFeeInput" class="text-sm canopy-secondary-text">Implementation Fee:</label>
                             <input type="number" id="implementationFeeInput" name="implementationFeeInput" value="0" min="0" class="implementation-fee-input module-user-input w-24 text-right font-semibold">
                         </div>
                     </div>
                 </div>
-                
-                <div class="mt-10 pt-6 border-t border-gray-200">
-                    <div class="flex flex-col items-center text-center">
-                        <p class="text-sm canopy-secondary-text mb-1">Estimated Grand Total</p>
-                        <p id="totalPrice" class="text-4xl md:text-5xl font-bold canopy-primary-accent-text">$0</p>
-                        <p id="priceFrequency" class="text-sm text-gray-500">per month</p>
-                        <p id="totalOneTimeFeesLine" class="text-sm text-gray-500 hidden"></p>
-                    </div>
-                </div>
-
-                <div class="mt-8 text-center">
-                    <button class="canopy-primary-accent hover:opacity-80 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-150 ease-in-out">
-                        Get Started
-                    </button>
-                </div>
-                
-                <div class="mt-6 pt-4 border-t border-dashed border-gray-300">
+                                
+                <div class="mt-4 pt-3 border-t border-dashed border-gray-300"> 
                      <div class="item-content justify-end">
                          <input type="number" id="discountPercentage" name="discountPercentage" value="0" min="0" max="100" class="discount-input discreet-discount-input w-20" placeholder="%">
                      </div>
                 </div>
             </div>
 
-            <div class="lg:w-1/3 summary-panel p-6 md:p-8 rounded-lg shadow-lg">
-                <h3 class="text-xl font-semibold mb-6 border-b pb-3 text-center border-gray-700">Pricing Breakdown</h3>
-                <div id="summaryPanelContent" class="space-y-1"> </div>
-                <div id="summaryTotalsSection" class="mt-6 pt-4 border-t-2 border-gray-700"> 
+            <div class="lg:w-2/5 flex flex-col gap-6"> 
+                <div class="summary-panel p-4 md:p-6 rounded-lg shadow-lg"> 
+                    <h3 class="summary-section-header">Pricing Breakdown</h3> 
+                    <div id="summaryPanelContent" class="space-y-1"> </div>
+                    <div id="summaryTotalsSection" class="mt-4 pt-3 border-t-2 border-gray-700">  
+                    </div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl">
+                     <h3 class="text-lg font-semibold canopy-main-text mb-3 border-b pb-2">Add-ons</h3>
+                     <div id="addonsContainerSummary" class="space-y-2"> 
+                     </div>
                 </div>
             </div>
         </div>
 
-        <footer class="text-center mt-12 text-sm text-gray-500">
+        <footer class="text-center mt-10 text-sm text-gray-500"> 
             <p>&copy; <span id="currentYear"></span> Canopy</p>
         </footer>
     </div>
@@ -399,18 +393,14 @@
         const billingToggleInput = document.getElementById('billingToggleInput');
         const monthlyLabel = document.getElementById('monthlyLabel');
         const annualLabel = document.getElementById('annualLabel');
-        const totalPriceDisplay = document.getElementById('totalPrice'); 
-        const priceFrequencyDisplay = document.getElementById('priceFrequency'); 
-        const totalOneTimeFeesLine = document.getElementById('totalOneTimeFeesLine');
-
-
+        
         const currentYearSpan = document.getElementById('currentYear');
         const annualSavingText = document.getElementById('annualSavingText'); 
         const discountPercentageInput = document.getElementById('discountPercentage');
         const implementationFeeInput = document.getElementById('implementationFeeInput'); 
         
         const selectableModulesContainer = document.getElementById('selectableModulesContainer');
-        const addonsContainer = document.getElementById('addonsContainer');
+        const addonsContainerSummary = document.getElementById('addonsContainerSummary'); 
         const summaryPanelContent = document.getElementById('summaryPanelContent');
         const summaryTotalsSection = document.getElementById('summaryTotalsSection'); 
 
@@ -560,7 +550,7 @@
 
         function createSelectableItemEntry(key, itemData, container, itemType) {
             const div = document.createElement('div');
-            div.className = itemType === 'module' ? 'module-card' : 'addon-card';
+            div.className = itemType === 'module' ? 'module-card' : 'addon-card'; 
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -581,9 +571,9 @@
             
             if (itemType === 'addon') {
                 const headerDiv = document.createElement('div');
-                headerDiv.className = 'addon-card-header';
+                headerDiv.className = 'addon-card-header'; 
                 const titleSpan = document.createElement('span');
-                titleSpan.className = 'addon-card-title text-lg';
+                titleSpan.className = 'addon-card-title text-lg'; 
                 titleSpan.textContent = itemData.name;
                 
                 headerDiv.appendChild(titleSpan);
@@ -597,12 +587,12 @@
                     div.appendChild(descP);
                 }
                 const pricingP = document.createElement('p');
-                pricingP.className = 'addon-card-pricing';
+                pricingP.className = 'addon-card-pricing'; 
                 pricingP.id = `${itemData.id_checkbox}_price_display`;
                 div.appendChild(pricingP);
                 
                 const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'item-actions mt-2';
+                actionsDiv.className = 'item-actions mt-2'; 
                 const userLabelText = itemData.is_consumption_based ? (itemData.unit_name || "Quantity") + ":" : "Users:";
                 const userLabel = document.createElement('label');
                 userLabel.htmlFor = itemData.id_user_input;
@@ -681,13 +671,13 @@
 
         function renderAllSelectableItems() {
             selectableModulesContainer.innerHTML = '';
-            addonsContainer.innerHTML = '';
+            addonsContainerSummary.innerHTML = ''; // Target new container for addons
 
             for (const key in pricing.selectable_modules) {
                 createSelectableItemEntry(key, pricing.selectable_modules[key], selectableModulesContainer, 'module');
             }
             for (const key in pricing.addons) {
-                createSelectableItemEntry(key, pricing.addons[key], addonsContainer, 'addon');
+                createSelectableItemEntry(key, pricing.addons[key], addonsContainerSummary, 'addon');
             }
         }
 
@@ -744,14 +734,15 @@
                 summaryPanelContent.appendChild(separatorDiv);
             }
 
-            addSummaryItem(selectedCEtierValue === 'standard' ? 'Standard' : 'Pro', '', summaryData.ceTierName); 
-            addSummaryItem('Client Engagement Platform:', 'Platform', summaryData.ceCostDisplay);
+            addSummaryItem('Tier:', '', selectedCEtierValue === 'standard' ? 'Standard' : 'Pro'); 
+            addSummaryItem('Client Engagement Platform:', '', summaryData.ceCostDisplay); 
 
 
-            summaryData.moduleDetails.forEach(mod => {
+            summaryData.moduleDetails.forEach(mod => { 
                 addSummaryItem(mod.name, `${mod.users} ${mod.unitName || 'Users'}`, mod.costDisplay);
             });
-             summaryData.addonDetails.forEach(addon => {
+            
+            summaryData.addonDetails.forEach(addon => {
                 addSummaryItem(addon.name, `${addon.users} ${addon.unitName || 'Users'}`, addon.costDisplay);
             });
             
@@ -802,7 +793,7 @@
             let totalMonthlySubscriptionCostAnnualEquiv = 0; 
             const summaryDetails = {
                 moduleDetails: [],
-                addonDetails: [],
+                addonDetails: [], 
                 discountPercent: 0,
                 subscriptionSubtotalDisplay: '$0',
                 discountAmountDisplay: '-$0',
@@ -930,32 +921,29 @@
             let calculatedImplFee = annualEquivalentOfDiscountedSubscription * implPercentage;
             let oneTimeImplementationFeeFromCalc = Math.max(calculatedImplFee, pricing.implementation_minimum_fee);
             
-            let currentImplementationFee = parseFloat(implementationFeeInput.value);
-            if (isNaN(currentImplementationFee) || !manualImplFeeSet) { 
+            let currentImplementationFee;
+            if (manualImplFeeSet) {
+                currentImplementationFee = parseFloat(implementationFeeInput.value) || 0; 
+            } else {
                 currentImplementationFee = oneTimeImplementationFeeFromCalc;
                 implementationFeeInput.value = currentImplementationFee.toFixed(0); 
             }
             
             summaryDetails.implementationFeeDisplay = `$${currentImplementationFee.toFixed(0)}`;
 
-            let finalDisplayPrice = 0;
+            let grandTotalForSummary = 0; 
+            
             if (isAnnualBilling) {
-                finalDisplayPrice = discountedSubscriptionTotalForPeriod + currentImplementationFee;
-                priceFrequencyDisplay.textContent = "per year";
-                totalOneTimeFeesLine.classList.add('hidden');
-                summaryDetails.grandTotalFrequency = "per year";
+                grandTotalForSummary = discountedSubscriptionTotalForPeriod + currentImplementationFee;
+                summaryDetails.grandTotalFrequency = ""; // Removed "per year"
                 summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = false;
             } else {
-                finalDisplayPrice = discountedSubscriptionTotalForPeriod; 
-                priceFrequencyDisplay.textContent = "per month";
-                totalOneTimeFeesLine.textContent = `+ One-Time Implementation: $${currentImplementationFee.toFixed(0)}`;
-                totalOneTimeFeesLine.classList.remove('hidden');
+                grandTotalForSummary = discountedSubscriptionTotalForPeriod; 
                 summaryDetails.grandTotalFrequency = "per month";
                 summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = true;
             }
             
-            totalPriceDisplay.textContent = `$${finalDisplayPrice.toFixed(0)}`;
-            summaryDetails.grandTotalDisplay = `$${finalDisplayPrice.toFixed(0)}`;
+            summaryDetails.grandTotalDisplay = `$${grandTotalForSummary.toFixed(0)}`;
             updateSummaryPanel(summaryDetails); 
         }
 
@@ -984,7 +972,7 @@
             calculateAndUpdatePrice();
         });
         discountPercentageInput.addEventListener('input', () => {
-            if (!manualImplFeeSet) {
+            if (!manualImplFeeSet) { 
             }
             calculateAndUpdatePrice();
         });

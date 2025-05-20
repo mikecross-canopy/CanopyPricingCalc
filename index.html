@@ -19,10 +19,10 @@
         .canopy-primary-accent-text { 
             color: #0BE6C7;
         }
-        .canopy-primary-accent-border { /* Used for CE Platform selected state */
+        .canopy-primary-accent-border { 
             border-color: #0BE6C7 !important; 
         }
-        .item-selected-border { /* For selected modules/addons */
+        .item-selected-border { 
             border-color: #0BE6C7 !important;
             border-width: 2px !important;
         }
@@ -30,7 +30,7 @@
             color: #000000; 
         }
         .canopy-secondary-text { 
-            color: #374151; /* Tailwind gray-700 */
+            color: #374151; 
         }
         .billing-toggle-bg {
             background-color: #e2e8f0; 
@@ -43,11 +43,13 @@
             background-color: #0BE6C7;
             border-color: #0BE6C7;
         }
-        input[type="number"].module-user-input, input[type="number"].discount-input {
+        input[type="number"].module-user-input, 
+        input[type="number"].discount-input,
+        input[type="number"].implementation-fee-input {
             border: 1px solid #cbd5e0;
             padding: 0.35rem 0.5rem;
             border-radius: 0.375rem;
-            width: 70px;
+            width: 80px; /* Increased width slightly for better usability */
             text-align: center;
             color: #000000; 
         }
@@ -57,8 +59,8 @@
         }
         
         .summary-panel {
-            background-color: #000000; /* Black background for summary */
-            color: #FFFFFF; /* White text for summary */
+            background-color: #000000; 
+            color: #FFFFFF; 
             border-left: none; 
         }
         .summary-panel h3 {
@@ -102,14 +104,11 @@
              color: #0BE6C7 !important;
         }
 
-
-        .discreet-discount-label {
-            color: #a0aec0; 
-            font-size: 0.875rem; 
-        }
-        .discreet-discount-input {
+        .discreet-discount-input { /* Specific styling for discount input */
             border: 1px solid #e2e8f0; 
+            background-color: #f9fafb; /* Tailwind gray-50, very light gray */
             color: #a0aec0; 
+            width: 70px; /* Keep it small */
         }
         .peer:checked + span { 
             background-color: #0BE6C7 !important; 
@@ -123,7 +122,7 @@
             position: relative;
         }
         .ce-platform-section.selected {
-            border-color: #0BE6C7; /* Uses canopy-primary-accent-border */
+            border-color: #0BE6C7; 
             box-shadow: 0 0 0 2px #0BE6C7;
         }
         .ce-tier-selector {
@@ -216,15 +215,16 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
         }
-        .module-card, .addon-card { /* Combined default card style */
+        .module-card, .addon-card { 
             background-color: #FFFFFF;
-            border: 1px solid #e2e8f0; /* Default light gray border */
+            border: 1px solid #e2e8f0; 
             border-radius: 0.5rem;
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out; /* Smooth transition for border */
+            transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out; 
+            cursor: pointer; /* Make card clickable */
         }
         .module-card-header, .addon-card-header {
             display: flex;
@@ -269,7 +269,7 @@
             position: absolute;
             left: 0;
         }
-        .module-card-actions, .addon-card-actions { /* Combined actions style */
+        .module-card-actions, .addon-card-actions { 
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -353,8 +353,8 @@
                     <h3 class="text-xl font-semibold canopy-main-text mb-3 border-b pb-2">Implementation & Onboarding</h3>
                     <div class="base-package-item" style="border-bottom: none;"> 
                          <div class="flex justify-between items-center">
-                            <p class="text-sm canopy-secondary-text">Calculated Implementation Fee:</p>
-                            <p id="implementationFeeDisplay" class="text-sm canopy-main-text font-semibold">$0</p>
+                            <label for="implementationFeeInput" class="text-sm canopy-secondary-text">Implementation Fee:</label>
+                            <input type="number" id="implementationFeeInput" name="implementationFeeInput" value="0" min="0" class="implementation-fee-input module-user-input w-24 text-right font-semibold">
                         </div>
                     </div>
                 </div>
@@ -376,8 +376,7 @@
                 
                 <div class="mt-6 pt-4 border-t border-dashed border-gray-300">
                      <div class="item-content justify-end">
-                         <label for="discountPercentage" class="discreet-discount-label mr-2">Discount (%):</label>
-                         <input type="number" id="discountPercentage" name="discountPercentage" value="0" min="0" max="100" class="discount-input discreet-discount-input w-20">
+                         <input type="number" id="discountPercentage" name="discountPercentage" value="0" min="0" max="100" class="discount-input discreet-discount-input w-20" placeholder="%">
                      </div>
                 </div>
             </div>
@@ -408,7 +407,7 @@
         const currentYearSpan = document.getElementById('currentYear');
         const annualSavingText = document.getElementById('annualSavingText'); 
         const discountPercentageInput = document.getElementById('discountPercentage');
-        const implementationFeeDisplay = document.getElementById('implementationFeeDisplay'); 
+        const implementationFeeInput = document.getElementById('implementationFeeInput'); 
         
         const selectableModulesContainer = document.getElementById('selectableModulesContainer');
         const addonsContainer = document.getElementById('addonsContainer');
@@ -499,7 +498,7 @@
                     id_checkbox: "addonTaxResolutionCheck",
                     id_user_input: "addonTaxResolutionUsers",
                     price_per_user_annual_equiv: 50,
-                    is_primary_style: true // Retained for potential future distinct styling, not used for border now
+                    is_primary_style: true 
                 },
                 kba_esignature: {
                     name: "KBA eSignature",
@@ -514,6 +513,7 @@
 
         let isAnnualBilling = false; 
         let selectedCEtierValue = 'standard'; 
+        let manualImplFeeSet = false; 
 
         // --- Functions ---
 
@@ -561,8 +561,7 @@
         function createSelectableItemEntry(key, itemData, container, itemType) {
             const div = document.createElement('div');
             div.className = itemType === 'module' ? 'module-card' : 'addon-card';
-             // Default border, will be overridden by .item-selected-border if checked
-
+            
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = itemData.id_checkbox;
@@ -571,7 +570,7 @@
             checkbox.dataset.itemKey = key;
             checkbox.dataset.itemType = itemType;
 
-            const userInput = document.createElement('input'); // Define userInput here to be in scope for checkbox listener
+            const userInput = document.createElement('input');
             userInput.type = 'number';
             userInput.id = itemData.id_user_input;
             userInput.name = itemData.id_user_input;
@@ -581,9 +580,6 @@
             userInput.disabled = true;
             
             if (itemType === 'addon') {
-                if (itemData.is_primary_style && !checkbox.checked) { // Only apply if not selected
-                    // div.classList.add('addon-card-primary'); // Example if you want a default primary style different from selected
-                }
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'addon-card-header';
                 const titleSpan = document.createElement('span');
@@ -606,7 +602,7 @@
                 div.appendChild(pricingP);
                 
                 const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'item-actions mt-2'; // Renamed from module-card-actions
+                actionsDiv.className = 'item-actions mt-2';
                 const userLabelText = itemData.is_consumption_based ? (itemData.unit_name || "Quantity") + ":" : "Users:";
                 const userLabel = document.createElement('label');
                 userLabel.htmlFor = itemData.id_user_input;
@@ -625,7 +621,7 @@
                 titleSpan.textContent = itemData.name;
                
                 headerDiv.appendChild(titleSpan);
-                headerDiv.appendChild(checkbox); // Checkbox for module
+                headerDiv.appendChild(checkbox); 
                 div.appendChild(headerDiv);
 
                 const priceDiv = document.createElement('div');
@@ -657,10 +653,18 @@
                 userLabel.textContent = 'Users:';
                 
                 actionsDiv.appendChild(userLabel);
-                actionsDiv.appendChild(userInput); // User input for module
+                actionsDiv.appendChild(userInput); 
                 div.appendChild(actionsDiv);
             }
             
+            div.addEventListener('click', (event) => {
+                if (event.target !== userInput && event.target !== checkbox && !event.target.closest('label[for="' + userInput.id + '"]')) {
+                    checkbox.checked = !checkbox.checked;
+                    const changeEvent = new Event('change', { bubbles: true });
+                    checkbox.dispatchEvent(changeEvent);
+                }
+            });
+
             checkbox.addEventListener('change', (event) => {
                 userInput.disabled = !event.target.checked;
                 div.classList.toggle('item-selected-border', event.target.checked);
@@ -740,7 +744,7 @@
                 summaryPanelContent.appendChild(separatorDiv);
             }
 
-            addSummaryItem(selectedCEtierValue.charAt(0).toUpperCase() + selectedCEtierValue.slice(1), '', summaryData.ceTierName); 
+            addSummaryItem(selectedCEtierValue === 'standard' ? 'Standard' : 'Pro', '', summaryData.ceTierName); 
             addSummaryItem('Client Engagement Platform:', 'Platform', summaryData.ceCostDisplay);
 
 
@@ -809,7 +813,7 @@
                 showOneTimeFeeSeparatelyInGrandTotal: false
             };
 
-            summaryDetails.ceTierName = selectedCEtierValue.charAt(0).toUpperCase() + selectedCEtierValue.slice(1); // "Standard" or "Pro"
+            summaryDetails.ceTierName = selectedCEtierValue.charAt(0).toUpperCase() + selectedCEtierValue.slice(1); 
             let baseCEAnnualEquivMonthlyRate = pricing.base_client_engagement[selectedCEtierValue].effective_monthly_rate_on_annual_plan;
             totalMonthlySubscriptionCostAnnualEquiv += baseCEAnnualEquivMonthlyRate;
 
@@ -924,14 +928,19 @@
             
             let implPercentage = pricing.base_client_engagement[selectedCEtierValue].implementation_percentage;
             let calculatedImplFee = annualEquivalentOfDiscountedSubscription * implPercentage;
-            let oneTimeImplementationFee = Math.max(calculatedImplFee, pricing.implementation_minimum_fee);
+            let oneTimeImplementationFeeFromCalc = Math.max(calculatedImplFee, pricing.implementation_minimum_fee);
             
-            implementationFeeDisplay.textContent = `$${oneTimeImplementationFee.toFixed(0)}`; 
-            summaryDetails.implementationFeeDisplay = `$${oneTimeImplementationFee.toFixed(0)}`;
+            let currentImplementationFee = parseFloat(implementationFeeInput.value);
+            if (isNaN(currentImplementationFee) || !manualImplFeeSet) { 
+                currentImplementationFee = oneTimeImplementationFeeFromCalc;
+                implementationFeeInput.value = currentImplementationFee.toFixed(0); 
+            }
+            
+            summaryDetails.implementationFeeDisplay = `$${currentImplementationFee.toFixed(0)}`;
 
             let finalDisplayPrice = 0;
             if (isAnnualBilling) {
-                finalDisplayPrice = discountedSubscriptionTotalForPeriod + oneTimeImplementationFee;
+                finalDisplayPrice = discountedSubscriptionTotalForPeriod + currentImplementationFee;
                 priceFrequencyDisplay.textContent = "per year";
                 totalOneTimeFeesLine.classList.add('hidden');
                 summaryDetails.grandTotalFrequency = "per year";
@@ -939,7 +948,7 @@
             } else {
                 finalDisplayPrice = discountedSubscriptionTotalForPeriod; 
                 priceFrequencyDisplay.textContent = "per month";
-                totalOneTimeFeesLine.textContent = `+ One-Time Implementation: $${oneTimeImplementationFee.toFixed(0)}`;
+                totalOneTimeFeesLine.textContent = `+ One-Time Implementation: $${currentImplementationFee.toFixed(0)}`;
                 totalOneTimeFeesLine.classList.remove('hidden');
                 summaryDetails.grandTotalFrequency = "per month";
                 summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = true;
@@ -955,21 +964,34 @@
         }
 
         // --- Event Listeners ---
-        billingToggleInput.addEventListener('change', toggleBillingCycle);
+        billingToggleInput.addEventListener('change', () => {
+            manualImplFeeSet = false; 
+            toggleBillingCycle();
+        });
         
         ceTierStandardButton.addEventListener('click', () => {
+            if (selectedCEtierValue !== 'standard') manualImplFeeSet = false;
             selectedCEtierValue = 'standard';
             clientEngagementTierStandardRadio.checked = true; 
             renderClientEngagementDetails();
             calculateAndUpdatePrice();
         });
         ceTierProButton.addEventListener('click', () => {
+            if (selectedCEtierValue !== 'pro') manualImplFeeSet = false;
             selectedCEtierValue = 'pro';
             clientEngagementTierProRadio.checked = true; 
             renderClientEngagementDetails();
             calculateAndUpdatePrice();
         });
-        discountPercentageInput.addEventListener('input', calculateAndUpdatePrice);
+        discountPercentageInput.addEventListener('input', () => {
+            if (!manualImplFeeSet) {
+            }
+            calculateAndUpdatePrice();
+        });
+        implementationFeeInput.addEventListener('input', () => {
+            manualImplFeeSet = true; 
+            calculateAndUpdatePrice(); 
+        });
 
 
         // --- Initializations ---

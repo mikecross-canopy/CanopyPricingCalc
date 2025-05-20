@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canopy Pricing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F1F3F7; /* New company background color */
+        }
+        .canopy-primary-accent { /* New primary accent color */
+            background-color: #0BE6C7;
+        }
+        .canopy-primary-accent-text { /* New primary accent text color */
+            color: #0BE6C7;
+        }
+        .canopy-main-text { /* Main text color - black */
+            color: #000000; 
+        }
+        .canopy-secondary-text { /* For slightly less prominent text */
+            color: #374151; /* Tailwind gray-700 */
+        }
+        .billing-toggle-bg {
+            background-color: #e2e8f0; 
+        }
+        .billing-label.active {
+            color: #0BE6C7; 
+            font-weight: 600;
+        }
+        .custom-checkbox:checked {
+            background-color: #0BE6C7;
+            border-color: #0BE6C7;
+        }
+        input[type="number"].module-user-input, input[type="number"].discount-input {
+            border: 1px solid #cbd5e0;
+            padding: 0.35rem 0.5rem;
+            border-radius: 0.375rem;
+            width: 70px;
+            text-align: center;
+            color: #000000; /* Ensure input text is black */
+        }
+        input[type="number"].module-user-input:disabled {
+            background-color: #edf2f7;
+            cursor: not-allowed;
+        }
+        .base-package-item, .module-item, .addon-item, .adjustment-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .module-item:last-child, .addon-item:last-child, .adjustment-item:last-child {
+            border-bottom: none;
+        }
+        .item-content { 
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .item-main-controls { 
+             display: flex;
+             flex-wrap: wrap;
+             align-items: center;
+             justify-content: space-between;
+             width: 100%;
+        }
+        .item-info { 
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            margin-right: 1rem; 
+        }
+        .item-actions { 
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+            sm:margin-top: 0;
+        }
+        .item-details {
+            font-size: 0.75rem; 
+            color: #4A5568; /* Tailwind gray-700 for details */
+            margin-top: 0.25rem; 
+            padding-left: 2.75rem; 
+            width: 100%; 
+        }
+        .summary-panel {
+            background-color: #FFFFFF; /* White background for summary panel */
+            border-left: 1px solid #e2e8f0;
+        }
+        .summary-panel h3 {
+            color: #000000; 
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 0.875rem;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-item-label {
+            color: #4A5568; /* Tailwind gray-600 */
+        }
+        .summary-item-value {
+            color: #000000; 
+            font-weight: 500;
+        }
+        .summary-total-strong {
+            font-weight: 700;
+            font-size: 1.125rem; /* text-lg */
+        }
+        .discreet-discount-label {
+            color: #a0aec0; /* text-gray-400 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .discreet-discount-input {
+            border: 1px solid #e2e8f0; /* lighter border */
+            color: #a0aec0; /* text-gray-400 */
+        }
+        /* Ensure toggle button uses new primary accent when active */
+        .peer:checked + span { /* For the billing toggle button */
+            background-color: #0BE6C7 !important; /* Override Tailwind if necessary */
+        }
+
+    </style>
+</head>
+<body class="canopy-main-text">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-16 mb-4" onerror="this.style.display='none'; console.error('Logo image not found.')">
+            <h1 class="text-3xl md:text-4xl font-bold canopy-main-text">Canopy Pricing</h1>
+            </header>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <div class="lg:w-2/3 bg-white p-6 md:p-8 rounded-lg shadow-xl">
+                <div class="flex justify-center items-center mb-10">
+                    <span id="monthlyLabel" class="billing-label canopy-secondary-text mr-3 text-sm md:text-base font-medium active">Monthly <span class="text-xs text-gray-500">(+20% Premium)</span></span>
+                    <label for="billingToggleInput" class="relative inline-block w-12 h-6 billing-toggle-bg rounded-full cursor-pointer">
+                        <input type="checkbox" id="billingToggleInput" class="sr-only peer">
+                        <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-full peer-checked:bg-teal-500"></span> </label>
+                    <span id="annualLabel" class="billing-label canopy-secondary-text ml-3 text-sm md:text-base font-medium">
+                        Annually <span class="canopy-primary-accent-text text-xs" id="annualSavingText"></span>
+                    </span>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold canopy-main-text mb-3 border-b pb-2">Client Engagement Platform</h3>
+                    <div class="base-package-item">
+                        <p class="text-md font-semibold canopy-main-text mb-2">Select Tier:</p>
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-2 sm:space-y-0">
+                            <label class="flex items-center text-sm canopy-secondary-text cursor-pointer">
+                                <input type="radio" name="clientEngagementTier" value="standard" class="custom-checkbox mr-2" checked>
+                                Standard <span class="text-xs text-gray-500 ml-1" id="standardTierPriceDesc">(Base: $180/mo)</span>
+                            </label>
+                            <label class="flex items-center text-sm canopy-secondary-text cursor-pointer">
+                                <input type="radio" name="clientEngagementTier" value="pro" class="custom-checkbox mr-2">
+                                Pro <span class="text-xs text-gray-500 ml-1" id="proTierPriceDesc">(Base: $210/mo)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold canopy-main-text mb-3 border-b pb-2">Modules</h3>
+                    <div id="selectableModulesContainer"></div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold canopy-main-text mb-3 border-b pb-2">Add-ons</h3>
+                    <div id="addonsContainer"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold canopy-main-text mb-3 border-b pb-2">Implementation & Onboarding</h3>
+                    <div class="base-package-item">
+                         <div class="flex justify-between items-center">
+                            <p class="text-sm canopy-secondary-text">Calculated Implementation Fee:</p>
+                            <p id="implementationFeeDisplay" class="text-sm canopy-main-text font-semibold">$0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-10 pt-6 border-t border-gray-200">
+                    <div class="flex flex-col items-center text-center">
+                        <p class="text-sm canopy-secondary-text mb-1">Estimated Grand Total</p>
+                        <p id="totalPrice" class="text-4xl md:text-5xl font-bold canopy-primary-accent-text">$0</p>
+                        <p id="priceFrequency" class="text-sm text-gray-500">per month</p>
+                        <p id="totalOneTimeFeesLine" class="text-sm text-gray-500 hidden"></p>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button class="canopy-primary-accent hover:opacity-80 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-150 ease-in-out">
+                        Get Started
+                    </button>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-dashed border-gray-300">
+                     <div class="item-content justify-end">
+                         <label for="discountPercentage" class="discreet-discount-label mr-2">Discount (%):</label>
+                         <input type="number" id="discountPercentage" name="discountPercentage" value="0" min="0" max="100" class="discount-input discreet-discount-input w-20">
+                     </div>
+                </div>
+            </div>
+
+            <div class="lg:w-1/3 summary-panel p-6 md:p-8 rounded-lg shadow-lg">
+                <h3 class="text-xl font-semibold mb-6 border-b pb-3 text-center">Pricing Breakdown</h3>
+                <div id="summaryPanelContent" class="space-y-1"> </div>
+                <div class="mt-6 pt-4 border-t-2 border-gray-300"> <div class="summary-item summary-total-strong">
+                        <span class="summary-item-label">Grand Total:</span>
+                        <span id="summaryGrandTotal" class="summary-item-value canopy-primary-accent-text">$0</span>
+                    </div>
+                    <div class="summary-item pt-0"> <span id="summaryGrandTotalFrequency" class="summary-item-label text-xs italic w-full text-right">per month</span>
+                    </div>
+                     <div id="summaryOneTimeFeesLine" class="summary-item text-xs italic pt-0 hidden"> <span class="summary-item-label"></span>
+                        <span id="summaryOneTimeFeesValue" class="summary-item-value"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <p>&copy; <span id="currentYear"></span> Your Company Name. Inspired by Canopy.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const billingToggleInput = document.getElementById('billingToggleInput');
+        const monthlyLabel = document.getElementById('monthlyLabel');
+        const annualLabel = document.getElementById('annualLabel');
+        const totalPriceDisplay = document.getElementById('totalPrice'); 
+        const priceFrequencyDisplay = document.getElementById('priceFrequency'); 
+        const totalOneTimeFeesLine = document.getElementById('totalOneTimeFeesLine');
+
+
+        const currentYearSpan = document.getElementById('currentYear');
+        const standardTierPriceDesc = document.getElementById('standardTierPriceDesc');
+        const proTierPriceDesc = document.getElementById('proTierPriceDesc');
+        const annualSavingText = document.getElementById('annualSavingText'); 
+        const discountPercentageInput = document.getElementById('discountPercentage');
+        const implementationFeeDisplay = document.getElementById('implementationFeeDisplay'); 
+        
+        const selectableModulesContainer = document.getElementById('selectableModulesContainer');
+        const addonsContainer = document.getElementById('addonsContainer');
+        const summaryPanelContent = document.getElementById('summaryPanelContent');
+        const summaryGrandTotal = document.getElementById('summaryGrandTotal');
+        const summaryGrandTotalFrequency = document.getElementById('summaryGrandTotalFrequency');
+        const summaryOneTimeFeesLine = document.getElementById('summaryOneTimeFeesLine');
+        const summaryOneTimeFeesValue = document.getElementById('summaryOneTimeFeesValue');
+
+
+        // --- Pricing Configuration ---
+        const pricing = {
+            monthly_premium_factor: 1.20, 
+            base_client_engagement: { 
+                standard: { name: "Client Engagement - Standard", effective_monthly_rate_on_annual_plan: 150, implementation_percentage: 0.15 }, 
+                pro: { name: "Client Engagement - Pro", effective_monthly_rate_on_annual_plan: 175, implementation_percentage: 0.20 }
+            },
+            implementation_minimum_fee: 1500,
+            selectable_modules: { 
+                document_management: {
+                    name: "Document Management",
+                    id_checkbox: "moduleDocManagementCheck",
+                    id_user_input: "moduleDocManagementUsers",
+                    standard_tier_pricing: [ 
+                        { user_max: 4, price_per_user_annual_equiv: 40 },
+                        { user_max: 9, price_per_user_annual_equiv: 36 },
+                        { user_max: Infinity, price_per_user_annual_equiv: 40 * (1 - 0.15) } 
+                    ],
+                    pro_tier_pricing: [ 
+                        { user_max: 4, price_per_user_annual_equiv: 40 },
+                        { user_max: 9, price_per_user_annual_equiv: 36 },
+                        { user_max: Infinity, price_per_user_annual_equiv: 40 * (1 - 0.15) }
+                    ]
+                },
+                workflow: { 
+                    name: "Workflow", // Renamed
+                    id_checkbox: "moduleWorkflowCheck",
+                    id_user_input: "moduleWorkflowUsers",
+                    standard_tier_pricing: [
+                        { user_max: 4, price_per_user_annual_equiv: 35 },
+                        { user_max: 9, price_per_user_annual_equiv: 32 },
+                        { user_max: Infinity, price_per_user_annual_equiv: 35 * (1 - 0.15) }
+                    ],
+                    pro_tier_pricing: [
+                        { user_max: 4, price_per_user_annual_equiv: 45 },
+                        { user_max: 9, price_per_user_annual_equiv: 45 * (1 - 0.10) }, 
+                        { user_max: Infinity, price_per_user_annual_equiv: 45 * (1 - 0.15) } 
+                    ]
+                },
+                time_billing: {
+                    name: "Time & Billing",
+                    id_checkbox: "moduleTimeBillingCheck",
+                    id_user_input: "moduleTimeBillingUsers",
+                    standard_tier_pricing: [
+                        { user_max: 4, price_per_user_annual_equiv: 25 },
+                        { user_max: 9, price_per_user_annual_equiv: 22 },
+                        { user_max: Infinity, price_per_user_annual_equiv: 25 * (1 - 0.15) }
+                    ],
+                    pro_tier_pricing: [
+                        { user_max: 4, price_per_user_annual_equiv: 35 },
+                        { user_max: 9, price_per_user_annual_equiv: 35 * (1 - 0.10) },
+                        { user_max: Infinity, price_per_user_annual_equiv: 35 * (1 - 0.15) }
+                    ]
+                }
+            },
+            addons: {
+                tax_resolution: {
+                    name: "Tax Resolution Suite",
+                    id_checkbox: "addonTaxResolutionCheck",
+                    id_user_input: "addonTaxResolutionUsers",
+                    price_per_user_annual_equiv: 50 
+                }
+            }
+        };
+
+        let isAnnualBilling = false; 
+
+        // --- Functions ---
+        function updateBasePackageTierDisplay() {
+            const standardRateAnnualEquiv = pricing.base_client_engagement.standard.effective_monthly_rate_on_annual_plan;
+            const proRateAnnualEquiv = pricing.base_client_engagement.pro.effective_monthly_rate_on_annual_plan;
+
+            if (isAnnualBilling) {
+                standardTierPriceDesc.textContent = `(Base: $${standardRateAnnualEquiv.toFixed(0)}/mo, billed annually)`;
+                proTierPriceDesc.textContent = `(Base: $${proRateAnnualEquiv.toFixed(0)}/mo, billed annually)`;
+                annualSavingText.textContent = ``; 
+            } else {
+                const standardActualMonthly = standardRateAnnualEquiv * pricing.monthly_premium_factor;
+                const proActualMonthly = proRateAnnualEquiv * pricing.monthly_premium_factor;
+                standardTierPriceDesc.textContent = `(Base: $${standardActualMonthly.toFixed(0)}/mo)`;
+                proTierPriceDesc.textContent = `(Base: $${proActualMonthly.toFixed(0)}/mo)`;
+                annualSavingText.textContent = ``; 
+            }
+        }
+
+        function createSelectableItemEntry(key, itemData, container, itemType) {
+            const div = document.createElement('div');
+            div.className = itemType === 'module' ? 'module-item' : 'addon-item';
+            
+            const itemMainControlsDiv = document.createElement('div');
+            itemMainControlsDiv.className = 'item-main-controls';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'item-info';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = itemData.id_checkbox;
+            checkbox.name = itemData.id_checkbox;
+            checkbox.className = 'custom-checkbox h-5 w-5 border-gray-300 rounded focus:ring-transparent mr-3 flex-shrink-0';
+            checkbox.dataset.itemKey = key;
+            checkbox.dataset.itemType = itemType;
+            
+            const label = document.createElement('label');
+            label.htmlFor = itemData.id_checkbox;
+            label.className = 'text-sm canopy-secondary-text cursor-pointer';
+            label.textContent = itemData.name;
+
+            infoDiv.appendChild(checkbox);
+            infoDiv.appendChild(label);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'item-actions';
+
+            const userLabel = document.createElement('label');
+            userLabel.htmlFor = itemData.id_user_input;
+            userLabel.className = 'text-xs text-gray-600 mr-2';
+            userLabel.textContent = 'Users:';
+            
+            const userInput = document.createElement('input');
+            userInput.type = 'number';
+            userInput.id = itemData.id_user_input;
+            userInput.name = itemData.id_user_input;
+            userInput.value = "0"; 
+            userInput.min = "0";
+            userInput.className = 'module-user-input';
+            userInput.disabled = true; 
+
+            actionsDiv.appendChild(userLabel);
+            actionsDiv.appendChild(userInput);
+
+            itemMainControlsDiv.appendChild(infoDiv);
+            itemMainControlsDiv.appendChild(actionsDiv);
+            div.appendChild(itemMainControlsDiv);
+
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'item-details';
+            detailsDiv.innerHTML = `
+                <span id="${itemData.id_checkbox}_ppu">Cost/User: N/A</span> | 
+                <span id="${itemData.id_checkbox}_total">Module Total: $0</span>
+            `;
+            div.appendChild(detailsDiv);
+            
+            container.appendChild(div);
+
+            checkbox.addEventListener('change', (event) => {
+                userInput.disabled = !event.target.checked;
+                if (!event.target.checked) {
+                    userInput.value = "0"; 
+                } else if (userInput.value === "0") { 
+                     userInput.value = "1"; 
+                }
+                calculateAndUpdatePrice();
+            });
+            userInput.addEventListener('input', calculateAndUpdatePrice);
+        }
+
+        function renderAllSelectableItems() {
+            selectableModulesContainer.innerHTML = '';
+            addonsContainer.innerHTML = '';
+
+            for (const key in pricing.selectable_modules) {
+                createSelectableItemEntry(key, pricing.selectable_modules[key], selectableModulesContainer, 'module');
+            }
+            for (const key in pricing.addons) {
+                createSelectableItemEntry(key, pricing.addons[key], addonsContainer, 'addon');
+            }
+        }
+
+        function toggleBillingCycle() {
+            isAnnualBilling = billingToggleInput.checked; 
+            monthlyLabel.classList.toggle('active', !isAnnualBilling);
+            annualLabel.classList.toggle('active', isAnnualBilling);
+            updateBasePackageTierDisplay(); 
+            calculateAndUpdatePrice();
+        }
+
+        function getPerUserAnnualEquivalentPrice(userCount, pricingTiersForItem) {
+            if (!pricingTiersForItem) return 0;
+            for (const tier of pricingTiersForItem) {
+                if (userCount <= tier.user_max) {
+                    return tier.price_per_user_annual_equiv;
+                }
+            }
+            return 0; 
+        }
+        
+        function updateSummaryPanel(summaryData) {
+            summaryPanelContent.innerHTML = ''; 
+
+            function addSummaryItem(label, value, isStrong = false, isGreen = false, isSubtle = false) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'summary-item';
+                if (isStrong) itemDiv.classList.add('summary-total-strong');
+                if (isSubtle) itemDiv.classList.add('text-xs', 'italic');
+                
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'summary-item-label';
+                labelSpan.textContent = label;
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'summary-item-value';
+                if (isGreen) valueSpan.classList.add('canopy-primary-accent-text');
+                valueSpan.textContent = value;
+                
+                itemDiv.appendChild(labelSpan);
+                itemDiv.appendChild(valueSpan);
+                summaryPanelContent.appendChild(itemDiv);
+            }
+             function addSummarySeparator() { 
+                const separatorDiv = document.createElement('div');
+                separatorDiv.className = 'pt-2 mt-2 border-t border-gray-300'; 
+                summaryPanelContent.appendChild(separatorDiv);
+            }
+
+
+            addSummaryItem('Tier:', summaryData.ceTierName);
+            addSummaryItem('Client Engagement Platform:', summaryData.ceCostDisplay);
+
+            summaryData.moduleDetails.forEach(mod => {
+                addSummaryItem(`${mod.name} (${mod.users} Users):`, mod.costDisplay);
+            });
+             summaryData.addonDetails.forEach(addon => {
+                addSummaryItem(`${addon.name} (${addon.users} Users):`, addon.costDisplay);
+            });
+            
+            addSummarySeparator(); 
+
+            if (summaryData.discountPercent > 0) {
+                addSummaryItem('Subscription Subtotal:', summaryData.subscriptionSubtotalDisplay);
+                addSummaryItem('Discount Applied:', summaryData.discountAmountDisplay, false, true);
+                addSummaryItem('Discounted Subscription:', summaryData.discountedSubscriptionTotalDisplay, true);
+            } else {
+                 addSummaryItem('Subscription Total:', summaryData.subscriptionSubtotalDisplay, true);
+            }
+            
+            addSummarySeparator(); 
+
+            addSummaryItem('One-Time Implementation:', summaryData.implementationFeeDisplay, false, false, true);
+
+            summaryGrandTotal.textContent = summaryData.grandTotalDisplay;
+            summaryGrandTotalFrequency.textContent = summaryData.grandTotalFrequency;
+
+            if (summaryData.showOneTimeFeeSeparatelyInGrandTotal) {
+                summaryOneTimeFeesLine.classList.remove('hidden');
+                summaryOneTimeFeesValue.textContent = `+ ${summaryData.implementationFeeDisplay} (One-Time)`;
+            } else {
+                summaryOneTimeFeesLine.classList.add('hidden');
+            }
+        }
+
+
+        function calculateAndUpdatePrice() {
+            let totalMonthlySubscriptionCostAnnualEquiv = 0; 
+            const summaryDetails = {
+                moduleDetails: [],
+                addonDetails: [],
+                discountPercent: 0,
+                subscriptionSubtotalDisplay: '$0',
+                discountAmountDisplay: '-$0',
+                discountedSubscriptionTotalDisplay: '$0',
+                implementationFeeDisplay: '$0',
+                grandTotalDisplay: '$0',
+                grandTotalFrequency: 'per month',
+                showOneTimeFeeSeparatelyInGrandTotal: false
+            };
+
+
+            const selectedCEtierRadios = document.querySelectorAll('input[name="clientEngagementTier"]');
+            let selectedCEtierValue = 'standard'; 
+            selectedCEtierRadios.forEach(radio => {
+                if (radio.checked) {
+                    selectedCEtierValue = radio.value;
+                }
+            });
+            summaryDetails.ceTierName = pricing.base_client_engagement[selectedCEtierValue].name;
+
+
+            let baseCEAnnualEquivMonthlyRate = pricing.base_client_engagement[selectedCEtierValue].effective_monthly_rate_on_annual_plan;
+            totalMonthlySubscriptionCostAnnualEquiv += baseCEAnnualEquivMonthlyRate;
+            if (isAnnualBilling) {
+                summaryDetails.ceCostDisplay = `$${(baseCEAnnualEquivMonthlyRate * 12).toFixed(0)}/yr`;
+            } else {
+                summaryDetails.ceCostDisplay = `$${(baseCEAnnualEquivMonthlyRate * pricing.monthly_premium_factor).toFixed(0)}/mo`;
+            }
+
+
+            function updateItemDetailDisplay(itemIdCheckbox, perUserCostText, itemTotalCostText) {
+                const ppuEl = document.getElementById(`${itemIdCheckbox}_ppu`);
+                const totalEl = document.getElementById(`${itemIdCheckbox}_total`);
+                if (ppuEl) ppuEl.textContent = `Cost/User: ${perUserCostText}`;
+                if (totalEl) totalEl.textContent = `Module Total: ${itemTotalCostText}`;
+            }
+            
+            for (const key in pricing.selectable_modules) {
+                const moduleData = pricing.selectable_modules[key];
+                const checkbox = document.getElementById(moduleData.id_checkbox);
+                const userInput = document.getElementById(moduleData.id_user_input);
+                const moduleUsers = parseInt(userInput.value) || 0;
+
+                let itemPerUserDisplay = "N/A";
+                let itemTotalDisplay = "$0";
+                let moduleDisplayCost = "$0"; 
+
+                if (checkbox && checkbox.checked && moduleUsers > 0) {
+                    const pricingTiers = selectedCEtierValue === 'pro' ? moduleData.pro_tier_pricing : moduleData.standard_tier_pricing;
+                    let pricePerUserAnnualEquiv = getPerUserAnnualEquivalentPrice(moduleUsers, pricingTiers);
+                    totalMonthlySubscriptionCostAnnualEquiv += (pricePerUserAnnualEquiv * moduleUsers);
+                    
+                    if (isAnnualBilling) {
+                        itemPerUserDisplay = `$${pricePerUserAnnualEquiv.toFixed(2)}/mo (annual plan)`;
+                        itemTotalDisplay = `$${(pricePerUserAnnualEquiv * moduleUsers * 12).toFixed(0)}/yr`;
+                        moduleDisplayCost = itemTotalDisplay;
+                    } else {
+                        let actualMonthlyPricePerUser = pricePerUserAnnualEquiv * pricing.monthly_premium_factor;
+                        itemPerUserDisplay = `$${actualMonthlyPricePerUser.toFixed(2)}/mo`;
+                        itemTotalDisplay = `$${(actualMonthlyPricePerUser * moduleUsers).toFixed(0)}/mo`;
+                        moduleDisplayCost = itemTotalDisplay;
+                    }
+                    summaryDetails.moduleDetails.push({ name: moduleData.name, users: moduleUsers, costDisplay: moduleDisplayCost });
+                }
+                 updateItemDetailDisplay(moduleData.id_checkbox, itemPerUserDisplay, itemTotalDisplay);
+            }
+            
+            for (const key in pricing.addons) {
+                const addonData = pricing.addons[key];
+                const checkbox = document.getElementById(addonData.id_checkbox);
+                const userInput = document.getElementById(addonData.id_user_input);
+                const addonUsers = parseInt(userInput.value) || 0;
+
+                let itemPerUserDisplay = "N/A";
+                let itemTotalDisplay = "$0";
+                let addonDisplayCost = "$0"; 
+
+
+                if (checkbox && checkbox.checked && addonUsers > 0) {
+                    let pricePerUserAnnualEquiv = addonData.price_per_user_annual_equiv; 
+                    totalMonthlySubscriptionCostAnnualEquiv += (pricePerUserAnnualEquiv * addonUsers);
+                    
+                    if (isAnnualBilling) {
+                        itemPerUserDisplay = `$${pricePerUserAnnualEquiv.toFixed(2)}/mo (annual plan)`;
+                        itemTotalDisplay = `$${(pricePerUserAnnualEquiv * addonUsers * 12).toFixed(0)}/yr`;
+                        addonDisplayCost = itemTotalDisplay;
+                    } else {
+                        let actualMonthlyPricePerUser = pricePerUserAnnualEquiv * pricing.monthly_premium_factor;
+                        itemPerUserDisplay = `$${actualMonthlyPricePerUser.toFixed(2)}/mo`;
+                        itemTotalDisplay = `$${(actualMonthlyPricePerUser * addonUsers).toFixed(0)}/mo`;
+                        addonDisplayCost = itemTotalDisplay;
+                    }
+                     summaryDetails.addonDetails.push({ name: addonData.name, users: addonUsers, costDisplay: addonDisplayCost });
+                }
+                updateItemDetailDisplay(addonData.id_checkbox, itemPerUserDisplay, itemTotalDisplay);
+            }
+
+            const discountPercent = parseFloat(discountPercentageInput.value) || 0;
+            summaryDetails.discountPercent = discountPercent;
+            const discountDecimal = discountPercent / 100;
+            
+            let subscriptionSubtotalForPeriod; 
+            if (isAnnualBilling) {
+                subscriptionSubtotalForPeriod = totalMonthlySubscriptionCostAnnualEquiv * 12;
+            } else {
+                subscriptionSubtotalForPeriod = totalMonthlySubscriptionCostAnnualEquiv * pricing.monthly_premium_factor;
+            }
+            summaryDetails.subscriptionSubtotalDisplay = `$${subscriptionSubtotalForPeriod.toFixed(0)}`;
+
+
+            const discountAmount = subscriptionSubtotalForPeriod * discountDecimal;
+            const discountedSubscriptionTotalForPeriod = subscriptionSubtotalForPeriod - discountAmount;
+            summaryDetails.discountAmountDisplay = `-$${discountAmount.toFixed(0)}`;
+            summaryDetails.discountedSubscriptionTotalDisplay = `$${discountedSubscriptionTotalForPeriod.toFixed(0)}`;
+
+            const annualEquivalentOfDiscountedSubscription = (totalMonthlySubscriptionCostAnnualEquiv * 12) * (1 - discountDecimal);
+            
+            let implPercentage = pricing.base_client_engagement[selectedCEtierValue].implementation_percentage;
+            let calculatedImplFee = annualEquivalentOfDiscountedSubscription * implPercentage;
+            let oneTimeImplementationFee = Math.max(calculatedImplFee, pricing.implementation_minimum_fee);
+            
+            implementationFeeDisplay.textContent = `$${oneTimeImplementationFee.toFixed(0)}`; 
+            summaryDetails.implementationFeeDisplay = `$${oneTimeImplementationFee.toFixed(0)}`;
+
+            let finalDisplayPrice = 0;
+            if (isAnnualBilling) {
+                finalDisplayPrice = discountedSubscriptionTotalForPeriod + oneTimeImplementationFee;
+                priceFrequencyDisplay.textContent = "per year";
+                totalOneTimeFeesLine.classList.add('hidden');
+                summaryDetails.grandTotalFrequency = "per year";
+                summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = false;
+            } else {
+                finalDisplayPrice = discountedSubscriptionTotalForPeriod; 
+                priceFrequencyDisplay.textContent = "per month";
+                totalOneTimeFeesLine.textContent = `+ One-Time Implementation: $${oneTimeImplementationFee.toFixed(0)}`;
+                totalOneTimeFeesLine.classList.remove('hidden');
+                summaryDetails.grandTotalFrequency = "per month";
+                summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = true;
+            }
+            
+            totalPriceDisplay.textContent = `$${finalDisplayPrice.toFixed(0)}`;
+            summaryDetails.grandTotalDisplay = `$${finalDisplayPrice.toFixed(0)}`;
+            updateSummaryPanel(summaryDetails); 
+        }
+
+        function setInitialYear() {
+            currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+        // --- Event Listeners ---
+        billingToggleInput.addEventListener('change', toggleBillingCycle);
+        const ceTierRadios = document.querySelectorAll('input[name="clientEngagementTier"]');
+        ceTierRadios.forEach(radio => radio.addEventListener('change', calculateAndUpdatePrice));
+        discountPercentageInput.addEventListener('input', calculateAndUpdatePrice);
+
+
+        // --- Initializations ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAllSelectableItems(); 
+            
+            isAnnualBilling = billingToggleInput.checked; 
+            monthlyLabel.classList.toggle('active', !isAnnualBilling);
+            annualLabel.classList.toggle('active', isAnnualBilling);
+            
+            updateBasePackageTierDisplay(); 
+            calculateAndUpdatePrice(); 
+            setInitialYear();
+        });
+    </script>
+</body>
+</html>

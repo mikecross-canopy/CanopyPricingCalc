@@ -43,16 +43,31 @@
             background-color: #0BE6C7;
             border-color: #0BE6C7;
         }
+
         input[type="number"].module-user-input, 
-        input[type="number"].discount-input,
-        input[type="number"].implementation-fee-input { /* Added implementation-fee-input here */
-            border: 1px solid #cbd5e0;
-            padding: 0.35rem 0.5rem;
-            border-radius: 0.375rem;
-            width: 80px; 
-            text-align: center;
+        /* input[type="number"].implementation-fee-input, /* Style handled by Tailwind now for inline */
+        select.data-migration-select,
+        select.implementation-tier-select {
+            border: 1px solid #cbd5e0; 
+            padding: 0.35rem 0.5rem;   
+            border-radius: 0.375rem; 
             color: #000000; 
+            text-align: center; 
         }
+
+        input[type="number"].module-user-input {
+             width: 80px; 
+        }
+      
+        select.data-migration-select,
+        select.implementation-tier-select { 
+            text-align: left; 
+            padding-right: 2rem; 
+        }
+        select.data-migration-select {
+             width: 100%;
+        }
+      
         input[type="number"].module-user-input:disabled {
             background-color: #edf2f7;
             cursor: not-allowed;
@@ -74,7 +89,7 @@
         }
         .summary-item {
             display: grid; 
-            grid-template-columns: 2fr 1fr 1fr; 
+            grid-template-columns: 2fr auto 1fr;
             gap: 0.5rem; 
             padding: 0.65rem 0; 
             border-bottom: 1px solid #4A5563; 
@@ -97,214 +112,57 @@
             font-weight: 600; 
             text-align: right;
         }
-        .summary-total-section .summary-item-label,
-        .summary-total-section .summary-item-value {
-             color: #FFFFFF;
+       
+        .discreet-discount-input { 
+            border: none; 
+            background-color: #FFFFFF; 
+            color: #9CA3AF; 
+            width: 70px; 
+            padding: 0.25rem 0.5rem; 
+            border-radius: 0.375rem; 
+            text-align: center;
         }
-        .summary-grand-total .summary-item-label, 
-        .summary-grand-total .summary-item-value { 
-            font-size: 1.125rem; 
-            font-weight: 700;
-        }
-        .summary-grand-total .canopy-primary-accent-text {
-             color: #0BE6C7 !important;
+        .discreet-discount-input::placeholder {
+            color: #D1D5DB; 
         }
 
-        .discreet-discount-input { 
-            border: 1px solid #e2e8f0; 
-            background-color: #f9fafb; 
-            color: #a0aec0; 
-            width: 70px; 
-        }
         .peer:checked + span { 
             background-color: #0BE6C7 !important; 
         }
 
         /* Client Engagement Platform Styling */
-        .ce-platform-section {
-            border: 2px solid #e2e8f0;
-            border-radius: 0.5rem;
-            padding: 1.25rem; 
-            position: relative;
-        }
-        .ce-platform-section.selected {
-            border-color: #0BE6C7; 
-            box-shadow: 0 0 0 2px #0BE6C7;
-        }
-        .ce-tier-selector {
-            display: flex;
-            margin-bottom: 1.25rem; 
-            border: 1px solid #D1D5DB; 
-            border-radius: 0.375rem; 
-            overflow: hidden;
-        }
-        .ce-tier-button {
-            flex: 1;
-            padding: 0.65rem 1rem; 
-            text-align: center;
-            background-color: #FFFFFF;
-            color: #374151; 
-            cursor: pointer;
-            border-right: 1px solid #D1D5DB;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .ce-tier-button:last-child {
-            border-right: none;
-        }
-        .ce-tier-button.active {
-            background-color: #0BE6C7;
-            color: #FFFFFF;
-            font-weight: 600;
-        }
-        .ce-tier-button .tier-name {
-            display: block;
-            font-size: 0.9rem; 
-            font-weight: 600;
-        }
-        .ce-tier-button .tier-recommendation {
-            display: block;
-            font-size: 0.7rem; 
-            color: #6B7280; 
-        }
-        .ce-tier-button.active .tier-recommendation {
-            color: #E0FEFA; 
-        }
-        .ce-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start; 
-        }
-        .ce-feature-list {
-            list-style: none;
-            padding-left: 0;
-            font-size: 0.8rem; 
-            color: #374151; 
-        }
-        .ce-feature-list li {
-            padding-left: 1.25rem;
-            position: relative;
-            margin-bottom: 0.25rem; 
-        }
-        .ce-feature-list li::before {
-            content: '✓';
-            color: #0BE6C7;
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-        }
-        .ce-price-display {
-            text-align: right;
-            flex-shrink: 0; 
-            margin-left: 1.5rem; 
-        }
-        .ce-price-display .price {
-            font-size: 2rem; 
-            font-weight: 800; 
-            color: #000000;
-            line-height: 1;
-        }
-        .ce-price-display .price-term {
-            font-size: 0.8rem; 
-            color: #6B7280; 
-            display: block;
-        }
-         .ce-price-display .implementation-note {
-            font-size: 0.7rem; 
-            color: #6B7280;
-            margin-top: 0.25rem;
-        }
-
+        .ce-platform-section { border: 2px solid #e2e8f0; border-radius: 0.5rem; padding: 1.25rem; position: relative; }
+        .ce-platform-section.selected { border-color: #0BE6C7; box-shadow: 0 0 0 2px #0BE6C7; }
+        .ce-tier-selector { display: flex; margin-bottom: 1.25rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; overflow: hidden; }
+        .ce-tier-button { flex: 1; padding: 0.65rem 1rem; text-align: center; background-color: #FFFFFF; color: #374151; cursor: pointer; border-right: 1px solid #D1D5DB; transition: background-color 0.2s ease-in-out; }
+        .ce-tier-button:last-child { border-right: none; }
+        .ce-tier-button.active { background-color: #0BE6C7; color: #FFFFFF; font-weight: 600; }
+        .ce-tier-button .tier-name { display: block; font-size: 0.9rem; font-weight: 600; }
+        .ce-tier-button .tier-recommendation { display: block; font-size: 0.7rem; color: #6B7280; }
+        .ce-tier-button.active .tier-recommendation { color: #E0FEFA; }
+        .ce-details { display: flex; justify-content: space-between; align-items: flex-start; }
+        .ce-feature-list { list-style: none; padding-left: 0; font-size: 0.8rem; color: #374151; }
+        .ce-feature-list li { padding-left: 1.25rem; position: relative; margin-bottom: 0.25rem; }
+        .ce-feature-list li::before { content: '✓'; color: #0BE6C7; position: absolute; left: 0; font-weight: bold; }
+        .ce-price-display { text-align: right; flex-shrink: 0; margin-left: 1.5rem; }
+        .ce-price-display .price { font-size: 2rem; font-weight: 800; color: #000000; line-height: 1; }
+        .ce-price-display .price-term { font-size: 0.8rem; color: #6B7280; display: block; }
+        .ce-price-display .implementation-note { font-size: 0.7rem; color: #6B7280; margin-top: 0.25rem; }
 
         /* Module Card Styling */
-        .modules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
-            gap: 1rem; 
-        }
-        .module-card, .addon-card { 
-            background-color: #FFFFFF;
-            border: 1px solid #e2e8f0; 
-            border-radius: 0.5rem;
-            padding: 1.25rem; 
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out; 
-            cursor: pointer; 
-        }
-        .addon-card { 
-            padding: 0.75rem;
-        }
-        .module-card-header, .addon-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem; 
-        }
-        .module-card-title, .addon-card-title {
-            font-size: 1.05rem; 
-            font-weight: 700; 
-            color: #000000;
-        }
-        .module-card-price {
-            font-size: 1.35rem; 
-            font-weight: 700; 
-            color: #000000;
-            margin-bottom: 0.15rem; 
-            line-height: 1.2;
-        }
-        .module-card-price-term {
-            font-size: 0.7rem; 
-            color: #6B7280;
-            display: block;
-            margin-bottom: 0.75rem; 
-        }
-        .module-feature-list {
-            list-style: none;
-            padding-left: 0;
-            font-size: 0.8rem; 
-            color: #4A5568; 
-            margin-bottom: 1rem; 
-            flex-grow: 1; 
-        }
-        .module-feature-list li {
-            padding-left: 1.25rem;
-            position: relative;
-            margin-bottom: 0.25rem; 
-        }
-        .module-feature-list li::before {
-            content: '✓';
-            color: #0BE6C7;
-            position: absolute;
-            left: 0;
-        }
-        .module-card-actions, .addon-card-actions { 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: auto; 
-            padding-top: 0.75rem; 
-            border-top: 1px solid #e2e8f0;
-        }
-        .addon-card-description {
-            font-size: 0.7rem; 
-            color: #4A5568; 
-            margin-bottom: 0.25rem; 
-        }
-        .addon-card-pricing {
-            font-size: 0.8rem; 
-            color: #374151; 
-            margin-bottom: 0.25rem; 
-        }
-        .base-package-item, .adjustment-item { 
-             border-bottom: 1px solid #e2e8f0;
-            padding-top: 0.75rem; 
-            padding-bottom: 0.75rem; 
-        }
-        .base-package-item:last-child, .adjustment-item:last-child {
-            border-bottom: none;
-        }
-
+        .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+        .module-card, .addon-card { background-color: #FFFFFF; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out; cursor: pointer; }
+        .addon-card { padding: 0.75rem; } /* Addon cards are now in the left panel, this style is fine */
+        .module-card-header, .addon-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .module-card-title, .addon-card-title { font-size: 1.05rem; font-weight: 700; color: #000000; }
+        .module-card-price { font-size: 1.35rem; font-weight: 700; color: #000000; margin-bottom: 0.15rem; line-height: 1.2; }
+        .module-card-price-term { font-size: 0.7rem; color: #6B7280; display: block; margin-bottom: 0.75rem; }
+        .module-feature-list { list-style: none; padding-left: 0; font-size: 0.8rem; color: #4A5568; margin-bottom: 1rem; flex-grow: 1; }
+        .module-feature-list li { padding-left: 1.25rem; position: relative; margin-bottom: 0.25rem; }
+        .module-feature-list li::before { content: '✓'; color: #0BE6C7; position: absolute; left: 0; }
+        .module-card-actions, .addon-card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid #e2e8f0; }
+        .addon-card-description { font-size: 0.7rem; color: #4A5568; margin-bottom: 0.25rem; }
+        .addon-card-pricing { font-size: 0.8rem; color: #374151; margin-bottom: 0.25rem; }
     </style>
 </head>
 <body class="canopy-main-text">
@@ -315,72 +173,91 @@
         </header>
 
         <div class="flex flex-col lg:flex-row gap-6"> 
-            <div class="lg:w-3/5 bg-white p-4 md:p-6 rounded-lg shadow-xl"> 
-                <div class="flex justify-center items-center mb-8"> 
-                    <span id="monthlyLabel" class="billing-label canopy-secondary-text mr-3 text-sm md:text-base font-medium active">Monthly <span class="text-xs text-gray-500">(+20% Premium)</span></span>
-                    <label for="billingToggleInput" class="relative inline-block w-12 h-6 billing-toggle-bg rounded-full cursor-pointer">
-                        <input type="checkbox" id="billingToggleInput" class="sr-only peer">
-                        <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-full peer-checked:bg-teal-500"></span> </label>
-                    <span id="annualLabel" class="billing-label canopy-secondary-text ml-3 text-sm md:text-base font-medium">
-                        Annually <span class="canopy-primary-accent-text text-xs" id="annualSavingText"></span>
-                    </span>
-                </div>
+            <div class="lg:w-3/5 bg-white p-4 md:p-6 rounded-lg shadow-xl flex flex-col">
+                <div> 
+                    <div class="flex justify-center items-center mb-8"> 
+                        <span id="monthlyLabel" class="billing-label canopy-secondary-text mr-3 text-sm md:text-base font-medium active">Monthly <span class="text-xs text-gray-500">(+20% Premium)</span></span>
+                        <label for="billingToggleInput" class="relative inline-block w-12 h-6 billing-toggle-bg rounded-full cursor-pointer">
+                            <input type="checkbox" id="billingToggleInput" class="sr-only peer">
+                            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-full peer-checked:bg-teal-500"></span> </label>
+                        <span id="annualLabel" class="billing-label canopy-secondary-text ml-3 text-sm md:text-base font-medium">
+                            Annually <span class="canopy-primary-accent-text text-xs" id="annualSavingText"></span>
+                        </span>
+                    </div>
 
-                <div class="mb-8"> <h3 class="text-lg font-semibold canopy-main-text mb-3">Client Engagement Platform</h3> 
-                    <div class="ce-tier-selector">
-                        <div id="ceTierStandardButton" class="ce-tier-button active">
-                            <span class="tier-name">STANDARD</span>
-                            <span class="tier-recommendation">Recommended for small firms</span>
+                    <div class="mb-8"> <h3 class="text-lg font-semibold canopy-main-text mb-3">Client Engagement Platform</h3> 
+                        <div class="ce-tier-selector">
+                            <div id="ceTierStandardButton" class="ce-tier-button active">
+                                <span class="tier-name">STANDARD</span>
+                                <span class="tier-recommendation">Recommended for small firms</span>
+                            </div>
+                            <div id="ceTierProButton" class="ce-tier-button">
+                                <span class="tier-name">PRO</span>
+                                <span class="tier-recommendation">Recommended for growing firms</span>
+                            </div>
                         </div>
-                        <div id="ceTierProButton" class="ce-tier-button">
-                            <span class="tier-name">PRO</span>
-                            <span class="tier-recommendation">Recommended for growing firms</span>
+                        <div id="clientEngagementDetails" class="ce-platform-section selected"> 
+                        </div>
+                         <div class="hidden">
+                            <input type="radio" name="clientEngagementTier" id="clientEngagementTierStandard" value="standard" checked>
+                            <input type="radio" name="clientEngagementTier" id="clientEngagementTierPro" value="pro">
                         </div>
                     </div>
-                    <div id="clientEngagementDetails" class="ce-platform-section selected"> 
-                    </div>
-                     <div class="hidden">
-                        <input type="radio" name="clientEngagementTier" id="clientEngagementTierStandard" value="standard" checked>
-                        <input type="radio" name="clientEngagementTier" id="clientEngagementTierPro" value="pro">
-                    </div>
-                </div>
 
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold canopy-main-text mb-3">Modules</h3> 
+                        <div id="selectableModulesContainer" class="modules-grid"></div>
+                    </div>
 
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold canopy-main-text mb-3">Modules</h3> 
-                    <div id="selectableModulesContainer" class="modules-grid"></div>
+                    <div class="mb-8">
+                         <h3 class="text-lg font-semibold canopy-main-text mb-3">Add-ons</h3>
+                         <div id="addonsContainerSummary" class="space-y-3 modules-grid"> </div>
+                    </div>
                 </div>
                 
-                <div class="mb-5"> 
-                    <h3 class="text-lg font-semibold canopy-main-text mb-2 border-b pb-1">Implementation & Onboarding</h3> 
-                    <div class="base-package-item" style="border-bottom: none; padding-top: 0.5rem; padding-bottom: 0.5rem;"> 
-                         <div class="flex justify-between items-center">
-                            <label for="implementationFeeInput" class="text-sm canopy-secondary-text">Implementation Fee:</label>
-                            <input type="number" id="implementationFeeInput" name="implementationFeeInput" value="0" min="0" class="implementation-fee-input module-user-input w-24 text-right font-semibold">
-                        </div>
+                <div class="mt-auto pt-4 border-t border-dashed border-gray-300"> 
+                     <div class="text-right"> 
+                        <label for="discountPercentage" class="text-xs text-gray-500 mr-1"></label> 
+                        <input type="number" id="discountPercentage" name="discountPercentage" value="0" min="0" max="100" class="discreet-discount-input" placeholder="%">
                     </div>
-                </div>
-                                
-                <div class="mt-4 pt-3 border-t border-dashed border-gray-300"> 
-                     <div class="item-content justify-end">
-                         <input type="number" id="discountPercentage" name="discountPercentage" value="0" min="0" max="100" class="discount-input discreet-discount-input w-20" placeholder="%">
-                     </div>
                 </div>
             </div>
 
             <div class="lg:w-2/5 flex flex-col gap-6"> 
                 <div class="summary-panel p-4 md:p-6 rounded-lg shadow-lg"> 
+                    <div id="summaryHeaderTotal" class="text-center mb-4 pb-4 border-b border-gray-700"></div>
                     <h3 class="summary-section-header">Pricing Breakdown</h3> 
                     <div id="summaryPanelContent" class="space-y-1"> </div>
-                    <div id="summaryTotalsSection" class="mt-4 pt-3 border-t-2 border-gray-700">  
+                </div>
+
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl">
+                    <h3 class="text-lg font-semibold canopy-main-text mb-3 border-b pb-2">Implementation & Onboarding</h3>
+                    <div class="pt-2 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label for="implementationTierSelect" class="text-sm canopy-secondary-text whitespace-nowrap mr-2">Implementation:</label>
+                            <div class="flex items-center space-x-1 w-full">
+                                <select id="implementationTierSelect" name="implementationTierSelect" class="implementation-tier-select !py-1 !px-2 !text-sm !border-gray-300 !rounded flex-grow">
+                                </select>
+                                <span class="text-gray-500 mx-1">-</span>
+                                <div class="flex items-center border border-gray-300 rounded focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                                    <span class="text-sm text-gray-500 pl-2 pr-1 py-1">$</span>
+                                    <input type="number" id="implementationFeeInput" name="implementationFeeInput" value="0" min="0" 
+                                           class="!py-1 !px-1 !text-sm !border-none !w-16 text-right font-semibold focus:ring-0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right -mt-2"> 
+                             <a id="implementationInfoLink" href="#" target="_blank" class="text-xs canopy-primary-accent-text hover:underline">more info</a>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <label for="dataMigrationSelect" class="text-sm canopy-secondary-text">Data Migration:</label>
+                            <div class="w-3/5"> 
+                                <select id="dataMigrationSelect" name="dataMigrationSelect" class="data-migration-select"></select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl">
-                     <h3 class="text-lg font-semibold canopy-main-text mb-3 border-b pb-2">Add-ons</h3>
-                     <div id="addonsContainerSummary" class="space-y-2"> 
-                     </div>
                 </div>
-            </div>
         </div>
 
         <footer class="text-center mt-10 text-sm text-gray-500"> 
@@ -393,111 +270,49 @@
         const billingToggleInput = document.getElementById('billingToggleInput');
         const monthlyLabel = document.getElementById('monthlyLabel');
         const annualLabel = document.getElementById('annualLabel');
-        
         const currentYearSpan = document.getElementById('currentYear');
         const annualSavingText = document.getElementById('annualSavingText'); 
         const discountPercentageInput = document.getElementById('discountPercentage');
+        const implementationTierSelect = document.getElementById('implementationTierSelect'); 
+        const implementationInfoLink = document.getElementById('implementationInfoLink'); 
         const implementationFeeInput = document.getElementById('implementationFeeInput'); 
-        
+        const dataMigrationSelect = document.getElementById('dataMigrationSelect'); 
         const selectableModulesContainer = document.getElementById('selectableModulesContainer');
         const addonsContainerSummary = document.getElementById('addonsContainerSummary'); 
         const summaryPanelContent = document.getElementById('summaryPanelContent');
-        const summaryTotalsSection = document.getElementById('summaryTotalsSection'); 
-
+        const summaryHeaderTotalDiv = document.getElementById('summaryHeaderTotal'); 
         const clientEngagementDetailsDiv = document.getElementById('clientEngagementDetails');
         const ceTierStandardButton = document.getElementById('ceTierStandardButton');
         const ceTierProButton = document.getElementById('ceTierProButton');
         const clientEngagementTierStandardRadio = document.getElementById('clientEngagementTierStandard');
         const clientEngagementTierProRadio = document.getElementById('clientEngagementTierPro');
 
-
         // --- Pricing Configuration ---
         const pricing = {
             monthly_premium_factor: 1.20, 
             base_client_engagement: { 
-                standard: { 
-                    name: "Client Engagement - Standard", 
-                    effective_monthly_rate_on_annual_plan: 150, 
-                    implementation_percentage: 0.15,
-                    recommendation: "Recommended for small firms",
-                    features: ["Client Portal", "Mobile App for Clients & Firm", "Connected Email", "Notify team w/ @mentions", "CRM", "Client Engagement Platform includes 2,500 clients (add more as you need)"] 
-                }, 
-                pro: { 
-                    name: "Client Engagement - Pro", 
-                    effective_monthly_rate_on_annual_plan: 175, 
-                    implementation_percentage: 0.20,
-                    recommendation: "Recommended for growing firms",
-                    features: ["Engagements & Proposals w/ eSignature", "Client Requests", "Questionnaires & Organizers", "Custom Branding", "Custom Reports & Firm Analytics", "All Standard Features"]
-                }
+                standard: { name: "Client Engagement - Standard", effective_monthly_rate_on_annual_plan: 150, recommendation: "Recommended for small firms", features: ["Client Portal", "Mobile App for Clients & Firm", "Connected Email", "Notify team w/ @mentions", "CRM", "Client Engagement Platform includes 2,500 clients (add more as you need)"] }, 
+                pro: { name: "Client Engagement - Pro", effective_monthly_rate_on_annual_plan: 175, recommendation: "Recommended for growing firms", features: ["Engagements & Proposals w/ eSignature", "Client Requests", "Questionnaires & Organizers", "Custom Branding", "Custom Reports & Firm Analytics", "All Standard Features"] }
             },
-            implementation_minimum_fee: 1500,
+            implementation_tiers: { 
+                standard: { name: "Standard", percentage: 0.15, minimum_fee: 1500, info_link: "your_standard_implementation_details_url_here.pdf" },
+                premium: { name: "Premium", percentage: 0.20, minimum_fee: 1500, info_link: "your_premium_implementation_details_url_here.pdf" }
+            },
+            data_migration_options: { 
+                none: { name: "Select an option...", price: 0 },
+                filecabinet: { name: "FileCabinet", price: 1000 },
+                smartvault: { name: "SmartVault", price: 500 },
+                upload_only: { name: "Upload Only", price: 500 },
+                revver: { name: "Revver", price: 1000 },
+                general: { name: "General Data Migration", price: 750 }
+            },
             selectable_modules: { 
-                document_management: {
-                    name: "Document Management",
-                    id_checkbox: "moduleDocManagementCheck",
-                    id_user_input: "moduleDocManagementUsers",
-                    features: ["Secure File Exchange", "Unlimited Document Storage", "Unlimited eSignatures", "Retention Policies", "Customizable Folder Permissions", "Native File Annotations", "Firm Workpaper Storage", "Desktop Sync & Print Driver"],
-                    standard_tier_pricing: [ 
-                        { user_max: 4, price_per_user_annual_equiv: 40 },
-                        { user_max: 9, price_per_user_annual_equiv: 36 },
-                        { user_max: Infinity, price_per_user_annual_equiv: 40 * (1 - 0.15) } 
-                    ],
-                    pro_tier_pricing: [ 
-                        { user_max: 4, price_per_user_annual_equiv: 40 },
-                        { user_max: 9, price_per_user_annual_equiv: 36 },
-                        { user_max: Infinity, price_per_user_annual_equiv: 40 * (1 - 0.15) }
-                    ]
-                },
-                workflow: { 
-                    name: "Workflow",
-                    id_checkbox: "moduleWorkflowCheck",
-                    id_user_input: "moduleWorkflowUsers",
-                    features: ["Projects & Tasks", "Automation", "Workflow Templates", "Recurrences", "Custom Statuses"],
-                    standard_tier_pricing: [
-                        { user_max: 4, price_per_user_annual_equiv: 35 },
-                        { user_max: 9, price_per_user_annual_equiv: 32 },
-                        { user_max: Infinity, price_per_user_annual_equiv: 35 * (1 - 0.15) }
-                    ],
-                    pro_tier_pricing: [
-                        { user_max: 4, price_per_user_annual_equiv: 45 },
-                        { user_max: 9, price_per_user_annual_equiv: 45 * (1 - 0.10) }, 
-                        { user_max: Infinity, price_per_user_annual_equiv: 45 * (1 - 0.15) } 
-                    ]
-                },
-                time_billing: {
-                    name: "Time & Billing",
-                    id_checkbox: "moduleTimeBillingCheck",
-                    id_user_input: "moduleTimeBillingUsers",
-                    features: ["Generate & Send Invoices", "Time Tracking", "WIP", "Collect Card & ACH Payments", "Surcharging", "Pre-Built Reports"],
-                    standard_tier_pricing: [
-                        { user_max: 4, price_per_user_annual_equiv: 25 },
-                        { user_max: 9, price_per_user_annual_equiv: 22 },
-                        { user_max: Infinity, price_per_user_annual_equiv: 25 * (1 - 0.15) }
-                    ],
-                    pro_tier_pricing: [
-                        { user_max: 4, price_per_user_annual_equiv: 35 },
-                        { user_max: 9, price_per_user_annual_equiv: 35 * (1 - 0.10) },
-                        { user_max: Infinity, price_per_user_annual_equiv: 35 * (1 - 0.15) }
-                    ]
-                }
+                document_management: { name: "Document Management", id_checkbox: "moduleDocManagementCheck", id_user_input: "moduleDocManagementUsers", features: ["Secure File Exchange", "Unlimited Document Storage", "Unlimited eSignatures", "Retention Policies", "Customizable Folder Permissions", "Native File Annotations", "Firm Workpaper Storage", "Desktop Sync & Print Driver"], standard_tier_pricing: [ { user_max: 4, price_per_user_annual_equiv: 40 }, { user_max: 9, price_per_user_annual_equiv: 36 }, { user_max: Infinity, price_per_user_annual_equiv: 40 * (1 - 0.15) } ], pro_tier_pricing: [ { user_max: 4, price_per_user_annual_equiv: 40 }, { user_max: 9, price_per_user_annual_equiv: 36 }, { user_max: Infinity, price_per_user_annual_equiv: 40 * (1 - 0.15) } ] },
+                workflow: { name: "Workflow", id_checkbox: "moduleWorkflowCheck", id_user_input: "moduleWorkflowUsers", features: ["Projects & Tasks", "Automation", "Workflow Templates", "Recurrences", "Custom Statuses"], standard_tier_pricing: [ { user_max: 4, price_per_user_annual_equiv: 35 }, { user_max: 9, price_per_user_annual_equiv: 32 }, { user_max: Infinity, price_per_user_annual_equiv: 35 * (1 - 0.15) } ], pro_tier_pricing: [ { user_max: 4, price_per_user_annual_equiv: 45 }, { user_max: 9, price_per_user_annual_equiv: 45 * (1 - 0.10) },  { user_max: Infinity, price_per_user_annual_equiv: 45 * (1 - 0.15) }  ] },
+                time_billing: { name: "Time & Billing", id_checkbox: "moduleTimeBillingCheck", id_user_input: "moduleTimeBillingUsers", features: ["Generate & Send Invoices", "Time Tracking", "WIP", "Collect Card & ACH Payments", "Surcharging", "Pre-Built Reports"], standard_tier_pricing: [ { user_max: 4, price_per_user_annual_equiv: 25 }, { user_max: 9, price_per_user_annual_equiv: 22 }, { user_max: Infinity, price_per_user_annual_equiv: 25 * (1 - 0.15) } ], pro_tier_pricing: [ { user_max: 4, price_per_user_annual_equiv: 35 }, { user_max: 9, price_per_user_annual_equiv: 35 * (1 - 0.10) }, { user_max: Infinity, price_per_user_annual_equiv: 35 * (1 - 0.15) } ] }
             },
             addons: {
-                tax_resolution: {
-                    name: "Tax Resolution Suite",
-                    description: "includes Transcripts and Notices",
-                    id_checkbox: "addonTaxResolutionCheck",
-                    id_user_input: "addonTaxResolutionUsers",
-                    price_per_user_annual_equiv: 50,
-                    is_primary_style: true 
-                },
-                kba_esignature: {
-                    name: "KBA eSignature",
-                    id_checkbox: "addonKBAcheck",
-                    id_user_input: "addonKBAquantity",
-                    price_per_item: 1.25, 
-                    unit_name: "credits",
-                    is_consumption_based: true 
-                }
+                tax_resolution: { name: "Tax Resolution Suite", description: "includes Transcripts and Notices", id_checkbox: "addonTaxResolutionCheck", id_user_input: "addonTaxResolutionUsers", price_per_user_annual_equiv: 50, is_primary_style: true }
             }
         };
 
@@ -505,12 +320,45 @@
         let selectedCEtierValue = 'standard'; 
         let manualImplFeeSet = false; 
 
-        // --- Functions ---
+        // --- Functions (JavaScript functions remain identical to the previous correct version) ---
+        // For brevity, I'm not repeating all functions here.
+        // Ensure you use all functions from the previous complete script:
+        // populateImplementationTiers, populateDataMigrationOptions, renderClientEngagementDetails,
+        // updateBasePackageTierDisplay, createSelectableItemEntry, renderAllSelectableItems,
+        // toggleBillingCycle, getPerUserAnnualEquivalentPrice, updateSummaryPanel,
+        // calculateAndUpdatePrice, setInitialYear.
+
+        // PASTE ALL JS FUNCTIONS FROM THE PREVIOUS FULL CODE RESPONSE HERE
+        // ... (Example of where the functions go) ...
+        function populateImplementationTiers() {
+            for (const key in pricing.implementation_tiers) {
+                const tier = pricing.implementation_tiers[key];
+                const optionElement = document.createElement('option');
+                optionElement.value = key;
+                optionElement.textContent = tier.name;
+                implementationTierSelect.appendChild(optionElement);
+            }
+            if (implementationTierSelect.value && pricing.implementation_tiers[implementationTierSelect.value]) { // Check if value is valid key
+                 implementationInfoLink.href = pricing.implementation_tiers[implementationTierSelect.value].info_link;
+            } else if (Object.keys(pricing.implementation_tiers).length > 0) { // Default to first if invalid
+                const firstKey = Object.keys(pricing.implementation_tiers)[0];
+                implementationInfoLink.href = pricing.implementation_tiers[firstKey].info_link;
+            }
+        }
+
+        function populateDataMigrationOptions() {
+            for (const key in pricing.data_migration_options) {
+                const option = pricing.data_migration_options[key];
+                const optionElement = document.createElement('option');
+                optionElement.value = key;
+                optionElement.textContent = option.price > 0 ? `${option.name} ($${option.price})` : option.name;
+                dataMigrationSelect.appendChild(optionElement);
+            }
+        }
 
         function renderClientEngagementDetails() {
             const tierData = pricing.base_client_engagement[selectedCEtierValue];
             let priceDisplay, priceTerm, implNote;
-
             if (isAnnualBilling) {
                 priceDisplay = `$${tierData.effective_monthly_rate_on_annual_plan.toFixed(0)}`;
                 priceTerm = "/mo with annual contract";
@@ -519,30 +367,14 @@
                 priceTerm = "/mo for unlimited users";
             }
             implNote = "+ Implementation fee";
-
-
             let featuresHTML = '<ul class="ce-feature-list mt-4 md:mt-0">';
-            tierData.features.forEach(feature => {
-                featuresHTML += `<li>${feature}</li>`;
-            });
+            tierData.features.forEach(feature => { featuresHTML += `<li>${feature}</li>`; });
             featuresHTML += '</ul>';
-
-            clientEngagementDetailsDiv.innerHTML = `
-                <div class="ce-details">
-                    <div>${featuresHTML}</div>
-                    <div class="ce-price-display">
-                        <div class="price">${priceDisplay}</div>
-                        <div class="price-term">${priceTerm}</div>
-                        <div class="implementation-note">${implNote}</div>
-                    </div>
-                </div>
-            `;
-            
+            clientEngagementDetailsDiv.innerHTML = `<div class="ce-details"><div>${featuresHTML}</div><div class="ce-price-display"><div class="price">${priceDisplay}</div><div class="price-term">${priceTerm}</div><div class="implementation-note">${implNote}</div></div></div>`;
             ceTierStandardButton.classList.toggle('active', selectedCEtierValue === 'standard');
             ceTierProButton.classList.toggle('active', selectedCEtierValue === 'pro');
             clientEngagementDetailsDiv.classList.toggle('selected', true); 
         }
-
 
         function updateBasePackageTierDisplay() { 
             annualSavingText.textContent = isAnnualBilling ? `(Save ~17%)` : ``;
@@ -551,118 +383,44 @@
         function createSelectableItemEntry(key, itemData, container, itemType) {
             const div = document.createElement('div');
             div.className = itemType === 'module' ? 'module-card' : 'addon-card'; 
-            
             const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = itemData.id_checkbox;
-            checkbox.name = itemData.id_checkbox;
+            checkbox.type = 'checkbox'; checkbox.id = itemData.id_checkbox; checkbox.name = itemData.id_checkbox;
             checkbox.className = 'custom-checkbox h-5 w-5 border-gray-300 rounded focus:ring-transparent flex-shrink-0';
-            checkbox.dataset.itemKey = key;
-            checkbox.dataset.itemType = itemType;
-
+            checkbox.dataset.itemKey = key; checkbox.dataset.itemType = itemType;
             const userInput = document.createElement('input');
-            userInput.type = 'number';
-            userInput.id = itemData.id_user_input;
-            userInput.name = itemData.id_user_input;
-            userInput.value = "0";
-            userInput.min = "0";
-            userInput.className = 'module-user-input';
-            userInput.disabled = true;
-            
+            userInput.type = 'number'; userInput.id = itemData.id_user_input; userInput.name = itemData.id_user_input;
+            userInput.value = "0"; userInput.min = "0"; userInput.className = 'module-user-input'; userInput.disabled = true;
             if (itemType === 'addon') {
-                const headerDiv = document.createElement('div');
-                headerDiv.className = 'addon-card-header'; 
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'addon-card-title text-lg'; 
-                titleSpan.textContent = itemData.name;
-                
-                headerDiv.appendChild(titleSpan);
-                headerDiv.appendChild(checkbox);
-                div.appendChild(headerDiv);
-
-                if (itemData.description) {
-                    const descP = document.createElement('p');
-                    descP.className = 'addon-card-description';
-                    descP.textContent = itemData.description;
-                    div.appendChild(descP);
-                }
-                const pricingP = document.createElement('p');
-                pricingP.className = 'addon-card-pricing'; 
-                pricingP.id = `${itemData.id_checkbox}_price_display`;
-                div.appendChild(pricingP);
-                
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'item-actions mt-2'; 
+                const headerDiv = document.createElement('div'); headerDiv.className = 'addon-card-header'; 
+                const titleSpan = document.createElement('span'); titleSpan.className = 'addon-card-title text-lg'; titleSpan.textContent = itemData.name;
+                headerDiv.appendChild(titleSpan); headerDiv.appendChild(checkbox); div.appendChild(headerDiv);
+                if (itemData.description) { const descP = document.createElement('p'); descP.className = 'addon-card-description'; descP.textContent = itemData.description; div.appendChild(descP); }
+                const pricingP = document.createElement('p'); pricingP.className = 'addon-card-pricing'; pricingP.id = `${itemData.id_checkbox}_price_display`; div.appendChild(pricingP);
+                const actionsDiv = document.createElement('div'); actionsDiv.className = 'item-actions mt-2'; 
                 const userLabelText = itemData.is_consumption_based ? (itemData.unit_name || "Quantity") + ":" : "Users:";
-                const userLabel = document.createElement('label');
-                userLabel.htmlFor = itemData.id_user_input;
-                userLabel.className = 'text-xs text-gray-600 mr-2';
-                userLabel.textContent = userLabelText;
-                
-                actionsDiv.appendChild(userLabel);
-                actionsDiv.appendChild(userInput);
-                div.appendChild(actionsDiv);
-
-            } else { // Module Card Styling
-                const headerDiv = document.createElement('div');
-                headerDiv.className = 'module-card-header';
-                const titleSpan = document.createElement('h4');
-                titleSpan.className = 'module-card-title';
-                titleSpan.textContent = itemData.name;
-               
-                headerDiv.appendChild(titleSpan);
-                headerDiv.appendChild(checkbox); 
-                div.appendChild(headerDiv);
-
-                const priceDiv = document.createElement('div');
-                priceDiv.className = 'module-card-price';
-                priceDiv.id = `${itemData.id_checkbox}_price_display`;
-                priceDiv.textContent = '$0'; 
-                div.appendChild(priceDiv);
-
-                const priceTermSpan = document.createElement('span');
-                priceTermSpan.className = 'module-card-price-term';
-                priceTermSpan.id = `${itemData.id_checkbox}_price_term_display`;
-                priceTermSpan.textContent = 'per user/mo'; 
-                div.appendChild(priceTermSpan);
-                
-                const featuresUl = document.createElement('ul'); 
-                featuresUl.className = 'module-feature-list';
-                (itemData.features || []).forEach(featureText => {
-                    const li = document.createElement('li');
-                    li.textContent = featureText;
-                    featuresUl.appendChild(li);
-                });
+                const userLabel = document.createElement('label'); userLabel.htmlFor = itemData.id_user_input; userLabel.className = 'text-xs text-gray-600 mr-2'; userLabel.textContent = userLabelText;
+                actionsDiv.appendChild(userLabel); actionsDiv.appendChild(userInput); div.appendChild(actionsDiv);
+            } else { 
+                const headerDiv = document.createElement('div'); headerDiv.className = 'module-card-header';
+                const titleSpan = document.createElement('h4'); titleSpan.className = 'module-card-title'; titleSpan.textContent = itemData.name;
+                headerDiv.appendChild(titleSpan); headerDiv.appendChild(checkbox); div.appendChild(headerDiv);
+                const priceDiv = document.createElement('div'); priceDiv.className = 'module-card-price'; priceDiv.id = `${itemData.id_checkbox}_price_display`; priceDiv.textContent = '$0'; div.appendChild(priceDiv);
+                const priceTermSpan = document.createElement('span'); priceTermSpan.className = 'module-card-price-term'; priceTermSpan.id = `${itemData.id_checkbox}_price_term_display`; priceTermSpan.textContent = 'per user/mo'; div.appendChild(priceTermSpan);
+                const featuresUl = document.createElement('ul'); featuresUl.className = 'module-feature-list';
+                (itemData.features || []).forEach(featureText => { const li = document.createElement('li'); li.textContent = featureText; featuresUl.appendChild(li); });
                 div.appendChild(featuresUl); 
-
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'module-card-actions';
-                const userLabel = document.createElement('label');
-                userLabel.htmlFor = itemData.id_user_input;
-                userLabel.className = 'text-xs text-gray-600 mr-2';
-                userLabel.textContent = 'Users:';
-                
-                actionsDiv.appendChild(userLabel);
-                actionsDiv.appendChild(userInput); 
-                div.appendChild(actionsDiv);
+                const actionsDiv = document.createElement('div'); actionsDiv.className = 'module-card-actions';
+                const userLabel = document.createElement('label'); userLabel.htmlFor = itemData.id_user_input; userLabel.className = 'text-xs text-gray-600 mr-2'; userLabel.textContent = 'Users:';
+                actionsDiv.appendChild(userLabel); actionsDiv.appendChild(userInput); div.appendChild(actionsDiv);
             }
-            
             div.addEventListener('click', (event) => {
                 if (event.target !== userInput && event.target !== checkbox && !event.target.closest('label[for="' + userInput.id + '"]')) {
-                    checkbox.checked = !checkbox.checked;
-                    const changeEvent = new Event('change', { bubbles: true });
-                    checkbox.dispatchEvent(changeEvent);
+                    checkbox.checked = !checkbox.checked; const changeEvent = new Event('change', { bubbles: true }); checkbox.dispatchEvent(changeEvent);
                 }
             });
-
             checkbox.addEventListener('change', (event) => {
-                userInput.disabled = !event.target.checked;
-                div.classList.toggle('item-selected-border', event.target.checked);
-                if (!event.target.checked) {
-                    userInput.value = "0"; 
-                } else if (userInput.value === "0") {
-                    userInput.value = itemData.is_consumption_based ? "10" : "1";
-                }
+                userInput.disabled = !event.target.checked; div.classList.toggle('item-selected-border', event.target.checked);
+                if (!event.target.checked) { userInput.value = "0"; } else if (userInput.value === "0") { userInput.value = itemData.is_consumption_based ? "10" : "1"; }
                 calculateAndUpdatePrice();
             });
             userInput.addEventListener('input', calculateAndUpdatePrice);
@@ -670,329 +428,158 @@
         }
 
         function renderAllSelectableItems() {
-            selectableModulesContainer.innerHTML = '';
-            addonsContainerSummary.innerHTML = ''; // Target new container for addons
-
-            for (const key in pricing.selectable_modules) {
-                createSelectableItemEntry(key, pricing.selectable_modules[key], selectableModulesContainer, 'module');
-            }
-            for (const key in pricing.addons) {
-                createSelectableItemEntry(key, pricing.addons[key], addonsContainerSummary, 'addon');
-            }
+            selectableModulesContainer.innerHTML = ''; addonsContainerSummary.innerHTML = ''; 
+            for (const key in pricing.selectable_modules) { createSelectableItemEntry(key, pricing.selectable_modules[key], selectableModulesContainer, 'module'); }
+            for (const key in pricing.addons) { createSelectableItemEntry(key, pricing.addons[key], addonsContainerSummary, 'addon'); } // Addons now rendered here
         }
 
         function toggleBillingCycle() {
             isAnnualBilling = billingToggleInput.checked; 
-            monthlyLabel.classList.toggle('active', !isAnnualBilling);
-            annualLabel.classList.toggle('active', isAnnualBilling);
-            renderClientEngagementDetails(); 
-            calculateAndUpdatePrice();
+            monthlyLabel.classList.toggle('active', !isAnnualBilling); annualLabel.classList.toggle('active', isAnnualBilling);
+            renderClientEngagementDetails(); manualImplFeeSet = false; calculateAndUpdatePrice();
         }
 
         function getPerUserAnnualEquivalentPrice(userCount, pricingTiersForItem) {
             if (!pricingTiersForItem) return 0;
-            for (const tier of pricingTiersForItem) {
-                if (userCount <= tier.user_max) {
-                    return tier.price_per_user_annual_equiv;
-                }
-            }
+            for (const tier of pricingTiersForItem) { if (userCount <= tier.user_max) { return tier.price_per_user_annual_equiv; } }
             return 0; 
         }
         
         function updateSummaryPanel(summaryData) {
-            summaryPanelContent.innerHTML = ''; 
-            summaryTotalsSection.innerHTML = ''; 
-
+            summaryPanelContent.innerHTML = ''; summaryHeaderTotalDiv.innerHTML = ''; 
+            const headerGrandTotalVal = document.createElement('div'); headerGrandTotalVal.className = 'text-5xl font-extrabold canopy-primary-accent-text leading-tight';
+            headerGrandTotalVal.textContent = summaryData.grandTotalDisplay; summaryHeaderTotalDiv.appendChild(headerGrandTotalVal);
+            const headerGrandTotalFreq = document.createElement('div'); headerGrandTotalFreq.className = 'text-sm text-gray-300 mt-1'; 
+            headerGrandTotalFreq.textContent = summaryData.grandTotalFrequency; summaryHeaderTotalDiv.appendChild(headerGrandTotalFreq);
+            if (summaryData.showOneTimeFeeSeparatelyInGrandTotal && summaryData.totalOneTimeFeesForDisplay !== '$0') {
+                const headerOneTimeFeeLine = document.createElement('div'); headerOneTimeFeeLine.className = 'text-sm text-gray-300 mt-1';
+                headerOneTimeFeeLine.textContent = `+ ${summaryData.totalOneTimeFeesForDisplay} (One-Time)`;
+                summaryHeaderTotalDiv.appendChild(headerOneTimeFeeLine);
+            }
             function addSummaryItem(label, quantity, value, isStrong = false, isGreen = false) {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'summary-item';
-                 if (isStrong && label.toLowerCase().includes("total")) itemDiv.classList.add('summary-grand-total'); 
-                else if (isStrong) itemDiv.classList.add('font-semibold');
-
-
-                const labelSpan = document.createElement('span');
-                labelSpan.className = 'summary-item-label';
-                labelSpan.textContent = label;
-                
-                const quantitySpan = document.createElement('span');
-                quantitySpan.className = 'summary-item-quantity';
-                quantitySpan.textContent = quantity;
-
-                const valueSpan = document.createElement('span');
-                valueSpan.className = 'summary-item-value';
-                if (isGreen) valueSpan.classList.add('canopy-primary-accent-text');
-                valueSpan.textContent = value;
-                
-                itemDiv.appendChild(labelSpan);
-                itemDiv.appendChild(quantitySpan);
-                itemDiv.appendChild(valueSpan);
+                const itemDiv = document.createElement('div'); itemDiv.className = 'summary-item'; if (isStrong) itemDiv.classList.add('font-semibold');
+                const labelSpan = document.createElement('span'); labelSpan.className = 'summary-item-label'; labelSpan.textContent = label;
+                const quantitySpan = document.createElement('span'); quantitySpan.className = 'summary-item-quantity'; quantitySpan.textContent = quantity;
+                const valueSpan = document.createElement('span'); valueSpan.className = 'summary-item-value'; if (isGreen) valueSpan.classList.add('canopy-primary-accent-text');
+                valueSpan.textContent = value; itemDiv.appendChild(labelSpan); itemDiv.appendChild(quantitySpan); itemDiv.appendChild(valueSpan);
                 summaryPanelContent.appendChild(itemDiv);
             }
-            function addSummarySeparator() { 
-                const separatorDiv = document.createElement('div');
-                separatorDiv.className = 'pt-2 mt-2 border-t border-gray-700'; 
-                summaryPanelContent.appendChild(separatorDiv);
-            }
-
+            function addSummarySeparator() { const separatorDiv = document.createElement('div'); separatorDiv.className = 'pt-2 mt-2 border-t border-gray-700'; summaryPanelContent.appendChild(separatorDiv); }
             addSummaryItem('Tier:', '', selectedCEtierValue === 'standard' ? 'Standard' : 'Pro'); 
             addSummaryItem('Client Engagement Platform:', '', summaryData.ceCostDisplay); 
-
-
-            summaryData.moduleDetails.forEach(mod => { 
-                addSummaryItem(mod.name, `${mod.users} ${mod.unitName || 'Users'}`, mod.costDisplay);
-            });
-            
-            summaryData.addonDetails.forEach(addon => {
-                addSummaryItem(addon.name, `${addon.users} ${addon.unitName || 'Users'}`, addon.costDisplay);
-            });
-            
-            addSummarySeparator(); 
-
+            summaryData.moduleDetails.forEach(mod => { addSummaryItem(mod.name, `${mod.users} ${mod.unitName || 'Users'}`, mod.costDisplay); });
+            summaryData.addonDetails.forEach(addon => { addSummaryItem(addon.name, `${addon.users} ${addon.unitName || 'Users'}`, addon.costDisplay); });
+            if (summaryData.moduleDetails.length > 0 || summaryData.addonDetails.length > 0) { addSummarySeparator(); }
             if (summaryData.discountPercent > 0) {
                 addSummaryItem('Subscription Subtotal:', '', summaryData.subscriptionSubtotalDisplay);
                 addSummaryItem('Discount Applied:', `(${summaryData.discountPercent}%)`, summaryData.discountAmountDisplay, false, true);
                 addSummaryItem('Discounted Subscription:', '', summaryData.discountedSubscriptionTotalDisplay, true);
-            } else {
-                 addSummaryItem('Subscription Total:', '', summaryData.subscriptionSubtotalDisplay, true);
+            } else { addSummaryItem('Subscription Total:', '', summaryData.subscriptionSubtotalDisplay, true); }
+            if (summaryData.implementationFeeForDisplay !== '$0' || summaryData.dataMigrationFeeForDisplay !== '$0') {
+                addSummarySeparator();
+                if (summaryData.implementationFeeForDisplay !== '$0') { addSummaryItem(`Implementation (${summaryData.implementationTierName}):`, '', summaryData.implementationFeeForDisplay); }
+                if (summaryData.dataMigrationFeeForDisplay !== '$0') { addSummaryItem(`Data Migration (${summaryData.dataMigrationName}):`, '', summaryData.dataMigrationFeeForDisplay); }
             }
-            
-            addSummarySeparator(); 
-
-            addSummaryItem('One-Time Implementation:', '', summaryData.implementationFeeDisplay, false, false);
-
-            const grandTotalItemDiv = document.createElement('div');
-            grandTotalItemDiv.className = 'summary-item summary-grand-total';
-            const grandTotalLabelSpan = document.createElement('span');
-            grandTotalLabelSpan.className = 'summary-item-label col-span-2'; 
-            grandTotalLabelSpan.textContent = 'Grand Total:';
-            const grandTotalValueSpan = document.createElement('span');
-            grandTotalValueSpan.className = 'summary-item-value canopy-primary-accent-text';
-            grandTotalValueSpan.textContent = summaryData.grandTotalDisplay;
-            grandTotalItemDiv.appendChild(grandTotalLabelSpan);
-            grandTotalItemDiv.appendChild(grandTotalValueSpan);
-            summaryTotalsSection.appendChild(grandTotalItemDiv);
-
-            const grandTotalFrequencyDiv = document.createElement('div');
-            grandTotalFrequencyDiv.className = 'text-xs italic text-right text-gray-400 pr-0 mr-0 -mt-2'; 
-            grandTotalFrequencyDiv.textContent = summaryData.grandTotalFrequency;
-            summaryTotalsSection.appendChild(grandTotalFrequencyDiv);
-
-            const oneTimeFeesDiv = document.createElement('div');
-            oneTimeFeesDiv.className = 'text-xs italic text-right text-gray-400 pr-0 mr-0 mt-1';
-            if (summaryData.showOneTimeFeeSeparatelyInGrandTotal) {
-                oneTimeFeesDiv.textContent = `+ ${summaryData.implementationFeeDisplay} (One-Time)`;
-                oneTimeFeesDiv.classList.remove('hidden');
-            } else {
-                oneTimeFeesDiv.classList.add('hidden');
-            }
-            summaryTotalsSection.appendChild(oneTimeFeesDiv);
         }
-
 
         function calculateAndUpdatePrice() {
             let totalMonthlySubscriptionCostAnnualEquiv = 0; 
-            const summaryDetails = {
-                moduleDetails: [],
-                addonDetails: [], 
-                discountPercent: 0,
-                subscriptionSubtotalDisplay: '$0',
-                discountAmountDisplay: '-$0',
-                discountedSubscriptionTotalDisplay: '$0',
-                implementationFeeDisplay: '$0',
-                grandTotalDisplay: '$0',
-                grandTotalFrequency: 'per month',
-                showOneTimeFeeSeparatelyInGrandTotal: false
-            };
-
+            const summaryDetails = { moduleDetails: [], addonDetails: [], discountPercent: 0, subscriptionSubtotalDisplay: '$0', discountAmountDisplay: '-$0', discountedSubscriptionTotalDisplay: '$0', implementationTierName: '', implementationFeeForDisplay: '$0', dataMigrationFeeForDisplay: '$0', dataMigrationName: '', totalOneTimeFeesForDisplay: '$0', grandTotalDisplay: '$0', grandTotalFrequency: 'per month', showOneTimeFeeSeparatelyInGrandTotal: false };
             summaryDetails.ceTierName = selectedCEtierValue.charAt(0).toUpperCase() + selectedCEtierValue.slice(1); 
             let baseCEAnnualEquivMonthlyRate = pricing.base_client_engagement[selectedCEtierValue].effective_monthly_rate_on_annual_plan;
             totalMonthlySubscriptionCostAnnualEquiv += baseCEAnnualEquivMonthlyRate;
-
-            if (isAnnualBilling) {
-                summaryDetails.ceCostDisplay = `$${(baseCEAnnualEquivMonthlyRate * 12).toFixed(0)}/yr`;
-            } else {
-                summaryDetails.ceCostDisplay = `$${(baseCEAnnualEquivMonthlyRate * pricing.monthly_premium_factor).toFixed(0)}/mo`;
-            }
-
+            if (isAnnualBilling) { summaryDetails.ceCostDisplay = `$${(baseCEAnnualEquivMonthlyRate * 12).toFixed(0)}/yr`; } 
+            else { summaryDetails.ceCostDisplay = `$${(baseCEAnnualEquivMonthlyRate * pricing.monthly_premium_factor).toFixed(0)}/mo`; }
             function updateItemDetailDisplay(itemIdCheckbox, perUserCostText, itemTotalCostText, isModuleCard = true) {
-                const priceDisplayEl = document.getElementById(`${itemIdCheckbox}_price_display`);
-                const priceTermEl = document.getElementById(`${itemIdCheckbox}_price_term_display`); 
-                
-                if (isModuleCard && priceDisplayEl && priceTermEl) { 
-                    const parts = perUserCostText.split('/mo');
-                    priceDisplayEl.textContent = perUserCostText === "$0" ? "$0" : (parts[0] || '$0');
-                    priceTermEl.textContent = perUserCostText === "$0" ? 'per user/mo' : (parts[1] ? `/mo${parts[1]}` : (isAnnualBilling ? '/user/mo (annual plan)' : '/user/mo'));
-                } else if (!isModuleCard && priceDisplayEl) { 
-                     priceDisplayEl.textContent = perUserCostText === "$0" ? (pricing.addons[document.getElementById(itemIdCheckbox).dataset.itemKey]?.is_consumption_based ? `$${pricing.addons[document.getElementById(itemIdCheckbox).dataset.itemKey].price_per_item.toFixed(2)} per ${pricing.addons[document.getElementById(itemIdCheckbox).dataset.itemKey].unit_name || 'item'}` : "$0") : perUserCostText;
-                }
+                const priceDisplayEl = document.getElementById(`${itemIdCheckbox}_price_display`); const priceTermEl = document.getElementById(`${itemIdCheckbox}_price_term_display`); 
+                if (isModuleCard && priceDisplayEl && priceTermEl) { const parts = perUserCostText.split('/mo'); priceDisplayEl.textContent = perUserCostText === "$0" ? "$0" : (parts[0] || '$0'); priceTermEl.textContent = perUserCostText === "$0" ? 'per user/mo' : (parts[1] ? `/mo${parts[1]}` : (isAnnualBilling ? '/user/mo (annual plan)' : '/user/mo')); } 
+                else if (!isModuleCard && priceDisplayEl) { priceDisplayEl.textContent = perUserCostText === "$0" ? (pricing.addons[document.getElementById(itemIdCheckbox).dataset.itemKey]?.is_consumption_based ? `$${pricing.addons[document.getElementById(itemIdCheckbox).dataset.itemKey].price_per_item.toFixed(2)} per ${pricing.addons[document.getElementById(itemIdCheckbox).dataset.itemKey].unit_name || 'item'}` : "$0") : perUserCostText; }
             }
-            
-            // Selectable Modules
             for (const key in pricing.selectable_modules) {
-                const moduleData = pricing.selectable_modules[key];
-                const checkbox = document.getElementById(moduleData.id_checkbox);
-                const userInput = document.getElementById(moduleData.id_user_input);
-                const moduleUsers = parseInt(userInput.value) || 0;
-
-                let itemPerUserDisplay = "$0";
-                let moduleDisplayCostForSummary = "$0"; 
-
+                const moduleData = pricing.selectable_modules[key]; const checkbox = document.getElementById(moduleData.id_checkbox); const userInput = document.getElementById(moduleData.id_user_input);
+                const moduleUsers = parseInt(userInput.value) || 0; let itemPerUserDisplay = "$0"; let moduleDisplayCostForSummary = "$0"; 
                 if (checkbox && checkbox.checked && moduleUsers > 0) {
                     const pricingTiers = selectedCEtierValue === 'pro' ? moduleData.pro_tier_pricing : moduleData.standard_tier_pricing;
-                    let pricePerUserAnnualEquiv = getPerUserAnnualEquivalentPrice(moduleUsers, pricingTiers);
-                    totalMonthlySubscriptionCostAnnualEquiv += (pricePerUserAnnualEquiv * moduleUsers);
-                    
-                    if (isAnnualBilling) {
-                        itemPerUserDisplay = `$${pricePerUserAnnualEquiv.toFixed(2)}/mo (annual plan)`;
-                        moduleDisplayCostForSummary = `$${(pricePerUserAnnualEquiv * moduleUsers * 12).toFixed(0)}/yr`;
-                    } else {
-                        let actualMonthlyPricePerUser = pricePerUserAnnualEquiv * pricing.monthly_premium_factor;
-                        itemPerUserDisplay = `$${actualMonthlyPricePerUser.toFixed(2)}/mo`;
-                        moduleDisplayCostForSummary = `$${(actualMonthlyPricePerUser * moduleUsers).toFixed(0)}/mo`;
-                    }
+                    let pricePerUserAnnualEquiv = getPerUserAnnualEquivalentPrice(moduleUsers, pricingTiers); totalMonthlySubscriptionCostAnnualEquiv += (pricePerUserAnnualEquiv * moduleUsers);
+                    if (isAnnualBilling) { itemPerUserDisplay = `$${pricePerUserAnnualEquiv.toFixed(2)}/mo (annual plan)`; moduleDisplayCostForSummary = `$${(pricePerUserAnnualEquiv * moduleUsers * 12).toFixed(0)}/yr`; } 
+                    else { let actualMonthlyPricePerUser = pricePerUserAnnualEquiv * pricing.monthly_premium_factor; itemPerUserDisplay = `$${actualMonthlyPricePerUser.toFixed(2)}/mo`; moduleDisplayCostForSummary = `$${(actualMonthlyPricePerUser * moduleUsers).toFixed(0)}/mo`; }
                     summaryDetails.moduleDetails.push({ name: moduleData.name, users: moduleUsers, costDisplay: moduleDisplayCostForSummary, unitName: "Users" });
-                }
-                 updateItemDetailDisplay(moduleData.id_checkbox, itemPerUserDisplay, "", true); 
+                } updateItemDetailDisplay(moduleData.id_checkbox, itemPerUserDisplay, "", true); 
             }
-            
-            // Add-ons
             for (const key in pricing.addons) {
-                const addonData = pricing.addons[key];
-                const checkbox = document.getElementById(addonData.id_checkbox);
-                const userInput = document.getElementById(addonData.id_user_input);
-                const itemQuantity = parseInt(userInput.value) || 0;
-
-                let itemPriceDisplayForCard = "$0"; 
-                let addonDisplayCostForSummary = "$0"; 
-
+                const addonData = pricing.addons[key]; const checkbox = document.getElementById(addonData.id_checkbox); const userInput = document.getElementById(addonData.id_user_input);
+                const itemQuantity = parseInt(userInput.value) || 0; let itemPriceDisplayForCard = "$0"; let addonDisplayCostForSummary = "$0"; 
                 if (checkbox && checkbox.checked && itemQuantity > 0) {
-                    if (addonData.is_consumption_based) { 
-                        let itemCost = addonData.price_per_item * itemQuantity;
-                        
-                        if (isAnnualBilling) {
-                            totalMonthlySubscriptionCostAnnualEquiv += itemCost; 
-                            addonDisplayCostForSummary = `$${(itemCost * 12).toFixed(2)}/yr`;
-                        } else {
-                            totalMonthlySubscriptionCostAnnualEquiv += itemCost; 
-                            addonDisplayCostForSummary = `$${itemCost.toFixed(2)}/mo`;
-                        }
+                    if (addonData.is_consumption_based) { let itemCost = addonData.price_per_item * itemQuantity;
+                        if (isAnnualBilling) { totalMonthlySubscriptionCostAnnualEquiv += itemCost; addonDisplayCostForSummary = `$${(itemCost * 12).toFixed(2)}/yr`; } 
+                        else { totalMonthlySubscriptionCostAnnualEquiv += itemCost; addonDisplayCostForSummary = `$${itemCost.toFixed(2)}/mo`; }
                         itemPriceDisplayForCard = `$${addonData.price_per_item.toFixed(2)} per ${addonData.unit_name || 'item'}`;
-
-                    } else { 
-                        let pricePerUserAnnualEquiv = addonData.price_per_user_annual_equiv; 
-                        totalMonthlySubscriptionCostAnnualEquiv += (pricePerUserAnnualEquiv * itemQuantity);
-                        if (isAnnualBilling) {
-                            itemPriceDisplayForCard = `$${pricePerUserAnnualEquiv.toFixed(2)}/user/mo (annual billing)`;
-                            addonDisplayCostForSummary = `$${(pricePerUserAnnualEquiv * itemQuantity * 12).toFixed(0)}/yr`;
-                        } else {
-                            let actualMonthlyPricePerUser = pricePerUserAnnualEquiv * pricing.monthly_premium_factor;
-                            itemPriceDisplayForCard = `$${actualMonthlyPricePerUser.toFixed(2)}/user/mo`;
-                            addonDisplayCostForSummary = `$${(actualMonthlyPricePerUser * itemQuantity).toFixed(0)}/mo`;
-                        }
-                    }
-                    summaryDetails.addonDetails.push({ name: addonData.name, users: itemQuantity, costDisplay: addonDisplayCostForSummary, unitName: addonData.unit_name || (addonData.is_consumption_based ? 'items' : 'Users') });
-                } else if (addonData.is_consumption_based) { 
-                     itemPriceDisplayForCard = `$${addonData.price_per_item.toFixed(2)} per ${addonData.unit_name || 'item'}`;
-                }
+                    } else { let pricePerUserAnnualEquiv = addonData.price_per_user_annual_equiv; totalMonthlySubscriptionCostAnnualEquiv += (pricePerUserAnnualEquiv * itemQuantity);
+                        if (isAnnualBilling) { itemPriceDisplayForCard = `$${pricePerUserAnnualEquiv.toFixed(2)}/user/mo (annual billing)`; addonDisplayCostForSummary = `$${(pricePerUserAnnualEquiv * itemQuantity * 12).toFixed(0)}/yr`; } 
+                        else { let actualMonthlyPricePerUser = pricePerUserAnnualEquiv * pricing.monthly_premium_factor; itemPriceDisplayForCard = `$${actualMonthlyPricePerUser.toFixed(2)}/user/mo`; addonDisplayCostForSummary = `$${(actualMonthlyPricePerUser * itemQuantity).toFixed(0)}/mo`; }
+                    } summaryDetails.addonDetails.push({ name: addonData.name, users: itemQuantity, costDisplay: addonDisplayCostForSummary, unitName: addonData.unit_name || (addonData.is_consumption_based ? 'items' : 'Users') });
+                } else if (addonData.is_consumption_based) { itemPriceDisplayForCard = `$${addonData.price_per_item.toFixed(2)} per ${addonData.unit_name || 'item'}`; }
                 updateItemDetailDisplay(addonData.id_checkbox, itemPriceDisplayForCard, "", false); 
             }
-
-            const discountPercent = parseFloat(discountPercentageInput.value) || 0;
-            summaryDetails.discountPercent = discountPercent;
-            const discountDecimal = discountPercent / 100;
-            
-            let subscriptionSubtotalForPeriod; 
-            if (isAnnualBilling) {
-                subscriptionSubtotalForPeriod = totalMonthlySubscriptionCostAnnualEquiv * 12;
-            } else {
-                subscriptionSubtotalForPeriod = totalMonthlySubscriptionCostAnnualEquiv * pricing.monthly_premium_factor;
-            }
+            const discountPercent = parseFloat(discountPercentageInput.value) || 0; summaryDetails.discountPercent = discountPercent;
+            const discountDecimal = discountPercent / 100; let subscriptionSubtotalForPeriod; 
+            if (isAnnualBilling) { subscriptionSubtotalForPeriod = totalMonthlySubscriptionCostAnnualEquiv * 12; } 
+            else { subscriptionSubtotalForPeriod = totalMonthlySubscriptionCostAnnualEquiv * pricing.monthly_premium_factor; }
             summaryDetails.subscriptionSubtotalDisplay = `$${subscriptionSubtotalForPeriod.toFixed(0)}`;
-
-            const discountAmount = subscriptionSubtotalForPeriod * discountDecimal;
-            const discountedSubscriptionTotalForPeriod = subscriptionSubtotalForPeriod - discountAmount;
-            summaryDetails.discountAmountDisplay = `-$${discountAmount.toFixed(0)}`;
-            summaryDetails.discountedSubscriptionTotalDisplay = `$${discountedSubscriptionTotalForPeriod.toFixed(0)}`;
-
+            const discountAmount = subscriptionSubtotalForPeriod * discountDecimal; const discountedSubscriptionTotalForPeriod = subscriptionSubtotalForPeriod - discountAmount;
+            summaryDetails.discountAmountDisplay = `-$${discountAmount.toFixed(0)}`; summaryDetails.discountedSubscriptionTotalDisplay = `$${discountedSubscriptionTotalForPeriod.toFixed(0)}`;
             const annualEquivalentOfSubscriptionForImpl = totalMonthlySubscriptionCostAnnualEquiv * 12; 
             const annualEquivalentOfDiscountedSubscription = annualEquivalentOfSubscriptionForImpl * (1 - discountDecimal);
-            
-            let implPercentage = pricing.base_client_engagement[selectedCEtierValue].implementation_percentage;
-            let calculatedImplFee = annualEquivalentOfDiscountedSubscription * implPercentage;
-            let oneTimeImplementationFeeFromCalc = Math.max(calculatedImplFee, pricing.implementation_minimum_fee);
-            
+            const selectedImplTierKey = implementationTierSelect.value; const currentImplTier = pricing.implementation_tiers[selectedImplTierKey];
+            summaryDetails.implementationTierName = currentImplTier.name; let implPercentage = currentImplTier.percentage; let effectiveMinimumImplFee = currentImplTier.minimum_fee;
+            let calculatedImplFee = annualEquivalentOfDiscountedSubscription * implPercentage; let baseImplementationFee = Math.max(calculatedImplFee, effectiveMinimumImplFee); 
             let currentImplementationFee;
-            if (manualImplFeeSet) {
-                currentImplementationFee = parseFloat(implementationFeeInput.value) || 0; 
-            } else {
-                currentImplementationFee = oneTimeImplementationFeeFromCalc;
-                implementationFeeInput.value = currentImplementationFee.toFixed(0); 
-            }
-            
-            summaryDetails.implementationFeeDisplay = `$${currentImplementationFee.toFixed(0)}`;
-
-            let grandTotalForSummary = 0; 
-            
+            if (manualImplFeeSet) { currentImplementationFee = parseFloat(implementationFeeInput.value) || 0; } 
+            else { currentImplementationFee = baseImplementationFee; implementationFeeInput.value = currentImplementationFee.toFixed(0); }
+            summaryDetails.implementationFeeForDisplay = `$${currentImplementationFee.toFixed(0)}`;
+            const selectedMigrationKey = dataMigrationSelect.value; const selectedMigrationFee = pricing.data_migration_options[selectedMigrationKey]?.price || 0;
+            summaryDetails.dataMigrationFeeForDisplay = `$${selectedMigrationFee.toFixed(0)}`;
+            summaryDetails.dataMigrationName = pricing.data_migration_options[selectedMigrationKey]?.name.replace(/\s\(.*\)/, '') || '';
+            const totalOneTimeFees = currentImplementationFee + selectedMigrationFee;
+            summaryDetails.totalOneTimeFeesForDisplay = `$${totalOneTimeFees.toFixed(0)}`;
+            let grandTotalForHeader;
             if (isAnnualBilling) {
-                grandTotalForSummary = discountedSubscriptionTotalForPeriod + currentImplementationFee;
-                summaryDetails.grandTotalFrequency = ""; // Removed "per year"
+                grandTotalForHeader = discountedSubscriptionTotalForPeriod + totalOneTimeFees;
+                summaryDetails.grandTotalDisplay = `$${grandTotalForHeader.toFixed(0)}`;
+                summaryDetails.grandTotalFrequency = "Total for year (incl. one-time fees)";
                 summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = false;
-            } else {
-                grandTotalForSummary = discountedSubscriptionTotalForPeriod; 
-                summaryDetails.grandTotalFrequency = "per month";
-                summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = true;
+            } else { 
+                grandTotalForHeader = discountedSubscriptionTotalForPeriod; 
+                summaryDetails.grandTotalDisplay = `$${grandTotalForHeader.toFixed(0)}`;
+                summaryDetails.grandTotalFrequency = "/mo";
+                summaryDetails.showOneTimeFeeSeparatelyInGrandTotal = (totalOneTimeFees > 0);
             }
-            
-            summaryDetails.grandTotalDisplay = `$${grandTotalForSummary.toFixed(0)}`;
             updateSummaryPanel(summaryDetails); 
         }
 
-        function setInitialYear() {
-            currentYearSpan.textContent = "2025 Canopy";
-        }
+        function setInitialYear() { currentYearSpan.textContent = "2025 Canopy"; }
 
         // --- Event Listeners ---
-        billingToggleInput.addEventListener('change', () => {
+        billingToggleInput.addEventListener('change', () => { manualImplFeeSet = false; toggleBillingCycle(); });
+        ceTierStandardButton.addEventListener('click', () => { selectedCEtierValue = 'standard'; clientEngagementTierStandardRadio.checked = true; renderClientEngagementDetails(); calculateAndUpdatePrice(); });
+        ceTierProButton.addEventListener('click', () => { selectedCEtierValue = 'pro'; clientEngagementTierProRadio.checked = true; renderClientEngagementDetails(); calculateAndUpdatePrice(); });
+        implementationTierSelect.addEventListener('change', () => {
             manualImplFeeSet = false; 
-            toggleBillingCycle();
-        });
-        
-        ceTierStandardButton.addEventListener('click', () => {
-            if (selectedCEtierValue !== 'standard') manualImplFeeSet = false;
-            selectedCEtierValue = 'standard';
-            clientEngagementTierStandardRadio.checked = true; 
-            renderClientEngagementDetails();
+            if (implementationTierSelect.value && pricing.implementation_tiers[implementationTierSelect.value]) {
+                implementationInfoLink.href = pricing.implementation_tiers[implementationTierSelect.value].info_link;
+            } else { implementationInfoLink.href = "#"; }
             calculateAndUpdatePrice();
         });
-        ceTierProButton.addEventListener('click', () => {
-            if (selectedCEtierValue !== 'pro') manualImplFeeSet = false;
-            selectedCEtierValue = 'pro';
-            clientEngagementTierProRadio.checked = true; 
-            renderClientEngagementDetails();
-            calculateAndUpdatePrice();
-        });
-        discountPercentageInput.addEventListener('input', () => {
-            if (!manualImplFeeSet) { 
-            }
-            calculateAndUpdatePrice();
-        });
-        implementationFeeInput.addEventListener('input', () => {
-            manualImplFeeSet = true; 
-            calculateAndUpdatePrice(); 
-        });
-
+        discountPercentageInput.addEventListener('input', calculateAndUpdatePrice);
+        implementationFeeInput.addEventListener('input', () => { manualImplFeeSet = true; calculateAndUpdatePrice(); });
+        dataMigrationSelect.addEventListener('change', calculateAndUpdatePrice); 
 
         // --- Initializations ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderAllSelectableItems(); 
-            
+            populateImplementationTiers(); populateDataMigrationOptions(); renderAllSelectableItems(); 
             isAnnualBilling = billingToggleInput.checked; 
-            monthlyLabel.classList.toggle('active', !isAnnualBilling);
-            annualLabel.classList.toggle('active', isAnnualBilling);
-            
-            renderClientEngagementDetails(); 
-            calculateAndUpdatePrice(); 
-            setInitialYear();
+            monthlyLabel.classList.toggle('active', !isAnnualBilling); annualLabel.classList.toggle('active', isAnnualBilling);
+            renderClientEngagementDetails(); calculateAndUpdatePrice(); setInitialYear();
         });
     </script>
 </body>

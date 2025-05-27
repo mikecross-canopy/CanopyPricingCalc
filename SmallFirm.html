@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canopy Pricing - Small Firms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F1F3F7; /* Canopy COOL GRAY */
+        }
+        .canopy-aqua-text { color: #0BE6C7; }
+        .canopy-aqua-bg { background-color: #0BE6C7; }
+        .canopy-aqua-border { border-color: #0BE6C7; }
+        .canopy-aqua-focus-ring:focus {
+            --tw-ring-color: #0BE6C7;
+             box-shadow: 0 0 0 2px var(--tw-ring-color);
+        }
+        .plan-card-base {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .plan-card-base.selected {
+            border-color: #0BE6C7; /* Canopy Aqua */
+            box-shadow: 0 0 0 3px rgba(11, 230, 199, 0.5); 
+            transform: translateY(-5px);
+        }
+        .billing-toggle-active {
+            color: #0BE6C7; /* Canopy Aqua */
+            font-weight: 700;
+        }
+        .billing-toggle-inactive {
+            color: #6B7280; 
+        }
+        .section-card {
+            background-color: white; 
+            border-radius: 0.5rem; 
+            padding: 1.5rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); 
+        }
+        .plan-card-base ul li::before { 
+            content: '✓';
+            color: #0BE6C7; /* Canopy Aqua */
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+        .summary-text-main { color: #FFFFFF; } 
+        .summary-text-secondary { color: #D1D5DB; } 
+        .summary-text-accent { color: #0BE6C7; } 
+        .summary-dark-bg { background-color: #1F2937; } 
+
+        input:checked + .toggle-bg .toggle-dot {
+            transform: translateX(100%);
+            background-color: #0BE6C7; 
+        }
+        input:checked + .toggle-bg {
+            background-color: #0BE6C7; 
+             opacity: 0.6; 
+        }
+        .toggle-bg {
+            transition: background-color 0.2s ease;
+        }
+        .toggle-dot {
+            transition: transform 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-gray-900">
+
+    <div class="w-full max-w-screen-xl mx-auto p-4 md:p-8">
+        <header class="text-center mb-6"> {/* Reduced bottom margin slightly */}
+            <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-12 md:h-16" onerror="this.style.display='none';">
+        </header>
+
+        <div class="text-center mb-8">
+            <a href="index.html" class="canopy-aqua-bg hover:opacity-90 text-white font-semibold py-2 px-6 rounded-md shadow-md transition-opacity text-sm inline-block">
+                &larr; View Full Product Suite
+            </a>
+        </div>
+
+        <div class="section-card flex flex-col md:flex-row justify-between items-center gap-6 md:gap-10 mb-8">
+            <div class="flex items-center">
+                <label for="userCountSmall" class="mr-3 text-gray-700 font-medium">Users:</label>
+                <input type="number" id="userCountSmall" value="1" min="1" max="4" class="border border-gray-300 rounded-md p-2 w-20 text-center focus:ring-2 focus:ring-teal-500 focus:border-teal-500 canopy-aqua-focus-ring">
+            </div>
+            <div class="flex items-center">
+                <span id="annualLabelSmallFirms" class="billing-toggle-active text-sm md:text-base font-semibold mr-2 cursor-pointer">ANNUALLY</span>
+                <label for="billingToggleSmallFirms" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" id="billingToggleSmallFirms" class="sr-only peer">
+                    <div class="toggle-bg w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300">
+                        <div class="toggle-dot absolute top-0.5 left-[2px] bg-white border-gray-300 border rounded-full h-5 w-5 transition-transform"></div>
+                    </div>
+                </label>
+                <span id="monthlyLabelSmallFirms" class="billing-toggle-inactive text-sm md:text-base font-semibold ml-2 cursor-pointer">MONTH-TO-MONTH</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row lg:gap-8">
+            <div class="lg:w-2/3 space-y-8">
+                <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+                    <div id="starterPlan" data-plan-id="starter" class="plan-card-base section-card !p-0 overflow-hidden selected flex flex-col">
+                       <div class="p-6 flex-grow">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-1">Starter</h2>
+                            <p class="text-xs text-gray-500 mb-4 h-8">Client Engagement, Document Management</p>
+                            <div class="mb-6">
+                                <span id="starterPriceMain" class="text-5xl font-extrabold text-gray-900">$540</span>
+                                <span id="starterPriceSub" class="text-gray-500 block text-sm">per user / year</span>
+                                <p class="text-xs text-gray-500 mt-1">or <span id="starterMonthlyAltPrice">$60</span> per user / month</p>
+                            </div>
+                            <ul class="text-sm space-y-1.5 text-left text-gray-700 mb-6">
+                                <li>Client Engagement</li>
+                                <li>Document Management</li>
+                            </ul>
+                       </div>
+                       <button data-plan-id="starter" class="select-plan-button canopy-aqua-bg text-white w-full py-3 font-semibold hover:opacity-90 transition-opacity mt-auto">Select Starter</button>
+                    </div>
+
+                    <div id="essentialsPlan" data-plan-id="essentials" class="plan-card-base section-card !p-0 overflow-hidden flex flex-col">
+                       <div class="p-6 flex-grow">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-1">Essentials</h2>
+                            <p class="text-xs text-gray-500 mb-4 h-8">Everything in Starter, plus Workflow, Time & Billing</p>
+                             <div class="mb-6">
+                                <span id="essentialsPriceMain" class="text-5xl font-extrabold text-gray-900">$792</span>
+                                <span id="essentialsPriceSub" class="text-gray-500 block text-sm">per user / year</span>
+                                <p class="text-xs text-gray-500 mt-1">or <span id="essentialsMonthlyAltPrice">$88</span> per user / month</p>
+                            </div>
+                            <ul class="text-sm space-y-1.5 text-left text-gray-700 mb-6">
+                                <li>Client Engagement</li>
+                                <li>Document Management</li>
+                                <li>Workflow</li>
+                                <li>Time & Billing</li>
+                            </ul>
+                       </div>
+                       <button data-plan-id="essentials" class="select-plan-button bg-gray-700 text-white w-full py-3 font-semibold hover:bg-gray-800 transition-colors mt-auto">Select Essentials</button>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedPlanSmallFirms" value="starter">
+
+                <div id="taxResolutionSectionCard" class="section-card cursor-pointer">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="mb-4 md:mb-0 flex-grow">
+                            <h3 class="text-xl font-bold text-gray-900">Add-on: Tax Resolution</h3>
+                            <p class="text-sm text-gray-600">Includes Transcripts & Notices</p>
+                        </div>
+                        <div class="text-left md:text-right">
+                            <div class="mb-1">
+                                <span id="taxResolutionPriceMain" class="text-2xl font-bold text-gray-900">$600</span>
+                                <span id="taxResolutionPriceSub" class="text-gray-500 text-sm">/ year</span>
+                                <p class="text-xs text-gray-500">or <span id="taxResolutionMonthlyAltPrice">$60</span> / month</p>
+                            </div>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="selectTaxResolutionSmallFirms" class="h-5 w-5 text-teal-500 border-gray-300 rounded focus:ring-teal-400 canopy-aqua-focus-ring">
+                                <span class="ml-2 text-gray-700">Add to my plan</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Onboarding & Implementation</h3>
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
+                        <label class="flex items-center p-3 border border-gray-200 rounded-md hover:border-teal-500 cursor-pointer has-[:checked]:border-teal-500 has-[:checked]:ring-2 has-[:checked]:ring-teal-200">
+                            <input type="radio" name="implementationSmallFirms" value="standard" class="h-4 w-4 text-teal-500 focus:ring-teal-400 border-gray-300 canopy-aqua-focus-ring" checked>
+                            <span class="ml-3 text-gray-700 font-medium">$150 Standard Implementation</span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-200 rounded-md hover:border-teal-500 cursor-pointer has-[:checked]:border-teal-500 has-[:checked]:ring-2 has-[:checked]:ring-teal-200">
+                            <input type="radio" name="implementationSmallFirms" value="premium" class="h-4 w-4 text-teal-500 focus:ring-teal-400 border-gray-300 canopy-aqua-focus-ring">
+                            <span class="ml-3 text-gray-700 font-medium">$750 Premium Implementation</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-1/3 lg:sticky lg:top-8 h-fit">
+                <div class="section-card summary-dark-bg !p-6 md:!p-8"> 
+                    <div id="summaryHeaderTotalSmallFirms" class="text-center mb-4 pb-4 border-b border-gray-600">
+                        {/* Populated by JS */}
+                    </div>
+                    <div id="summaryDetailsListSmallFirms" class="space-y-2">
+                        {/* Populated by JS */}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // PASTE THE ENTIRE JAVASCRIPT FROM THE PREVIOUS FULL CODE RESPONSE HERE
+    // (The JS from the previous turn where we fixed the toggle and added clickable tax box)
+    // No changes to the JS are needed for the comment removal or adding the static HTML link.
+    document.addEventListener('DOMContentLoaded', () => {
+        const userCountInput = document.getElementById('userCountSmall');
+        const billingToggle = document.getElementById('billingToggleSmallFirms');
+        const annualLabel = document.getElementById('annualLabelSmallFirms');
+        const monthlyLabel = document.getElementById('monthlyLabelSmallFirms');
+        const starterPlanCard = document.getElementById('starterPlan');
+        const essentialsPlanCard = document.getElementById('essentialsPlan');
+        const selectPlanButtons = document.querySelectorAll('.select-plan-button');
+        const hiddenSelectedPlanInput = document.getElementById('selectedPlanSmallFirms');
+        const starterPriceMainEl = document.getElementById('starterPriceMain');
+        const starterPriceSubEl = document.getElementById('starterPriceSub');
+        const starterMonthlyAltPriceEl = document.getElementById('starterMonthlyAltPrice');
+        const essentialsPriceMainEl = document.getElementById('essentialsPriceMain');
+        const essentialsPriceSubEl = document.getElementById('essentialsPriceSub');
+        const essentialsMonthlyAltPriceEl = document.getElementById('essentialsMonthlyAltPrice');
+        const taxResolutionSectionCard = document.getElementById('taxResolutionSectionCard'); 
+        const taxResolutionCheckbox = document.getElementById('selectTaxResolutionSmallFirms');
+        const taxResolutionPriceMainEl = document.getElementById('taxResolutionPriceMain');
+        const taxResolutionPriceSubEl = document.getElementById('taxResolutionPriceSub');
+        const taxResolutionMonthlyAltPriceEl = document.getElementById('taxResolutionMonthlyAltPrice');
+        const implementationRadios = document.querySelectorAll('input[name="implementationSmallFirms"]');
+        const summaryHeaderTotalDiv = document.getElementById('summaryHeaderTotalSmallFirms'); 
+        const summaryDetailsListDiv = document.getElementById('summaryDetailsListSmallFirms'); 
+
+        const pricing = {
+            plans: {
+                starter: { name: "Starter", annualPerUser: 540, monthlyPerUser: 60, features: ["Client Engagement", "Document Management"] },
+                essentials: { name: "Essentials", annualPerUser: 792, monthlyPerUser: 88, features: ["Client Engagement", "Document Management", "Workflow", "Time & Billing"] }
+            },
+            addOns: { taxResolution: { name: "Tax Resolution", annual: 600, monthly: 60 } },
+            implementation: { standard: { name: "Standard", price: 150 }, premium: { name: "Premium", price: 750 } }
+        };
+
+        let isMonthlyBilling = false; 
+        let selectedPlanId = 'starter'; 
+        let users = 1;
+
+        function updateDisplayedPrices() {
+            users = parseInt(userCountInput.value) || 1;
+            if(users < 1) users = 1; if(users > 4) users = 4; userCountInput.value = users;
+            
+            const starterPlanData = pricing.plans.starter;
+            const starterAltTextParent = starterMonthlyAltPriceEl.parentElement; 
+            const starterAltTextNode = starterAltTextParent ? starterAltTextParent.childNodes[2] : null; 
+            if (isMonthlyBilling) {
+                starterPriceMainEl.textContent = `$${starterPlanData.monthlyPerUser}`;
+                starterPriceSubEl.textContent = `per user / month`;
+                starterMonthlyAltPriceEl.textContent = `$${(starterPlanData.annualPerUser / 12).toFixed(0)}`;
+                if(starterAltTextNode && starterAltTextNode.nodeType === Node.TEXT_NODE) starterAltTextNode.textContent = " per user / year (billed annually)";
+            } else {
+                starterPriceMainEl.textContent = `$${starterPlanData.annualPerUser}`;
+                starterPriceSubEl.textContent = `per user / year`;
+                starterMonthlyAltPriceEl.textContent = `$${starterPlanData.monthlyPerUser}`;
+                if(starterAltTextNode && starterAltTextNode.nodeType === Node.TEXT_NODE) starterAltTextNode.textContent = " per user / month";
+            }
+            
+            const essentialsPlanData = pricing.plans.essentials;
+            const essentialsAltTextParent = essentialsMonthlyAltPriceEl.parentElement; 
+            const essentialsAltTextNode = essentialsAltTextParent ? essentialsAltTextParent.childNodes[2] : null; 
+
+             if (isMonthlyBilling) {
+                essentialsPriceMainEl.textContent = `$${essentialsPlanData.monthlyPerUser}`;
+                essentialsPriceSubEl.textContent = `per user / month`;
+                essentialsMonthlyAltPriceEl.textContent = `$${(essentialsPlanData.annualPerUser / 12).toFixed(0)}`;
+                if(essentialsAltTextNode && essentialsAltTextNode.nodeType === Node.TEXT_NODE) essentialsAltTextNode.textContent = " per user / year (billed annually)";
+            } else {
+                essentialsPriceMainEl.textContent = `$${essentialsPlanData.annualPerUser}`;
+                essentialsPriceSubEl.textContent = `per user / year`;
+                essentialsMonthlyAltPriceEl.textContent = `$${essentialsPlanData.monthlyPerUser}`;
+                if(essentialsAltTextNode && essentialsAltTextNode.nodeType === Node.TEXT_NODE) essentialsAltTextNode.textContent = " per user / month";
+            }
+
+            const taxResData = pricing.addOns.taxResolution;
+            const taxResAltTextParent = taxResolutionMonthlyAltPriceEl.parentElement; 
+            const taxResAltTextNode = taxResAltTextParent ? taxResAltTextParent.childNodes[2] : null; 
+            if (isMonthlyBilling) {
+                taxResolutionPriceMainEl.textContent = `$${taxResData.monthly}`;
+                taxResolutionPriceSubEl.textContent = `/ month`;
+                taxResolutionMonthlyAltPriceEl.textContent = `$${taxResData.annual}`;
+                if(taxResAltTextNode && taxResAltTextNode.nodeType === Node.TEXT_NODE) taxResAltTextNode.textContent = " / year (billed annually)";
+            } else {
+                taxResolutionPriceMainEl.textContent = `$${taxResData.annual}`;
+                taxResolutionPriceSubEl.textContent = `/ year`;
+                taxResolutionMonthlyAltPriceEl.textContent = `$${taxResData.monthly}`;
+                if(taxResAltTextNode && taxResAltTextNode.nodeType === Node.TEXT_NODE) taxResAltTextNode.textContent = " / month";
+            }
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            users = parseInt(userCountInput.value) || 1;
+            if(users < 1) users = 1; if(users > 4) users = 4; 
+
+            const planData = pricing.plans[selectedPlanId];
+            let planCostPerUser = isMonthlyBilling ? planData.monthlyPerUser : planData.annualPerUser;
+            let totalPlanCost = planCostPerUser * users;
+            let taxResolutionCost = 0;
+            if (taxResolutionCheckbox.checked) {
+                taxResolutionCost = isMonthlyBilling ? pricing.addOns.taxResolution.monthly : pricing.addOns.taxResolution.annual;
+            }
+            let totalSubscriptionCost = totalPlanCost + taxResolutionCost;
+            const selectedImplValue = document.querySelector('input[name="implementationSmallFirms"]:checked').value;
+            let implementationCost = pricing.implementation[selectedImplValue].price;
+
+            summaryHeaderTotalDiv.innerHTML = '';
+            summaryDetailsListDiv.innerHTML = '';
+
+            let grandTotalValue, grandTotalFrequencyText, oneTimeNoteText = '';
+            let showOneTimeNoteSeparately = false;
+
+            if (isMonthlyBilling) {
+                grandTotalValue = totalSubscriptionCost;
+                grandTotalFrequencyText = "/ month";
+                if (implementationCost > 0) {
+                    oneTimeNoteText = `+ $${implementationCost.toFixed(0)} one-time fees (billed upfront)`;
+                    showOneTimeNoteSeparately = true;
+                }
+            } else { 
+                grandTotalValue = totalSubscriptionCost + implementationCost; 
+                grandTotalFrequencyText = "First Year Total";
+            }
+
+            const headerGrandTotalValEl = document.createElement('div');
+            headerGrandTotalValEl.className = 'text-5xl font-extrabold summary-text-accent leading-tight'; 
+            headerGrandTotalValEl.textContent = `$${grandTotalValue.toFixed(0)}`;
+            summaryHeaderTotalDiv.appendChild(headerGrandTotalValEl);
+
+            const headerGrandTotalFreqEl = document.createElement('div');
+            headerGrandTotalFreqEl.className = 'text-sm summary-text-secondary mt-1'; 
+            headerGrandTotalFreqEl.textContent = grandTotalFrequencyText;
+            summaryHeaderTotalDiv.appendChild(headerGrandTotalFreqEl);
+
+            if (showOneTimeNoteSeparately) {
+                const oneTimeNoteEl = document.createElement('div');
+                oneTimeNoteEl.className = 'text-xs summary-text-secondary mt-1';
+                oneTimeNoteEl.textContent = oneTimeNoteText;
+                summaryHeaderTotalDiv.appendChild(oneTimeNoteEl);
+            }
+            
+            function addSummaryDetailItem(label, value) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex justify-between text-lg summary-text-main';
+                const labelSpan = document.createElement('span');
+                labelSpan.textContent = label;
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'font-semibold';
+                valueSpan.textContent = value;
+                itemDiv.appendChild(labelSpan);
+                itemDiv.appendChild(valueSpan);
+                summaryDetailsListDiv.appendChild(itemDiv);
+            }
+            function addDetailSeparator() {
+                const hr = document.createElement('hr');
+                hr.className = 'my-2 border-gray-600'; 
+                summaryDetailsListDiv.appendChild(hr);
+            }
+
+            addSummaryDetailItem(`Plan (${planData.name} x ${users} user${users > 1 ? 's' : ''}):`, `$${totalPlanCost.toFixed(0)}`);
+            if (taxResolutionCheckbox.checked) {
+                addSummaryDetailItem("Tax Resolution Add-on:", `$${taxResolutionCost.toFixed(0)}`);
+            }
+            addDetailSeparator();
+            addSummaryDetailItem("Total Subscription:", `$${totalSubscriptionCost.toFixed(0)} ${isMonthlyBilling ? "/ month" : "/ year"}`);
+            addSummaryDetailItem(`One-Time Implementation (${pricing.implementation[selectedImplValue].name}):`, `$${implementationCost.toFixed(0)}`);
+        }
+
+        function handlePlanSelection(planId) {
+            selectedPlanId = planId;
+            hiddenSelectedPlanInput.value = planId;
+            const allPlanCards = [starterPlanCard, essentialsPlanCard];
+            allPlanCards.forEach(card => {
+                card.classList.remove('selected', 'canopy-aqua-border');
+                card.classList.add('border-gray-200'); 
+                const button = card.querySelector('.select-plan-button');
+                button.classList.remove('canopy-aqua-bg', 'hover:opacity-90');
+                button.classList.add('bg-gray-700', 'hover:bg-gray-800');
+            });
+            const selectedCard = document.getElementById(planId === 'starter' ? 'starterPlan' : 'essentialsPlan');
+            if (selectedCard) {
+                selectedCard.classList.add('selected', 'canopy-aqua-border');
+                selectedCard.classList.remove('border-gray-200');
+                const button = selectedCard.querySelector('.select-plan-button');
+                button.classList.add('canopy-aqua-bg', 'hover:opacity-90');
+                button.classList.remove('bg-gray-700', 'hover:bg-gray-800');
+            }
+            calculateTotal();
+        }
+        
+        userCountInput.addEventListener('input', updateDisplayedPrices);
+        userCountInput.addEventListener('change', updateDisplayedPrices); 
+        billingToggle.addEventListener('change', (e) => {
+            isMonthlyBilling = e.target.checked;
+            if (isMonthlyBilling) {
+                monthlyLabel.classList.add('billing-toggle-active'); monthlyLabel.classList.remove('billing-toggle-inactive');
+                annualLabel.classList.add('billing-toggle-inactive'); annualLabel.classList.remove('billing-toggle-active');
+            } else {
+                annualLabel.classList.add('billing-toggle-active'); annualLabel.classList.remove('billing-toggle-inactive');
+                monthlyLabel.classList.add('billing-toggle-inactive'); monthlyLabel.classList.remove('billing-toggle-active');
+            }
+            updateDisplayedPrices();
+        });
+        annualLabel.addEventListener('click', () => { if(billingToggle.checked) { billingToggle.checked = false; billingToggle.dispatchEvent(new Event('change'));} });
+        monthlyLabel.addEventListener('click', () => { if(!billingToggle.checked) { billingToggle.checked = true; billingToggle.dispatchEvent(new Event('change'));} });
+        selectPlanButtons.forEach(button => button.addEventListener('click', (e) => handlePlanSelection(e.target.dataset.planId)));
+        [starterPlanCard, essentialsPlanCard].forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button')) { handlePlanSelection(card.dataset.planId); } }));
+        
+        taxResolutionSectionCard.addEventListener('click', (event) => {
+            if (event.target !== taxResolutionCheckbox && !event.target.closest('label[for="selectTaxResolutionSmallFirms"]')) {
+                taxResolutionCheckbox.checked = !taxResolutionCheckbox.checked;
+                taxResolutionCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        taxResolutionCheckbox.addEventListener('change', calculateTotal); 
+        implementationRadios.forEach(radio => radio.addEventListener('change', calculateTotal));
+
+        handlePlanSelection('starter'); 
+        updateDisplayedPrices(); 
+    });
+</script>
+
+</body>
+</html>

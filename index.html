@@ -45,7 +45,6 @@
         }
 
         input[type="number"].module-user-input, 
-        /* input[type="number"].implementation-fee-input, /* Style handled by Tailwind now for inline */
         select.data-migration-select,
         select.implementation-tier-select {
             border: 1px solid #cbd5e0; 
@@ -58,7 +57,7 @@
         input[type="number"].module-user-input {
              width: 80px; 
         }
-      
+        
         select.data-migration-select,
         select.implementation-tier-select { 
             text-align: left; 
@@ -67,7 +66,7 @@
         select.data-migration-select {
              width: 100%;
         }
-      
+        
         input[type="number"].module-user-input:disabled {
             background-color: #edf2f7;
             cursor: not-allowed;
@@ -112,7 +111,7 @@
             font-weight: 600; 
             text-align: right;
         }
-       
+        
         .discreet-discount-input { 
             border: none; 
             background-color: #FFFFFF; 
@@ -152,7 +151,7 @@
         /* Module Card Styling */
         .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
         .module-card, .addon-card { background-color: #FFFFFF; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s ease-in-out, border-width 0.2s ease-in-out; cursor: pointer; }
-        .addon-card { padding: 0.75rem; } /* Addon cards are now in the left panel, this style is fine */
+        .addon-card { padding: 0.75rem; } 
         .module-card-header, .addon-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
         .module-card-title, .addon-card-title { font-size: 1.05rem; font-weight: 700; color: #000000; }
         .module-card-price { font-size: 1.35rem; font-weight: 700; color: #000000; margin-bottom: 0.15rem; line-height: 1.2; }
@@ -170,7 +169,7 @@
     <div class="w-full max-w-screen-2xl mx-auto p-4 md:p-6"> 
         <header class="text-center mb-8"> 
             <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-16 mb-3" onerror="this.style.display='none'; console.error('Logo image not found.')">
-        </header>
+            </header>
 
         <div class="flex flex-col lg:flex-row gap-6"> 
             <div class="lg:w-3/5 bg-white p-4 md:p-6 rounded-lg shadow-xl flex flex-col">
@@ -257,7 +256,14 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="mt-6 text-center"> 
+                    <a href="SmallFirm.html" 
+                       class="canopy-primary-accent hover:opacity-80 text-white font-semibold py-2 px-6 rounded-md shadow-md transition-opacity text-sm inline-block">
+                        View Plans for Small Firms &rarr;
+                    </a>
                 </div>
+                 </div>
         </div>
 
         <footer class="text-center mt-10 text-sm text-gray-500"> 
@@ -321,15 +327,7 @@
         let manualImplFeeSet = false; 
 
         // --- Functions (JavaScript functions remain identical to the previous correct version) ---
-        // For brevity, I'm not repeating all functions here.
-        // Ensure you use all functions from the previous complete script:
-        // populateImplementationTiers, populateDataMigrationOptions, renderClientEngagementDetails,
-        // updateBasePackageTierDisplay, createSelectableItemEntry, renderAllSelectableItems,
-        // toggleBillingCycle, getPerUserAnnualEquivalentPrice, updateSummaryPanel,
-        // calculateAndUpdatePrice, setInitialYear.
-
         // PASTE ALL JS FUNCTIONS FROM THE PREVIOUS FULL CODE RESPONSE HERE
-        // ... (Example of where the functions go) ...
         function populateImplementationTiers() {
             for (const key in pricing.implementation_tiers) {
                 const tier = pricing.implementation_tiers[key];
@@ -338,9 +336,9 @@
                 optionElement.textContent = tier.name;
                 implementationTierSelect.appendChild(optionElement);
             }
-            if (implementationTierSelect.value && pricing.implementation_tiers[implementationTierSelect.value]) { // Check if value is valid key
+            if (implementationTierSelect.value && pricing.implementation_tiers[implementationTierSelect.value]) { 
                  implementationInfoLink.href = pricing.implementation_tiers[implementationTierSelect.value].info_link;
-            } else if (Object.keys(pricing.implementation_tiers).length > 0) { // Default to first if invalid
+            } else if (Object.keys(pricing.implementation_tiers).length > 0) { 
                 const firstKey = Object.keys(pricing.implementation_tiers)[0];
                 implementationInfoLink.href = pricing.implementation_tiers[firstKey].info_link;
             }
@@ -430,7 +428,7 @@
         function renderAllSelectableItems() {
             selectableModulesContainer.innerHTML = ''; addonsContainerSummary.innerHTML = ''; 
             for (const key in pricing.selectable_modules) { createSelectableItemEntry(key, pricing.selectable_modules[key], selectableModulesContainer, 'module'); }
-            for (const key in pricing.addons) { createSelectableItemEntry(key, pricing.addons[key], addonsContainerSummary, 'addon'); } // Addons now rendered here
+            for (const key in pricing.addons) { createSelectableItemEntry(key, pricing.addons[key], addonsContainerSummary, 'addon'); }
         }
 
         function toggleBillingCycle() {

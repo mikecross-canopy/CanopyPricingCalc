@@ -11,62 +11,65 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F1F3F7; /* Canopy COOL GRAY */
+            background-color: #F1F3F7; 
         }
         .canopy-aqua-text { color: #0BE6C7; }
         .canopy-aqua-bg { background-color: #0BE6C7; }
-        .canopy-aqua-border { border-color: #0BE6C7; }
         .canopy-aqua-focus-ring:focus {
             --tw-ring-color: #0BE6C7;
              box-shadow: 0 0 0 2px var(--tw-ring-color);
         }
         .plan-card-base {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
             cursor: pointer;
+            border: 2px solid transparent; 
+        }
+        .plan-card-base.section-card {
+            padding: 1.5rem; 
         }
         .plan-card-base.selected {
-            border-color: #0BE6C7; /* Canopy Aqua */
-            box-shadow: 0 0 0 3px rgba(11, 230, 199, 0.5); 
-            transform: translateY(-5px);
+            border-color: #0BE6C7; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06), 0 0 0 1px #0BE6C7; 
+            transform: translateY(-3px); 
         }
-        .billing-toggle-active {
-            color: #0BE6C7; /* Canopy Aqua */
-            font-weight: 700;
+        #starterPlan.plan-card-base, #essentialsPlan.plan-card-base {
+            border-width: 2px; /* Start with a transparent border for consistent sizing */
+            border-color: transparent;
         }
-        .billing-toggle-inactive {
-            color: #6B7280; 
+         #starterPlan.plan-card-base.selected, #essentialsPlan.plan-card-base.selected {
+            border-color: #0BE6C7 !important; 
+            box-shadow: 0 0 0 3px rgba(11, 230, 199, 0.5) !important; 
+            transform: translateY(-5px) !important;
         }
+        .billing-toggle-active { color: #0BE6C7; font-weight: 700; }
+        .billing-toggle-inactive { color: #6B7280; }
         .section-card {
             background-color: white; 
             border-radius: 0.5rem; 
-            padding: 1.5rem; 
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); 
         }
+        .plan-card-base.section-card:not([class*="!p-"]) { /* Ensure this doesn't override !p-0 */
+            padding: 1.5rem;
+        }
+        #starterPlan.plan-card-base.section-card, #essentialsPlan.plan-card-base.section-card { /* Ensure main plan cards with !p-0 get it */
+            padding:0 !important;
+        }
+
         .plan-card-base ul li::before { 
-            content: '✓';
-            color: #0BE6C7; /* Canopy Aqua */
-            margin-right: 0.5rem;
-            font-weight: bold;
+            content: '✓'; color: #0BE6C7; margin-right: 0.5rem; font-weight: bold;
         }
         .summary-text-main { color: #FFFFFF; } 
         .summary-text-secondary { color: #D1D5DB; } 
         .summary-text-accent { color: #0BE6C7; } 
         .summary-dark-bg { background-color: #1F2937; } 
 
-        input:checked + .toggle-bg .toggle-dot {
-            transform: translateX(100%);
-            background-color: #0BE6C7; 
-        }
-        input:checked + .toggle-bg {
-            background-color: #0BE6C7; 
-             opacity: 0.6; 
-        }
-        .toggle-bg {
-            transition: background-color 0.2s ease;
-        }
-        .toggle-dot {
-            transition: transform 0.2s ease-in-out;
-        }
+        input:checked + .toggle-bg .toggle-dot { transform: translateX(100%); background-color: #0BE6C7; }
+        input:checked + .toggle-bg { background-color: #0BE6C7; opacity: 0.6; }
+        .toggle-bg { transition: background-color 0.2s ease; }
+        .toggle-dot { transition: transform 0.2s ease-in-out; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="text-gray-900">
@@ -82,27 +85,29 @@
             </a>
         </div>
 
-        <div class="section-card flex flex-col md:flex-row justify-between items-center gap-6 md:gap-10 mb-8">
-            <div class="flex items-center">
-                <label for="userCountSmall" class="mr-3 text-gray-700 font-medium">Users:</label>
-                <input type="number" id="userCountSmall" value="1" min="1" max="4" class="border border-gray-300 rounded-md p-2 w-20 text-center focus:ring-2 focus:ring-teal-500 focus:border-teal-500 canopy-aqua-focus-ring">
-            </div>
-            <div class="flex items-center">
-                <span id="annualLabelSmallFirms" class="billing-toggle-active text-sm md:text-base font-semibold mr-2 cursor-pointer">ANNUALLY</span>
-                <label for="billingToggleSmallFirms" class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" value="" id="billingToggleSmallFirms" class="sr-only peer">
-                    <div class="toggle-bg w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300">
-                        <div class="toggle-dot absolute top-0.5 left-[2px] bg-white border-gray-300 border rounded-full h-5 w-5 transition-transform"></div>
-                    </div>
-                </label>
-                <span id="monthlyLabelSmallFirms" class="billing-toggle-inactive text-sm md:text-base font-semibold ml-2 cursor-pointer">MONTH-TO-MONTH</span>
+        <div class="section-card mb-8 !p-4 md:!p-6">
+            <div class="flex flex-col md:flex-row justify-center items-center md:space-x-12 space-y-4 md:space-y-0">
+                <div class="flex items-center">
+                    <label for="userCountSmall" class="mr-3 text-gray-700 font-medium">Users:</label>
+                    <input type="number" id="userCountSmall" value="1" min="1" max="4" class="border border-gray-300 rounded-md p-2 w-20 text-center focus:ring-2 focus:ring-teal-500 focus:border-teal-500 canopy-aqua-focus-ring">
+                </div>
+                <div class="flex items-center">
+                    <span id="annualLabelSmallFirms" class="billing-toggle-active text-sm md:text-base font-semibold mr-2 cursor-pointer">ANNUALLY</span>
+                    <label for="billingToggleSmallFirms" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" value="" id="billingToggleSmallFirms" class="sr-only peer">
+                        <div class="toggle-bg w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300">
+                            <div class="toggle-dot absolute top-0.5 left-[2px] bg-white border-gray-300 border rounded-full h-5 w-5 transition-transform"></div>
+                        </div>
+                    </label>
+                    <span id="monthlyLabelSmallFirms" class="billing-toggle-inactive text-sm md:text-base font-semibold ml-2 cursor-pointer">MONTH-TO-MONTH</span>
+                </div>
             </div>
         </div>
 
         <div class="flex flex-col lg:flex-row lg:gap-8">
             <div class="lg:w-2/3 space-y-8">
                 <div class="grid md:grid-cols-2 gap-6 md:gap-8">
-                    <div id="starterPlan" data-plan-id="starter" class="plan-card-base section-card !p-0 overflow-hidden selected flex flex-col">
+                    <div id="starterPlan" data-plan-id="starter" class="section-card !p-0 overflow-hidden selected flex flex-col plan-card-base">
                        <div class="p-6 flex-grow">
                             <h2 class="text-2xl font-bold text-gray-900 mb-1">Starter</h2>
                             <p class="text-xs text-gray-500 mb-4 h-8">Client Engagement, Document Management</p>
@@ -119,7 +124,7 @@
                        <button data-plan-id="starter" class="select-plan-button canopy-aqua-bg text-white w-full py-3 font-semibold hover:opacity-90 transition-opacity mt-auto">Starter</button>
                     </div>
 
-                    <div id="essentialsPlan" data-plan-id="essentials" class="plan-card-base section-card !p-0 overflow-hidden flex flex-col">
+                    <div id="essentialsPlan" data-plan-id="essentials" class="section-card !p-0 overflow-hidden flex flex-col plan-card-base">
                        <div class="p-6 flex-grow">
                             <h2 class="text-2xl font-bold text-gray-900 mb-1">Essentials</h2>
                             <p class="text-xs text-gray-500 mb-4 h-8">Everything in Starter, plus Workflow, Time & Billing</p>
@@ -140,36 +145,39 @@
                 </div>
                 <input type="hidden" id="selectedPlanSmallFirms" value="starter">
 
-                <div id="taxResolutionSectionCard" class="section-card cursor-pointer">
+                <div id="taxResolutionSectionCard" class="section-card plan-card-base">
                     <div class="flex flex-col md:flex-row justify-between items-center">
                         <div class="mb-4 md:mb-0 flex-grow">
                             <h3 class="text-xl font-bold text-gray-900">Add-on: Tax Resolution</h3>
                             <p class="text-sm text-gray-600">Includes Transcripts & Notices</p>
                         </div>
-                        <div class="text-left md:text-right">
+                        <div class="text-left md:text-right flex-shrink-0">
                             <div class="mb-1">
                                 <span id="taxResolutionPriceMain" class="text-2xl font-bold text-gray-900">$600</span>
-                                <span id="taxResolutionPriceSub" class="text-gray-500 text-sm">/ year</span>
-                                <p class="text-xs text-gray-500">or <span id="taxResolutionMonthlyAltPrice">$60</span> / month</p>
+                                <span id="taxResolutionPriceSub" class="text-gray-500 text-sm">/ unit / year</span>
+                                <p class="text-xs text-gray-500">or <span id="taxResolutionMonthlyAltPrice">$60</span> / unit / month</p>
                             </div>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" id="selectTaxResolutionSmallFirms" class="h-5 w-5 text-teal-500 border-gray-300 rounded focus:ring-teal-400 canopy-aqua-focus-ring">
-                                <span class="ml-2 text-gray-700"></span>
-                            </label>
+                             <div class="flex items-center justify-end md:justify-start mt-2">
+                                <div class="flex items-center ml-auto">
+                                    <label for="taxResolutionQuantity" class="text-sm text-gray-600 mr-1">Qty:</label>
+                                    <input type="number" id="taxResolutionQuantity" value="0" min="0" 
+                                           class="border border-gray-300 rounded-md p-1 w-16 text-center text-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 canopy-aqua-focus-ring" disabled>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="section-card">
+                <div class="section-card !p-4 md:!p-6">
                     <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Onboarding & Implementation</h3>
-                    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
-                        <label class="flex items-center p-3 border border-gray-200 rounded-md hover:border-teal-500 cursor-pointer has-[:checked]:border-teal-500 has-[:checked]:ring-2 has-[:checked]:ring-teal-200">
-                            <input type="radio" name="implementationSmallFirms" value="standard" class="h-4 w-4 text-teal-500 focus:ring-teal-400 border-gray-300 canopy-aqua-focus-ring" checked>
-                            <span class="ml-3 text-gray-700 font-medium">$150 Standard Implementation</span>
+                    <div class="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-4">
+                        <label class="flex items-center p-3 border border-gray-200 rounded-md hover:border-teal-500 cursor-pointer has-[:checked]:border-teal-500 has-[:checked]:ring-2 has-[:checked]:ring-teal-200 sm:flex-1 min-w-0 text-center sm:text-left justify-center sm:justify-start">
+                            <input type="radio" name="implementationSmallFirms" value="standard" class="h-4 w-4 text-teal-500 focus:ring-teal-400 border-gray-300 canopy-aqua-focus-ring flex-shrink-0" checked>
+                            <span class="ml-3 text-gray-700 font-medium">Standard <span class="block text-xs text-gray-500">($150 One-Time)</span></span>
                         </label>
-                        <label class="flex items-center p-3 border border-gray-200 rounded-md hover:border-teal-500 cursor-pointer has-[:checked]:border-teal-500 has-[:checked]:ring-2 has-[:checked]:ring-teal-200">
-                            <input type="radio" name="implementationSmallFirms" value="premium" class="h-4 w-4 text-teal-500 focus:ring-teal-400 border-gray-300 canopy-aqua-focus-ring">
-                            <span class="ml-3 text-gray-700 font-medium">$750 Premium Implementation</span>
+                        <label class="flex items-center p-3 border border-gray-200 rounded-md hover:border-teal-500 cursor-pointer has-[:checked]:border-teal-500 has-[:checked]:ring-2 has-[:checked]:ring-teal-200 sm:flex-1 min-w-0 text-center sm:text-left justify-center sm:justify-start">
+                            <input type="radio" name="implementationSmallFirms" value="premium" class="h-4 w-4 text-teal-500 focus:ring-teal-400 border-gray-300 canopy-aqua-focus-ring flex-shrink-0">
+                            <span class="ml-3 text-gray-700 font-medium">Premium <span class="block text-xs text-gray-500">($750 One-Time)</span></span>
                         </label>
                     </div>
                 </div>
@@ -180,7 +188,7 @@
                     <div id="summaryHeaderTotalSmallFirms" class="text-center mb-4 pb-4 border-b border-gray-600">
                         {/* Populated by JS */}
                     </div>
-                    <div id="summaryDetailsListSmallFirms" class="space-y-2">
+                    <div id="summaryDetailsListSmallFirms" class="space-y-1"> {/* Reduced space-y for tighter list */}
                         {/* Populated by JS */}
                     </div>
                 </div>
@@ -189,9 +197,6 @@
     </div>
 
 <script>
-    // PASTE THE ENTIRE JAVASCRIPT FROM THE PREVIOUS FULL CODE RESPONSE HERE
-    // (The JS from the previous turn where we fixed the toggle and added clickable tax box)
-    // No changes to the JS are needed for the comment removal or adding the static HTML link.
     document.addEventListener('DOMContentLoaded', () => {
         const userCountInput = document.getElementById('userCountSmall');
         const billingToggle = document.getElementById('billingToggleSmallFirms');
@@ -207,8 +212,8 @@
         const essentialsPriceMainEl = document.getElementById('essentialsPriceMain');
         const essentialsPriceSubEl = document.getElementById('essentialsPriceSub');
         const essentialsMonthlyAltPriceEl = document.getElementById('essentialsMonthlyAltPrice');
-        const taxResolutionSectionCard = document.getElementById('taxResolutionSectionCard'); 
-        const taxResolutionCheckbox = document.getElementById('selectTaxResolutionSmallFirms');
+        const taxResolutionSectionCard = document.getElementById('taxResolutionSectionCard');
+        const taxResolutionQuantityInput = document.getElementById('taxResolutionQuantity'); 
         const taxResolutionPriceMainEl = document.getElementById('taxResolutionPriceMain');
         const taxResolutionPriceSubEl = document.getElementById('taxResolutionPriceSub');
         const taxResolutionMonthlyAltPriceEl = document.getElementById('taxResolutionMonthlyAltPrice');
@@ -218,16 +223,21 @@
 
         const pricing = {
             plans: {
-                starter: { name: "Starter", annualPerUser: 540, monthlyPerUser: 60, features: ["Client Engagement", "Document Management"] },
-                essentials: { name: "Essentials", annualPerUser: 792, monthlyPerUser: 88, features: ["Client Engagement", "Document Management", "Workflow", "Time & Billing"] }
+                starter: { name: "Starter", annualPerUser: 540, monthlyPerUser: 60 },
+                essentials: { name: "Essentials", annualPerUser: 792, monthlyPerUser: 88 }
             },
-            addOns: { taxResolution: { name: "Tax Resolution", annual: 600, monthly: 60 } },
-            implementation: { standard: { name: "Standard", price: 150 }, premium: { name: "Premium", price: 750 } }
+            addOns: { 
+                taxResolution: { name: "Tax Resolution", price_annual_per_unit: 600, price_monthly_per_unit: 60 } 
+            },
+            implementation: { 
+                standard: { name: "Standard", price: 150 }, premium: { name: "Premium", price: 750 } 
+            }
         };
 
         let isMonthlyBilling = false; 
         let selectedPlanId = 'starter'; 
         let users = 1;
+        let isTaxResolutionSelected = false;
 
         function updateDisplayedPrices() {
             users = parseInt(userCountInput.value) || 1;
@@ -251,7 +261,6 @@
             const essentialsPlanData = pricing.plans.essentials;
             const essentialsAltTextParent = essentialsMonthlyAltPriceEl.parentElement; 
             const essentialsAltTextNode = essentialsAltTextParent ? essentialsAltTextParent.childNodes[2] : null; 
-
              if (isMonthlyBilling) {
                 essentialsPriceMainEl.textContent = `$${essentialsPlanData.monthlyPerUser}`;
                 essentialsPriceSubEl.textContent = `per user / month`;
@@ -268,15 +277,15 @@
             const taxResAltTextParent = taxResolutionMonthlyAltPriceEl.parentElement; 
             const taxResAltTextNode = taxResAltTextParent ? taxResAltTextParent.childNodes[2] : null; 
             if (isMonthlyBilling) {
-                taxResolutionPriceMainEl.textContent = `$${taxResData.monthly}`;
-                taxResolutionPriceSubEl.textContent = `/ month`;
-                taxResolutionMonthlyAltPriceEl.textContent = `$${taxResData.annual}`;
-                if(taxResAltTextNode && taxResAltTextNode.nodeType === Node.TEXT_NODE) taxResAltTextNode.textContent = " / year (billed annually)";
+                taxResolutionPriceMainEl.textContent = `$${taxResData.price_monthly_per_unit}`;
+                taxResolutionPriceSubEl.textContent = `/ unit / month`; 
+                taxResolutionMonthlyAltPriceEl.textContent = `$${taxResData.price_annual_per_unit}`;
+                if(taxResAltTextNode && taxResAltTextNode.nodeType === Node.TEXT_NODE) taxResAltTextNode.textContent = " / unit / year (billed annually)";
             } else {
-                taxResolutionPriceMainEl.textContent = `$${taxResData.annual}`;
-                taxResolutionPriceSubEl.textContent = `/ year`;
-                taxResolutionMonthlyAltPriceEl.textContent = `$${taxResData.monthly}`;
-                if(taxResAltTextNode && taxResAltTextNode.nodeType === Node.TEXT_NODE) taxResAltTextNode.textContent = " / month";
+                taxResolutionPriceMainEl.textContent = `$${taxResData.price_annual_per_unit}`;
+                taxResolutionPriceSubEl.textContent = `/ unit / year`; 
+                taxResolutionMonthlyAltPriceEl.textContent = `$${taxResData.price_monthly_per_unit}`;
+                if(taxResAltTextNode && taxResAltTextNode.nodeType === Node.TEXT_NODE) taxResAltTextNode.textContent = " / unit / month";
             }
             calculateTotal();
         }
@@ -288,10 +297,13 @@
             const planData = pricing.plans[selectedPlanId];
             let planCostPerUser = isMonthlyBilling ? planData.monthlyPerUser : planData.annualPerUser;
             let totalPlanCost = planCostPerUser * users;
+            
             let taxResolutionCost = 0;
-            if (taxResolutionCheckbox.checked) {
-                taxResolutionCost = isMonthlyBilling ? pricing.addOns.taxResolution.monthly : pricing.addOns.taxResolution.annual;
+            const taxResQuantity = parseInt(taxResolutionQuantityInput.value) || 0;
+            if (isTaxResolutionSelected && taxResQuantity > 0) {
+                taxResolutionCost = (isMonthlyBilling ? pricing.addOns.taxResolution.price_monthly_per_unit : pricing.addOns.taxResolution.price_annual_per_unit) * taxResQuantity;
             }
+
             let totalSubscriptionCost = totalPlanCost + taxResolutionCost;
             const selectedImplValue = document.querySelector('input[name="implementationSmallFirms"]:checked').value;
             let implementationCost = pricing.implementation[selectedImplValue].price;
@@ -320,7 +332,8 @@
             summaryHeaderTotalDiv.appendChild(headerGrandTotalValEl);
 
             const headerGrandTotalFreqEl = document.createElement('div');
-            headerGrandTotalFreqEl.className = 'text-sm summary-text-secondary mt-1'; 
+            // Changed for Grand Total sub-text styling
+            headerGrandTotalFreqEl.className = 'text-xs summary-text-secondary mt-2'; 
             headerGrandTotalFreqEl.textContent = grandTotalFrequencyText;
             summaryHeaderTotalDiv.appendChild(headerGrandTotalFreqEl);
 
@@ -331,13 +344,15 @@
                 summaryHeaderTotalDiv.appendChild(oneTimeNoteEl);
             }
             
-            function addSummaryDetailItem(label, value) {
+            function addSummaryDetailItem(label, value, sizeClass = 'text-lg', isBold = false) { // Added isBold
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'flex justify-between text-lg summary-text-main';
+                itemDiv.className = `flex justify-between ${sizeClass} summary-text-main`;
+                if(isBold) itemDiv.classList.add('font-semibold');
+
                 const labelSpan = document.createElement('span');
                 labelSpan.textContent = label;
                 const valueSpan = document.createElement('span');
-                valueSpan.className = 'font-semibold';
+                valueSpan.className = 'font-semibold'; // Value is always semibold based on original summary
                 valueSpan.textContent = value;
                 itemDiv.appendChild(labelSpan);
                 itemDiv.appendChild(valueSpan);
@@ -350,32 +365,38 @@
             }
 
             addSummaryDetailItem(`Plan (${planData.name} x ${users} user${users > 1 ? 's' : ''}):`, `$${totalPlanCost.toFixed(0)}`);
-            if (taxResolutionCheckbox.checked) {
-                addSummaryDetailItem("Tax Resolution Add-on:", `$${taxResolutionCost.toFixed(0)}`);
+            if (isTaxResolutionSelected && taxResQuantity > 0) {
+                addSummaryDetailItem(`Tax Resolution (${taxResQuantity} unit${taxResQuantity > 1 ? 's' : ''}):`, `$${taxResolutionCost.toFixed(0)}`);
             }
             addDetailSeparator();
-            addSummaryDetailItem("Total Subscription:", `$${totalSubscriptionCost.toFixed(0)} ${isMonthlyBilling ? "/ month" : "/ year"}`);
-            addSummaryDetailItem(`One-Time Implementation (${pricing.implementation[selectedImplValue].name}):`, `$${implementationCost.toFixed(0)}`);
+            // Apply new sizes
+            addSummaryDetailItem("Total Subscription:", `$${totalSubscriptionCost.toFixed(0)} ${isMonthlyBilling ? "/ month" : "/ year"}`, 'text-xl', true); // Bigger and Bold
+            addSummaryDetailItem(`One-Time Implementation (${pricing.implementation[selectedImplValue].name}):`, `$${implementationCost.toFixed(0)}`, 'text-base'); // Smaller
         }
 
         function handlePlanSelection(planId) {
             selectedPlanId = planId;
             hiddenSelectedPlanInput.value = planId;
+            
             const allPlanCards = [starterPlanCard, essentialsPlanCard];
             allPlanCards.forEach(card => {
-                card.classList.remove('selected', 'canopy-aqua-border');
-                card.classList.add('border-gray-200'); 
+                card.classList.remove('selected'); 
                 const button = card.querySelector('.select-plan-button');
-                button.classList.remove('canopy-aqua-bg', 'hover:opacity-90');
-                button.classList.add('bg-gray-700', 'hover:bg-gray-800');
+                if (button) {
+                    button.classList.remove('canopy-aqua-bg', 'hover:opacity-90');
+                    button.classList.add('bg-gray-700', 'hover:bg-gray-800');
+                }
             });
-            const selectedCard = document.getElementById(planId === 'starter' ? 'starterPlan' : 'essentialsPlan');
-            if (selectedCard) {
-                selectedCard.classList.add('selected', 'canopy-aqua-border');
-                selectedCard.classList.remove('border-gray-200');
-                const button = selectedCard.querySelector('.select-plan-button');
-                button.classList.add('canopy-aqua-bg', 'hover:opacity-90');
-                button.classList.remove('bg-gray-700', 'hover:bg-gray-800');
+        
+            const selectedCardEl = document.getElementById(planId === 'starter' ? 'starterPlan' : 'essentialsPlan');
+            if (selectedCardEl) {
+                selectedCardEl.classList.add('selected');
+                const button = selectedCardEl.querySelector('.select-plan-button');
+                if (button) {
+                    button.classList.add('canopy-aqua-bg', 'hover:opacity-90');
+                    button.classList.remove('bg-gray-700', 'hover:bg-gray-800');
+                    // Update button text to just plan name - already done in HTML
+                }
             }
             calculateTotal();
         }
@@ -395,20 +416,70 @@
         });
         annualLabel.addEventListener('click', () => { if(billingToggle.checked) { billingToggle.checked = false; billingToggle.dispatchEvent(new Event('change'));} });
         monthlyLabel.addEventListener('click', () => { if(!billingToggle.checked) { billingToggle.checked = true; billingToggle.dispatchEvent(new Event('change'));} });
-        selectPlanButtons.forEach(button => button.addEventListener('click', (e) => handlePlanSelection(e.target.dataset.planId)));
-        [starterPlanCard, essentialsPlanCard].forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button')) { handlePlanSelection(card.dataset.planId); } }));
         
+        selectPlanButtons.forEach(button => button.addEventListener('click', (e) => handlePlanSelection(e.target.dataset.planId)));
+        [starterPlanCard, essentialsPlanCard].forEach(card => {
+            card.addEventListener('click', (e) => { 
+                if (!e.target.closest('button')) { 
+                    handlePlanSelection(card.dataset.planId); 
+                }
+            });
+        });
+        
+        function toggleTaxResolutionVisuals(selected) {
+            taxResolutionSectionCard.classList.toggle('selected', selected);
+        }
+
+        function setTaxResolutionSelected(selectState) {
+            isTaxResolutionSelected = selectState;
+            toggleTaxResolutionVisuals(isTaxResolutionSelected);
+
+            if (isTaxResolutionSelected) {
+                taxResolutionQuantityInput.disabled = false;
+                if (parseInt(taxResolutionQuantityInput.value) <= 0) {
+                    taxResolutionQuantityInput.value = "1";
+                }
+            } else {
+                taxResolutionQuantityInput.disabled = true;
+                taxResolutionQuantityInput.value = "0";
+            }
+            calculateTotal();
+        }
+
         taxResolutionSectionCard.addEventListener('click', (event) => {
-            if (event.target !== taxResolutionCheckbox && !event.target.closest('label[for="selectTaxResolutionSmallFirms"]')) {
-                taxResolutionCheckbox.checked = !taxResolutionCheckbox.checked;
-                taxResolutionCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+            if (event.target === taxResolutionQuantityInput || event.target.closest('label[for="taxResolutionQuantity"]')) {
+                return; 
+            }
+            setTaxResolutionSelected(!isTaxResolutionSelected);
+        });
+        
+        taxResolutionQuantityInput.addEventListener('input', () => {
+            let quantity = parseInt(taxResolutionQuantityInput.value);
+            if (isNaN(quantity) || quantity < 0) {
+                quantity = 0;
+                taxResolutionQuantityInput.value = "0";
+            }
+
+            if (quantity > 0) {
+                if (!isTaxResolutionSelected) {
+                    setTaxResolutionSelected(true);
+                } else {
+                    calculateTotal(); 
+                }
+            } else { 
+                if (isTaxResolutionSelected) {
+                    setTaxResolutionSelected(false); 
+                } else {
+                    calculateTotal(); 
+                }
             }
         });
-        taxResolutionCheckbox.addEventListener('change', calculateTotal); 
+
         implementationRadios.forEach(radio => radio.addEventListener('change', calculateTotal));
 
         handlePlanSelection('starter'); 
         updateDisplayedPrices(); 
+        setTaxResolutionSelected(false); 
     });
 </script>
 

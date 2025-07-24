@@ -35,7 +35,7 @@
         }
         .firm-toggle button {
             flex: 1; padding: 0.35rem 0;
-            font-size: 0.75rem; /* Adjusted font size */
+            font-size: 0.75rem;
             font-weight: 600;
             border-radius: 9999px;
             transition: all 0.2s ease-in-out;
@@ -98,6 +98,29 @@
         .summary-label { color: #9ca3af; }
         .summary-value { color: white; }
         .switch-monthly-link { border-top: 1px solid #374151; color: #0BE6C7; }
+
+        .ce-input {
+            background-color: #1e293b;
+            color: white;
+            border: 1px solid #374151;
+            border-radius: 0.375rem;
+            width: 4.5rem;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: right;
+        }
+        .ce-input:focus {
+            outline: 2px solid #0BE6C7;
+            border-color: transparent;
+        }
+
+        .discreet-input {
+            color: #cbd5e1 !important;
+        }
+        .discreet-input::placeholder {
+            color: #e2e8f0;
+        }
     </style>
 </head>
 <body>
@@ -110,7 +133,7 @@
                 </div>
                 <div class="ml-auto firm-toggle w-48">
                     <button class="active">Growing Firms</button>
-                    <button onclick="window.location.href='SmallFirm2.html'">Small Firms</button>
+                    <button>Small Firms</button>
                 </div>
             </div>
             <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900">Pricing</h1>
@@ -134,10 +157,14 @@
 
                 <div class="mt-4 border border-slate-200 rounded-lg">
                     <div class="p-4 bg-blue-600 text-white rounded-t-lg">
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between items-start">
                             <div>
                                 <h3 id="ceTitle" class="font-bold">Client Engagement Platform</h3>
                                 <p id="ceSublabel" class="text-xs opacity-80">$150 / month, unlimited users</p>
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <label for="additionalClientsInput" class="text-xs opacity-80">Addtl. Clients:</label>
+                                    <input type="number" id="additionalClientsInput" min="0" value="0" class="ce-input">
+                                </div>
                             </div>
                             <div class="text-right">
                                 <p class="text-sm opacity-80">Annual Total</p>
@@ -166,6 +193,13 @@
                                 <select id="dataMigrationSelect" class="item-select"></select>
                             </div>
                         </div>
+                        <div class="border-t border-slate-200 mt-4 pt-3">
+                            <div class="flex justify-end">
+                                 <div class="w-1/4">
+                                     <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
+                                 </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -184,6 +218,10 @@
                         <span class="summary-label">One-Time Charges</span>
                         <span id="summaryOneTime" class="text-lg font-bold summary-value">$0</span>
                     </div>
+                    <div id="summaryDiscountRow" class="hidden flex justify-between items-center py-3 summary-line-item text-teal-400">
+                        <span class="summary-label">Discount</span>
+                        <span id="summaryDiscount" class="text-lg font-bold">0%</span>
+                    </div>
                     <div class="flex justify-between items-center py-3 summary-line-item">
                         <span class="summary-label">Payment Due Today</span>
                         <span id="summarySinglePayment" class="text-lg font-bold summary-value">$1,800</span>
@@ -192,7 +230,7 @@
                 
                 <div class="mt-auto pt-4 text-center">
                     <a href="#" id="summarySwitchLink" class="font-bold text-base switch-monthly-link block py-3">
-                        <span id="summarySwitchText">OR SWITCH TO MONTHLY!</span>
+                        <span id="summarySwitchText">OR SWITCH TO ANNUAL!</span>
                         <br>
                         <span id="summarySwitchPrice" class="text-xl">$180</span>
                     </a>
@@ -207,6 +245,7 @@
                 monthly_premium_factor: 1.20,
                 implementation_minimum_fee: 1500,
                 premium_onboarding_fee: 500,
+                additional_client_rate: 0.12,
                 base_client_engagement: {
                     standard: { name: "Client Engagement - Standard", monthly_rate: 150, impl_percent: 0.15 },
                     pro: { name: "Client Engagement - Pro", monthly_rate: 175, impl_percent: 0.20 }
@@ -236,7 +275,6 @@
             let isProTier = true;
             let manualImplFeeSet = false;
 
-            // --- DOM Elements ---
             const annualBtn = document.getElementById('annualBtn');
             const monthlyBtn = document.getElementById('monthlyBtn');
             const proTierBtn = document.getElementById('proTierBtn');
@@ -245,6 +283,8 @@
             const implementationFeeInput = document.getElementById('implementationFeeInput');
             const dataMigrationSelect = document.getElementById('dataMigrationSelect');
             const premiumOnboardingCheck = document.getElementById('premiumOnboardingCheck');
+            const additionalClientsInput = document.getElementById('additionalClientsInput');
+            const aeDiscountInput = document.getElementById('aeDiscountInput');
             
             const ceTitle = document.getElementById('ceTitle');
             const ceSublabel = document.getElementById('ceSublabel');
@@ -252,6 +292,8 @@
             const summaryBigTotal = document.getElementById('summaryBigTotal');
             const summaryPerMonth = document.getElementById('summaryPerMonth');
             const summaryOneTime = document.getElementById('summaryOneTime');
+            const summaryDiscountRow = document.getElementById('summaryDiscountRow');
+            const summaryDiscount = document.getElementById('summaryDiscount');
             const summarySinglePayment = document.getElementById('summarySinglePayment');
             const summarySwitchLink = document.getElementById('summarySwitchLink');
             const summarySwitchText = document.getElementById('summarySwitchText');
@@ -308,127 +350,122 @@
             }
 
             function calculateAndRender() {
-                const ceTierKey = isProTier ? 'pro' : 'standard';
-                const ceData = pricing.base_client_engagement[ceTierKey];
-                
-                let totalAnnualSubscriptionEquiv = ceData.monthly_rate * 12;
-                
-                document.querySelectorAll('.module-user-input').forEach(input => {
-                    const moduleKey = input.dataset.key;
-                    const userCount = parseInt(input.value) || 0;
-                    const module = pricing.modules[moduleKey];
-                    let moduleAnnualCost = 0;
-                    let displayPricePerUser = 0;
+                try {
+                    const ceTierKey = isProTier ? 'pro' : 'standard';
+                    const ceData = pricing.base_client_engagement[ceTierKey];
+                    
+                    const additionalClients = parseInt(additionalClientsInput.value) || 0;
+                    const additionalClientsAnnualCost = additionalClients * pricing.additional_client_rate * 12;
 
-                    if (module.no_discount) {
-                        moduleAnnualCost = module.annual_price_per_user * userCount;
-                        displayPricePerUser = module.monthly_price_per_user;
-                    } else {
-                        let basePrice = module.base_price;
-                        if (typeof basePrice === 'object' && basePrice !== null) {
-                            basePrice = isProTier ? basePrice.pro : basePrice.standard;
+                    let totalAnnualSubscriptionEquiv = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
+                    
+                    document.querySelectorAll('.module-user-input').forEach(input => {
+                        const moduleKey = input.dataset.key;
+                        const userCount = parseInt(input.value) || 0;
+                        const module = pricing.modules[moduleKey];
+                        let moduleAnnualCost = 0;
+                        let displayPricePerUser = 0;
+
+                        if (module.no_discount) {
+                            moduleAnnualCost = module.annual_price_per_user * userCount;
+                            displayPricePerUser = module.monthly_price_per_user;
+                        } else {
+                            let basePrice = module.base_price;
+                            if (typeof basePrice === 'object' && basePrice !== null) {
+                                basePrice = isProTier ? basePrice.pro : basePrice.standard;
+                            }
+                            const discount = getModuleDiscount(userCount);
+                            const discountedPricePerUser = basePrice * (1 - discount);
+                            moduleAnnualCost = discountedPricePerUser * userCount * 12;
+                            displayPricePerUser = discountedPricePerUser;
                         }
-                        const discount = getModuleDiscount(userCount);
-                        const discountedPricePerUser = basePrice * (1 - discount);
-                        moduleAnnualCost = discountedPricePerUser * userCount * 12;
-                        displayPricePerUser = discountedPricePerUser;
+                        
+                        totalAnnualSubscriptionEquiv += moduleAnnualCost;
+                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
+                        const monthlyModuleCost = moduleAnnualCost / 12;
+                        let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
+                        
+                        if (!isAnnual && !module.no_discount) {
+                             displayPrice *= pricing.monthly_premium_factor;
+                        } else if (!isAnnual && module.no_discount) {
+                            displayPrice = module.monthly_price_per_user * userCount;
+                        }
+                        document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(displayPrice) + (isAnnual ? '/yr' : '/mo');
+                    });
+
+                    const discountPercent = parseFloat(aeDiscountInput.value) || 0;
+                    if (discountPercent > 0) {
+                        totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
                     }
                     
-                    totalAnnualSubscriptionEquiv += moduleAnnualCost;
+                    const monthlyFactor = totalAnnualSubscriptionEquiv / 12;
+                    const currentMonthlyTotal = isAnnual ? monthlyFactor : monthlyFactor * pricing.monthly_premium_factor;
+                    const currentAnnualTotal = totalAnnualSubscriptionEquiv;
 
-                    document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
-                    const monthlyModuleCost = moduleAnnualCost / 12;
-                    let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
+                    let calculatedImplFee = Math.max(currentAnnualTotal * ceData.impl_percent, pricing.implementation_minimum_fee);
+                    let premiumFee = premiumOnboardingCheck.checked ? pricing.premium_onboarding_fee : 0;
+                    let migrationFee = pricing.data_migration_options[dataMigrationSelect.value].price;
                     
-                    if (!isAnnual && !module.no_discount) {
-                         displayPrice *= pricing.monthly_premium_factor;
-                    } else if (!isAnnual && module.no_discount) {
-                        displayPrice = module.monthly_price_per_user * userCount;
+                    let finalImplFee;
+                    if (manualImplFeeSet) {
+                        finalImplFee = parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0;
+                    } else {
+                        finalImplFee = calculatedImplFee + premiumFee;
+                        implementationFeeInput.value = formatCurrency(finalImplFee);
                     }
+                    
+                    let totalOneTimeCharges = finalImplFee + migrationFee;
 
-                    document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(displayPrice) + (isAnnual ? '/yr' : '/mo');
-                });
-                
-                const monthlyFactor = totalAnnualSubscriptionEquiv / 12;
-                const currentMonthlyTotal = isAnnual ? monthlyFactor : monthlyFactor * pricing.monthly_premium_factor;
-                const currentAnnualTotal = totalAnnualSubscriptionEquiv;
+                    ceTitle.textContent = ceData.name;
+                    const ceDisplayMonthly = isAnnual ? ceData.monthly_rate : ceData.monthly_rate * pricing.monthly_premium_factor;
+                    ceSublabel.textContent = `${formatCurrency(ceDisplayMonthly)} / month, unlimited users`;
+                    const ceBaseAnnual = ceData.monthly_rate * 12;
+                    const ceBaseMonthly = ceBaseAnnual / 12 * (isAnnual ? 1 : pricing.monthly_premium_factor);
+                    ceTotal.textContent = formatCurrency(isAnnual ? ceBaseAnnual : ceBaseMonthly) + (isAnnual ? '/yr' : '/mo');
 
-                // --- One-Time Charges ---
-                let calculatedImplFee = Math.max(currentAnnualTotal * ceData.impl_percent, pricing.implementation_minimum_fee);
-                let premiumFee = premiumOnboardingCheck.checked ? pricing.premium_onboarding_fee : 0;
-                let migrationFee = pricing.data_migration_options[dataMigrationSelect.value].price;
-                
-                let finalImplFee;
-                if (manualImplFeeSet) {
-                    finalImplFee = parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0;
-                } else {
-                    finalImplFee = calculatedImplFee + premiumFee;
-                    implementationFeeInput.value = formatCurrency(finalImplFee);
+                    summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
+                    summaryOneTime.textContent = formatCurrency(totalOneTimeCharges);
+
+                    if (discountPercent > 0) {
+                        summaryDiscountRow.classList.remove('hidden');
+                        summaryDiscount.textContent = `-${discountPercent}%`;
+                    } else {
+                        summaryDiscountRow.classList.add('hidden');
+                    }
+                    
+                    summarySwitchLink.style.display = 'block';
+
+                    if (isAnnual) {
+                        summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
+                        summarySinglePayment.textContent = formatCurrency(currentAnnualTotal + totalOneTimeCharges);
+                        summarySwitchText.textContent = 'OR SWITCH TO MONTHLY!';
+                        const switchToMonthlyPrice = (currentAnnualTotal / 12) * pricing.monthly_premium_factor;
+                        summarySwitchPrice.textContent = formatCurrency(switchToMonthlyPrice);
+                    } else {
+                        summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal);
+                        summarySinglePayment.textContent = formatCurrency(currentMonthlyTotal + totalOneTimeCharges);
+                        summarySwitchText.textContent = 'OR SWITCH TO ANNUAL!';
+                        summarySwitchPrice.textContent = formatCurrency(currentAnnualTotal);
+                    }
+                } catch (error) {
+                    console.error("An error occurred during calculation:", error);
                 }
-                
-                let totalOneTimeCharges = finalImplFee + migrationFee;
-
-                // --- Update UI ---
-                ceTitle.textContent = ceData.name;
-                const ceDisplayMonthly = isAnnual ? ceData.monthly_rate : ceData.monthly_rate * pricing.monthly_premium_factor;
-                ceSublabel.textContent = `${formatCurrency(ceDisplayMonthly)} / month, unlimited users`;
-                ceTotal.textContent = formatCurrency( isAnnual ? ceData.monthly_rate * 12 : ceDisplayMonthly) + (isAnnual ? '/yr' : '/mo');
-
-                summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
-                summaryOneTime.textContent = formatCurrency(totalOneTimeCharges);
-                
-                summarySwitchLink.style.display = 'block';
-
-                if (isAnnual) {
-                    summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
-                    summarySinglePayment.textContent = formatCurrency(currentAnnualTotal + totalOneTimeCharges);
-                    summarySwitchText.textContent = 'OR SWITCH TO MONTHLY!';
-                    const switchToMonthlyPrice = (currentAnnualTotal / 12) * pricing.monthly_premium_factor;
-                    summarySwitchPrice.textContent = formatCurrency(switchToMonthlyPrice);
-                } else {
-                    summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal);
-                    summarySinglePayment.textContent = formatCurrency(currentMonthlyTotal + totalOneTimeCharges);
-                    summarySwitchText.textContent = 'OR SWITCH TO ANNUAL!';
-                    summarySwitchPrice.textContent = formatCurrency(currentAnnualTotal);
-                }
-            }
-
-            function createToggleHandler(stateUpdater, activeBtn, inactiveBtn, isTierChange = false) {
-                return () => {
-                    stateUpdater();
-                    activeBtn.classList.add('active');
-                    inactiveBtn.classList.remove('active');
-                    manualImplFeeSet = false;
-
-                    // If it's a billing cycle change, re-render everything to update all text like /yr and /mo
-                    if (!isTierChange) {
-                        renderModules(); 
-                    }
-                    
-                    calculateAndRender();
-                };
             }
             
-            // This is the function that was modified
-            function createTierToggleHandler(stateUpdater, activeBtn, inactiveBtn) {
+            function createToggleHandler(stateUpdater, activeBtn, inactiveBtn) {
                 return () => {
                     stateUpdater();
                     activeBtn.classList.add('active');
                     inactiveBtn.classList.remove('active');
                     manualImplFeeSet = false;
-                    // The line that reset the modules was here, and has been removed.
                     calculateAndRender();
                 };
             }
 
-            // --- Event Listeners ---
-            annualBtn.addEventListener('click', createToggleHandler(() => { isAnnual = true; renderModules(); }, annualBtn, monthlyBtn));
-            monthlyBtn.addEventListener('click', createToggleHandler(() => { isAnnual = false; renderModules(); }, monthlyBtn, annualBtn));
-
-            // Use the new, specific handler for tier changes
-            proTierBtn.addEventListener('click', createTierToggleHandler(() => isProTier = true, proTierBtn, standardTierBtn));
-            standardTierBtn.addEventListener('click', createTierToggleHandler(() => isProTier = false, standardTierBtn, proTierBtn));
-
+            annualBtn.addEventListener('click', createToggleHandler(() => isAnnual = true, annualBtn, monthlyBtn));
+            monthlyBtn.addEventListener('click', createToggleHandler(() => isAnnual = false, monthlyBtn, annualBtn));
+            proTierBtn.addEventListener('click', createToggleHandler(() => isProTier = true, proTierBtn, standardTierBtn));
+            standardTierBtn.addEventListener('click', createToggleHandler(() => isProTier = false, standardTierBtn, proTierBtn));
 
             implementationFeeInput.addEventListener('input', () => {
                 manualImplFeeSet = true;
@@ -440,11 +477,12 @@
             });
             dataMigrationSelect.addEventListener('change', calculateAndRender);
             premiumOnboardingCheck.addEventListener('change', () => {
-                manualImplFeeSet = false; // Allow checkbox to trigger auto-calculation
+                manualImplFeeSet = false;
                 calculateAndRender();
             });
+            additionalClientsInput.addEventListener('input', calculateAndRender);
+            aeDiscountInput.addEventListener('input', calculateAndRender);
             
-            // --- Initial Load ---
             populateSelects();
             renderModules();
             calculateAndRender();

@@ -151,7 +151,7 @@
         <header class="text-center w-full max-w-4xl mx-auto z-10">
             <div class="flex justify-start items-center mb-4">
                 <div class="flex items-center space-x-2">
-                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="h-8" id="headerLogo">
+                    <img src="https://placehold.co/100x32/000000/FFFFFF?text=Logo" alt="Canopy Logo" class="h-8" id="headerLogo" onerror="this.onerror=null;this.src='https://placehold.co/100x32/000000/FFFFFF?text=Logo';">
                 </div>
                 <div class="ml-auto firm-toggle w-48">
                     <button class="active">Growing Firms</button>
@@ -189,7 +189,7 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm opacity-80">Annual Total</p>
+                                <p id="ceTotalLabel" class="text-sm opacity-80">Annual Total</p>
                                 <p id="ceTotal" class="font-bold text-lg">$2,100</p>
                             </div>
                         </div>
@@ -317,6 +317,7 @@
             
             const ceTitle = document.getElementById('ceTitle');
             const ceSublabel = document.getElementById('ceSublabel');
+            const ceTotalLabel = document.getElementById('ceTotalLabel'); // <-- Added this line
             const ceTotal = document.getElementById('ceTotal');
             const summaryBigTotal = document.getElementById('summaryBigTotal');
             const summaryPerMonth = document.getElementById('summaryPerMonth');
@@ -459,6 +460,7 @@
                     ceTitle.textContent = ceData.name;
                     ceSublabel.textContent = `${formatCurrency(displayedMonthlyRate)} ${ceData.description}`;
                     ceTotal.textContent = isAnnual ? `${formatCurrency(ceBaseAnnual)}/yr` : `${formatCurrency(ceBaseMonthly)}/mo`;
+                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total'; // <-- Added this line
 
 
                     summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
@@ -532,7 +534,8 @@
 
                 } catch(err) {
                     console.error("Failed to generate PDF:", err);
-                    alert("Sorry, there was an error generating the PDF. Please try again.");
+                    // Replaced alert with a console log for a better user experience in this environment
+                    console.log("Sorry, there was an error generating the PDF. Please try again.");
                 } finally {
                     bodyEl.classList.remove('pdf-capture-mode');
                 }
@@ -540,8 +543,9 @@
 
             annualBtn.addEventListener('click', createToggleHandler(() => isAnnual = true, annualBtn, monthlyBtn));
             monthlyBtn.addEventListener('click', createToggleHandler(() => isAnnual = false, monthlyBtn, annualBtn));
-            proTierBtn.addEventListener('click', createToggleHandler(() => isProTier = true, proTierBtn, standardTierBtn));
-            standardTierBtn.addEventListener('click', createToggleHandler(() => isProTier = false, standardTierBtn, proTierBtn));
+            proTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = true; renderModules(); calculateAndRender(); }, proTierBtn, standardTierBtn));
+            standardTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = false; renderModules(); calculateAndRender(); }, standardTierBtn, proTierBtn));
+
 
             implementationFeeInput.addEventListener('input', () => {
                 manualImplFeeSet = true;

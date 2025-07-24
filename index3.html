@@ -317,7 +317,7 @@
             
             const ceTitle = document.getElementById('ceTitle');
             const ceSublabel = document.getElementById('ceSublabel');
-            const ceTotalLabel = document.getElementById('ceTotalLabel'); // <-- Added this line
+            const ceTotalLabel = document.getElementById('ceTotalLabel');
             const ceTotal = document.getElementById('ceTotal');
             const summaryBigTotal = document.getElementById('summaryBigTotal');
             const summaryPerMonth = document.getElementById('summaryPerMonth');
@@ -460,7 +460,7 @@
                     ceTitle.textContent = ceData.name;
                     ceSublabel.textContent = `${formatCurrency(displayedMonthlyRate)} ${ceData.description}`;
                     ceTotal.textContent = isAnnual ? `${formatCurrency(ceBaseAnnual)}/yr` : `${formatCurrency(ceBaseMonthly)}/mo`;
-                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total'; // <-- Added this line
+                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total';
 
 
                     summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
@@ -543,8 +543,12 @@
 
             annualBtn.addEventListener('click', createToggleHandler(() => isAnnual = true, annualBtn, monthlyBtn));
             monthlyBtn.addEventListener('click', createToggleHandler(() => isAnnual = false, monthlyBtn, annualBtn));
-            proTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = true; renderModules(); calculateAndRender(); }, proTierBtn, standardTierBtn));
-            standardTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = false; renderModules(); calculateAndRender(); }, standardTierBtn, proTierBtn));
+            
+            // --- CHANGE IS HERE ---
+            // Removed renderModules() from the tier change handlers to preserve input values.
+            proTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = true; calculateAndRender(); }, proTierBtn, standardTierBtn));
+            standardTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = false; calculateAndRender(); }, standardTierBtn, proTierBtn));
+            // --- END OF CHANGE ---
 
 
             implementationFeeInput.addEventListener('input', () => {

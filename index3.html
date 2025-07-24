@@ -393,22 +393,42 @@
                 }
             }
 
-            function createToggleHandler(stateUpdater, activeBtn, inactiveBtn) {
+            function createToggleHandler(stateUpdater, activeBtn, inactiveBtn, isTierChange = false) {
                 return () => {
                     stateUpdater();
                     activeBtn.classList.add('active');
                     inactiveBtn.classList.remove('active');
                     manualImplFeeSet = false;
-                    renderModules(); // Re-render modules when tier changes
+
+                    // If it's a billing cycle change, re-render everything to update all text like /yr and /mo
+                    if (!isTierChange) {
+                        renderModules(); 
+                    }
+                    
+                    calculateAndRender();
+                };
+            }
+            
+            // This is the function that was modified
+            function createTierToggleHandler(stateUpdater, activeBtn, inactiveBtn) {
+                return () => {
+                    stateUpdater();
+                    activeBtn.classList.add('active');
+                    inactiveBtn.classList.remove('active');
+                    manualImplFeeSet = false;
+                    // The line that reset the modules was here, and has been removed.
                     calculateAndRender();
                 };
             }
 
             // --- Event Listeners ---
-            annualBtn.addEventListener('click', createToggleHandler(() => isAnnual = true, annualBtn, monthlyBtn));
-            monthlyBtn.addEventListener('click', createToggleHandler(() => isAnnual = false, monthlyBtn, annualBtn));
-            proTierBtn.addEventListener('click', createToggleHandler(() => isProTier = true, proTierBtn, standardTierBtn));
-            standardTierBtn.addEventListener('click', createToggleHandler(() => isProTier = false, standardTierBtn, proTierBtn));
+            annualBtn.addEventListener('click', createToggleHandler(() => { isAnnual = true; renderModules(); }, annualBtn, monthlyBtn));
+            monthlyBtn.addEventListener('click', createToggleHandler(() => { isAnnual = false; renderModules(); }, monthlyBtn, annualBtn));
+
+            // Use the new, specific handler for tier changes
+            proTierBtn.addEventListener('click', createTierToggleHandler(() => isProTier = true, proTierBtn, standardTierBtn));
+            standardTierBtn.addEventListener('click', createTierToggleHandler(() => isProTier = false, standardTierBtn, proTierBtn));
+
 
             implementationFeeInput.addEventListener('input', () => {
                 manualImplFeeSet = true;

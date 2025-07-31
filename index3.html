@@ -212,7 +212,21 @@
                             </div>
                             <div>
                                 <label class="input-label text-xs block text-right mb-1">Data Migration</label>
-                                <select id="dataMigrationSelect" class="item-select"></select>
+                                <div class="relative">
+                                    <button id="dataMigrationToggle" class="item-select w-full text-left flex justify-between items-center" type="button">
+                                        <span id="dataMigrationDisplay">Select options...</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="dataMigrationDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-32 overflow-y-auto">
+                                        <!-- Checkbox options will be populated here -->
+                                    </div>
+                                </div>
+                                <div id="filecabinetClientInput" class="mt-2" style="display: none;">
+                                    <label class="input-label text-xs block text-right mb-1">FileCabinet Client Count:</label>
+                                    <input type="number" id="filecabinet_clients" min="0" value="0" class="item-input w-full" placeholder="Enter client count">
+                                </div>
                             </div>
                         </div>
                         <div class="border-t border-slate-200 mt-4 pt-3">
@@ -291,7 +305,7 @@
                 ],
                 data_migration_options: {
                     none: { name: "None", price: 0 },
-                    filecabinet: { name: "FileCabinet", price: 1000 },
+                    filecabinet: { name: "FileCabinet", base_price: 1000, base_clients: 500, additional_client_rate: 2 },
                     smartvault: { name: "SmartVault", price: 500 },
                     upload: { name: "Upload Only", price: 500 },
                     revver: { name: "Revver", price: 1500 },
@@ -309,7 +323,9 @@
             const standardTierBtn = document.getElementById('standardTierBtn');
             const modulesContainer = document.getElementById('modulesContainer');
             const implementationFeeInput = document.getElementById('implementationFeeInput');
-            const dataMigrationSelect = document.getElementById('dataMigrationSelect');
+            const dataMigrationToggle = document.getElementById('dataMigrationToggle');
+            const dataMigrationDropdown = document.getElementById('dataMigrationDropdown');
+            const dataMigrationDisplay = document.getElementById('dataMigrationDisplay');
             const premiumOnboardingCheck = document.getElementById('premiumOnboardingCheck');
             const additionalClientsInput = document.getElementById('additionalClientsInput');
             const aeDiscountInput = document.getElementById('aeDiscountInput');
@@ -331,14 +347,58 @@
 
             const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
 
-            function populateSelects() {
-                dataMigrationSelect.innerHTML = '';
+            function populateDataMigrationOptions() {
+                dataMigrationDropdown.innerHTML = '';
                 for (const key in pricing.data_migration_options) {
                     const option = pricing.data_migration_options[key];
-                    const optEl = document.createElement('option');
-                    optEl.value = key;
-                    optEl.textContent = `${option.name} (${formatCurrency(option.price)})`;
-                    dataMigrationSelect.appendChild(optEl);
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `migration_${key}`;
+                    checkbox.value = key;
+                    checkbox.className = 'h-3 w-3 rounded border-gray-300 text-teal-500 focus:ring-teal-500 mr-2';
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `migration_${key}`;
+                    label.className = 'text-xs text-gray-700 cursor-pointer flex-1';
+                    
+                    // Handle different pricing structures
+                    if (option.price !== undefined) {
+                        label.textContent = `${option.name} (${formatCurrency(option.price)})`;
+                    } else if (option.base_price !== undefined) {
+                        label.textContent = `${option.name} (${formatCurrency(option.additional_client_rate)} per client, ${formatCurrency(option.base_price)} minimum)`;
+                    }
+                    
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    
+                    checkbox.addEventListener('change', () => {
+                        updateDataMigrationDisplay();
+                        // Show/hide FileCabinet client input based on selection
+                        const filecabinetSelected = document.getElementById('migration_filecabinet')?.checked;
+                        const filecabinetInput = document.getElementById('filecabinetClientInput');
+                        if (filecabinetInput) {
+                            filecabinetInput.style.display = filecabinetSelected ? 'block' : 'none';
+                        }
+                        calculateAndRender();
+                    });
+                    
+                    dataMigrationDropdown.appendChild(div);
+                }
+            }
+            
+            function updateDataMigrationDisplay() {
+                const selectedOptions = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => pricing.data_migration_options[checkbox.value].name);
+                
+                if (selectedOptions.length === 0) {
+                    dataMigrationDisplay.textContent = 'Select options...';
+                } else if (selectedOptions.length === 1) {
+                    dataMigrationDisplay.textContent = selectedOptions[0];
+                } else {
+                    dataMigrationDisplay.textContent = `${selectedOptions.length} options selected`;
                 }
             }
 
@@ -424,6 +484,7 @@
                     });
 
                     const discountPercent = parseFloat(aeDiscountInput.value) || 0;
+                    const totalBeforeDiscount = totalAnnualSubscriptionEquiv;
                     if (discountPercent > 0) {
                         totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
                     }
@@ -435,7 +496,30 @@
                         ? pricing.implementation_premium_percent
                         : pricing.implementation_standard_percent;
                     
-                    let migrationFee = pricing.data_migration_options[dataMigrationSelect.value].price;
+                    // Calculate migration fees from multiple selections
+                    let migrationFee = 0;
+                    const selectedOptions = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                        .map(checkbox => checkbox.value);
+                    
+                    selectedOptions.forEach(optionKey => {
+                        const option = pricing.data_migration_options[optionKey];
+                        
+                        if (option.price !== undefined) {
+                            // Fixed price option
+                            migrationFee += option.price;
+                        } else if (option.base_price !== undefined) {
+                            // Tiered pricing (FileCabinet)
+                            const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
+                            if (clientCount > 0) {
+                                let optionFee = option.base_price;
+                                if (clientCount > option.base_clients) {
+                                    const additionalClients = clientCount - option.base_clients;
+                                    optionFee += additionalClients * option.additional_client_rate;
+                                }
+                                migrationFee += optionFee;
+                            }
+                        }
+                    });
                     
                     let percentageBasedFee = implementationBase * implementationPercent;
                     let calculatedImplFee = Math.max(percentageBasedFee, pricing.implementation_minimum_fee);
@@ -454,8 +538,8 @@
                     const currentAnnualTotal = totalAnnualSubscriptionEquiv;
 
                     const displayedMonthlyRate = isAnnual ? ceData.monthly_rate : ceData.monthly_rate * pricing.monthly_premium_factor;
-                    const ceBaseAnnual = ceData.monthly_rate * 12;
-                    const ceBaseMonthly = ceData.monthly_rate * pricing.monthly_premium_factor;
+                    const ceBaseAnnual = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
+                    const ceBaseMonthly = (ceData.monthly_rate * pricing.monthly_premium_factor) + (additionalClientsAnnualCost / 12 * pricing.monthly_premium_factor);
 
                     ceTitle.textContent = ceData.name;
                     ceSublabel.textContent = `${formatCurrency(displayedMonthlyRate)} ${ceData.description}`;
@@ -468,7 +552,9 @@
 
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
-                        summaryDiscount.textContent = `-${discountPercent}%`;
+                        const discountAmount = totalBeforeDiscount - totalAnnualSubscriptionEquiv;
+                        const discountAmountDisplay = isAnnual ? discountAmount : discountAmount / 12 * pricing.monthly_premium_factor;
+                        summaryDiscount.textContent = `${formatCurrency(discountAmountDisplay)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
                     }
@@ -559,16 +645,33 @@
                 const numericValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
                 e.target.value = formatCurrency(numericValue);
             });
-            dataMigrationSelect.addEventListener('change', calculateAndRender);
+            // Toggle dropdown visibility
+            dataMigrationToggle.addEventListener('click', () => {
+                const isVisible = dataMigrationDropdown.classList.contains('hidden');
+                dataMigrationDropdown.classList.toggle('hidden', !isVisible);
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dataMigrationToggle.contains(e.target) && !dataMigrationDropdown.contains(e.target)) {
+                    dataMigrationDropdown.classList.add('hidden');
+                }
+            });
             premiumOnboardingCheck.addEventListener('change', () => {
                 manualImplFeeSet = false;
                 calculateAndRender();
             });
             additionalClientsInput.addEventListener('input', calculateAndRender);
+            
+            // Add event listener for FileCabinet client input
+            const filecabinetClientsInput = document.getElementById('filecabinet_clients');
+            if (filecabinetClientsInput) {
+                filecabinetClientsInput.addEventListener('input', calculateAndRender);
+            }
             aeDiscountInput.addEventListener('input', calculateAndRender);
             downloadPdfBtn.addEventListener('click', generatePdf);
             
-            populateSelects();
+            populateDataMigrationOptions();
             renderModules();
             calculateAndRender();
         });

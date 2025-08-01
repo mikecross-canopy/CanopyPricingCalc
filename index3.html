@@ -32,12 +32,12 @@
         .firm-toggle {
             background-color: #e5e7eb;
             display: flex;
-            padding: 0.25rem;
+            padding: 0.15rem;
             border-radius: 9999px;
         }
         .firm-toggle button {
-            flex: 1; padding: 0.35rem 0;
-            font-size: 0.75rem;
+            flex: 1; padding: 0.2rem 0;
+            font-size: 0.65rem;
             font-weight: 600;
             border-radius: 9999px;
             transition: all 0.2s ease-in-out;
@@ -149,20 +149,20 @@
     <div class="relative min-h-screen flex flex-col items-center justify-center p-4 main-container">
         
         <header class="text-center w-full max-w-4xl mx-auto z-10">
-            <div class="flex justify-start items-center mb-4">
+            <div class="flex justify-start items-center mb-1">
                 <div class="flex items-center space-x-2">
-                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-16 mb-3" onerror="this.style.display='none'; console.error('Logo image not found.')">
+                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
                 </div>
                 <div class="ml-auto firm-toggle w-48">
                     <button class="active">Growing Firms</button>
                     <button onclick="window.location.href='SmallFirm2.html'">Small Firms</button>
                 </div>
             </div>
-            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900">Pricing</h1>
-            <p class="mt-2 text-base text-slate-600">Customize Canopy to fit your practice with our modular pricing</p>
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-0">Pricing</h1>
+            <p class="text-xs text-slate-600">Customize Canopy to fit your practice with our modular pricing</p>
         </header>
 
-        <main id="calculatorMain" class="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-6 w-full max-w-4xl mx-auto card-wrapper">
+        <main id="calculatorMain" class="mt-2 grid grid-cols-1 lg:grid-cols-5 gap-6 w-full max-w-4xl mx-auto card-wrapper">
 
             <div class="lg:col-span-3 p-4 rounded-xl pricing-card">
                 

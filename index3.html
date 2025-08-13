@@ -232,7 +232,10 @@
                         <div class="border-t border-slate-200 mt-4 pt-3">
                             <div class="flex justify-end">
                                  <div class="w-1/4">
-                                     <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
+                                     <div class="flex items-center justify-end space-x-2">
+                                         <span id="aeDiscountAmountDisplay" class="text-xs text-slate-300 hidden">-$0</span>
+                                         <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
+                                     </div>
                                  </div>
                             </div>
                         </div>
@@ -278,6 +281,7 @@
                 </div>
             </div>
         </main>
+        <input type="hidden" id="internalMonthlyDiscount" value="-$0">
     </div>
 
     <script>
@@ -344,6 +348,8 @@
             const summarySwitchLink = document.getElementById('summarySwitchLink');
             const summarySwitchText = document.getElementById('summarySwitchText');
             const summarySwitchPrice = document.getElementById('summarySwitchPrice');
+            const internalMonthlyDiscountInput = document.getElementById('internalMonthlyDiscount');
+            const aeDiscountAmountDisplay = document.getElementById('aeDiscountAmountDisplay');
 
             const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
 
@@ -471,7 +477,11 @@
                         }
                         
                         totalAnnualSubscriptionEquiv += moduleAnnualCost;
-                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
+                        let perUserLabelPrice = displayPricePerUser;
+                        if (!isAnnual) {
+                            perUserLabelPrice = module.no_discount ? module.monthly_price_per_user : displayPricePerUser * pricing.monthly_premium_factor;
+                        }
+                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(perUserLabelPrice, 2)} / user / month`;
                         const monthlyModuleCost = moduleAnnualCost / 12;
                         let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
                         
@@ -485,9 +495,8 @@
 
                     const discountPercent = parseFloat(aeDiscountInput.value) || 0;
                     const totalBeforeDiscount = totalAnnualSubscriptionEquiv;
-                    if (discountPercent > 0) {
-                        totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
-                    }
+                    const discountAmount = discountPercent > 0 ? (totalBeforeDiscount * (discountPercent / 100)) : 0;
+                    totalAnnualSubscriptionEquiv = totalBeforeDiscount - discountAmount;
                     
                     const implementationBase = isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * pricing.monthly_premium_factor;
 
@@ -552,11 +561,24 @@
 
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
-                        const discountAmount = totalBeforeDiscount - totalAnnualSubscriptionEquiv;
                         const discountAmountDisplay = isAnnual ? discountAmount : discountAmount / 12 * pricing.monthly_premium_factor;
                         summaryDiscount.textContent = `${formatCurrency(discountAmountDisplay)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
+                    }
+
+                    // Update hidden monthly discount field for internal use (always monthly, include monthly premium), prefixed with '-'
+                    const internalMonthlyDiscountValue = (discountAmount / 12) * pricing.monthly_premium_factor;
+                    if (internalMonthlyDiscountInput) {
+                        internalMonthlyDiscountInput.value = `-${formatCurrency(internalMonthlyDiscountValue)}`;
+                    }
+                    if (aeDiscountAmountDisplay) {
+                        if (discountPercent > 0) {
+                            aeDiscountAmountDisplay.classList.remove('hidden');
+                            aeDiscountAmountDisplay.textContent = `-${formatCurrency(internalMonthlyDiscountValue)}`;
+                        } else {
+                            aeDiscountAmountDisplay.classList.add('hidden');
+                        }
                     }
                     
                     const paymentDueToday = isAnnual ? currentAnnualTotal + totalOneTimeCharges : currentMonthlyTotal + totalOneTimeCharges;

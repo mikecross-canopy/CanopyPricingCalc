@@ -7,9 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Ensure libraries are loaded
+        window.addEventListener('load', function() {
+            console.log("Window loaded, checking libraries again...");
+            console.log("html2canvas available:", typeof html2canvas !== 'undefined');
+            console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+        });
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs (Compat for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    <script>
+        // Provided Firebase config (set on window for compat init below)
+        window.FIREBASE_CONFIG = {
+          apiKey: "AIzaSyBceVpzCfvVY6JnbMCaK1Ye0zsnY9LOyI8",
+          authDomain: "ae-pricing-calculator.firebaseapp.com",
+          projectId: "ae-pricing-calculator",
+          storageBucket: "ae-pricing-calculator.firebasestorage.app",
+          messagingSenderId: "25810838101",
+          appId: "1:25810838101:web:9379152608fe8b8f9e6adc",
+          measurementId: "G-LQ8N00DH40"
+        };
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -42,6 +66,9 @@
             border-radius: 9999px;
             transition: all 0.2s ease-in-out;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .firm-toggle button.active { background-color: #111827; color: white; box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06); }
 
@@ -58,6 +85,9 @@
             border-radius: 0.375rem;
             transition: all 0.2s ease-in-out;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .billing-toggle button.active {
             background-color: #0BE6C7;
@@ -142,6 +172,127 @@
             display: grid;
             place-items: center;
         }
+        
+        /* Fix text alignment and positioning issues in PDF */
+        .pdf-capture-mode .item-input,
+        .pdf-capture-mode .item-select {
+            text-align: center !important;
+            padding: 0.5rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .pdf-capture-mode .ce-input {
+            text-align: center !important;
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .pdf-capture-mode .pricing-item {
+            padding: 1rem 1.5rem !important;
+            gap: 1.5rem !important;
+        }
+        
+        .pdf-capture-mode .summary-card {
+            padding: 2rem !important;
+        }
+        
+        .pdf-capture-mode .summary-total-lg {
+            font-size: 4rem !important;
+            line-height: 1 !important;
+        }
+        
+        /* Ensure proper button text centering */
+        .pdf-capture-mode button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        
+        /* Fix input container alignment */
+        .pdf-capture-mode .item-input-container {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+        }
+        
+        /* Ensure proper grid alignment */
+        .pdf-capture-mode .pricing-item {
+            display: grid !important;
+            grid-template-columns: 2.5fr 1fr 1fr !important;
+            align-items: center !important;
+        }
+        
+        /* Fix summary section alignment */
+        .pdf-capture-mode .summary-line-item {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        
+        /* Ensure the entire page is properly styled for PDF */
+        .pdf-capture-mode {
+            background-color: #F8FAFC !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        .pdf-capture-mode .main-container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 2rem !important;
+        }
+        
+        .pdf-capture-mode .card-wrapper {
+            width: 100% !important;
+            max-width: none !important;
+        }
+        
+        /* Ensure all styles are applied to the cloned content */
+        #pdfContainer, #pdfContainer * {
+            box-sizing: border-box !important;
+        }
+        
+        #pdfContainer .pricing-card {
+            background: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        #pdfContainer .summary-card {
+            background: #111827 !important;
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        #pdfContainer .billing-toggle button,
+        #pdfContainer .firm-toggle button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        
+        #pdfContainer .item-input,
+        #pdfContainer .item-select {
+            text-align: center !important;
+            padding: 8px !important;
+            font-size: 14px !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 6px !important;
+        }
+        
+        #pdfContainer .ce-input {
+            text-align: center !important;
+            padding: 6px 8px !important;
+            font-size: 14px !important;
+        }
 
     </style>
 </head>
@@ -153,9 +304,11 @@
                 <div class="flex items-center space-x-2">
                     <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
                 </div>
-                <div class="ml-auto firm-toggle w-48">
-                    <button class="active">Growing Firms</button>
-                    <button onclick="window.location.href='SmallFirm2.html'">Small Firms</button>
+                <div class="ml-auto">
+                    <div class="firm-toggle w-48">
+                        <button class="active">Growing Firms</button>
+                        <button onclick="window.location.href='SmallFirm2.html'">Small Firms</button>
+                    </div>
                 </div>
             </div>
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-0">Pricing</h1>
@@ -232,10 +385,7 @@
                         <div class="border-t border-slate-200 mt-4 pt-3">
                             <div class="flex justify-end">
                                  <div class="w-1/4">
-                                     <div class="flex items-center justify-end space-x-2">
-                                         <span id="aeDiscountAmountDisplay" class="text-xs text-slate-300 hidden">-$0</span>
-                                         <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
-                                     </div>
+                                     <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
                                  </div>
                             </div>
                         </div>
@@ -278,14 +428,94 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         </button>
                     </div>
+                    
                 </div>
             </div>
         </main>
-        <input type="hidden" id="internalMonthlyDiscount" value="-$0">
+    </div>
+
+    <!-- Collapsible Quote Tools (starts collapsed) -->
+    <section class="w-full max-w-4xl mx-auto mt-4">
+        <button id="quoteToolsToggle" class="w-full flex items-center justify-between rounded-lg bg-slate-800 text-white px-4 py-2 shadow">
+            <span class="font-semibold text-sm">Quote Tools</span>
+            <span id="quoteToolsChevron" class="transition-transform">▾</span>
+        </button>
+        <div id="quoteToolsPanel" class="hidden rounded-b-lg bg-slate-900 text-white p-4 space-y-3">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+                <div id="userInfo" class="hidden text-xs text-slate-200 bg-slate-700/70 rounded px-2 py-1"></div>
+                <button id="signInBtn" class="text-xs px-2 py-1 rounded bg-teal-500 text-slate-900 hover:bg-teal-400">Sign In</button>
+                <button id="signOutBtn" class="hidden text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Sign Out</button>
+            </div>
+            <div id="quoteToolsLocked" class="text-xs text-slate-300 bg-slate-800/60 rounded p-3">
+                Sign in to save and manage quotes.
+            </div>
+            <div id="quoteToolsContent" class="hidden">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2">
+                        <label for="quoteNameInput" class="text-[11px] text-slate-300">Quote Name</label>
+                        <input id="quoteNameInput" type="text" placeholder="Enter a quote name..." class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs" />
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <label for="quoteNotesInput" class="text-[11px] text-slate-300 mt-1">Notes</label>
+                        <textarea id="quoteNotesInput" rows="2" placeholder="Notes (optional)" class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs"></textarea>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <button id="saveQuoteBtn" class="text-xs px-3 py-1 rounded bg-emerald-500 text-slate-900 hover:bg-emerald-400">Save Quote</button>
+                            <button id="manageQuotesBtn" class="text-xs px-3 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Manage Quotes</button>
+                            <span id="saveStatusMsg" class="text-[11px] text-slate-300"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] text-slate-400 mr-1">Local Options:</span>
+                            <button id="exportQuoteBtn" class="text-xs px-3 py-1 rounded bg-slate-700 text-white hover:bg-slate-600">Export</button>
+                            <label class="text-xs px-3 py-1 rounded bg-slate-700 text-white hover:bg-slate-600 cursor-pointer">
+                                Import
+                                <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Tip: Use Manage Quotes to filter and manage saved quotes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quotes Modal -->
+    <div id="quotesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-slate-900 font-bold">Saved Quotes</h3>
+                <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+            </div>
+            <!-- Quote name moved to Quote Tools panel -->
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <select id="timeRangeSelect" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
+                    <option value="all">All time</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="60">Last 60 days</option>
+                </select>
+                <select id="monthSelect" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
+                    <option value="all">All months</option>
+                </select>
+                <input id="searchQuoteInput" type="text" placeholder="Search by name" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
+            </div>
+            <div id="quotesList" class="max-h-72 overflow-y-auto border border-slate-200 rounded"></div>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Test if libraries are loaded
+            console.log("DOM loaded, checking libraries...");
+            console.log("html2canvas available:", typeof html2canvas !== 'undefined');
+            console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+            
+            if (typeof html2canvas === 'undefined') {
+                console.error("HTML2Canvas not loaded!");
+            }
+            if (typeof window.jspdf === 'undefined') {
+                console.error("jsPDF not loaded!");
+            }
             const pricing = {
                 monthly_premium_factor: 1.20,
                 implementation_minimum_fee: 1500,
@@ -311,7 +541,7 @@
                     none: { name: "None", price: 0 },
                     filecabinet: { name: "FileCabinet", base_price: 1000, base_clients: 500, additional_client_rate: 2 },
                     smartvault: { name: "SmartVault", price: 500 },
-                    upload: { name: "File Upload", price: 500 },
+                    upload: { name: "Upload Only", price: 500 },
                     revver: { name: "Revver", price: 1500 },
                     general: { name: "General Data Migration", price: 750 }
                 }
@@ -348,8 +578,39 @@
             const summarySwitchLink = document.getElementById('summarySwitchLink');
             const summarySwitchText = document.getElementById('summarySwitchText');
             const summarySwitchPrice = document.getElementById('summarySwitchPrice');
-            const internalMonthlyDiscountInput = document.getElementById('internalMonthlyDiscount');
-            const aeDiscountAmountDisplay = document.getElementById('aeDiscountAmountDisplay');
+            // Auth and Cloud elements
+            const signInBtn = document.getElementById('signInBtn');
+            const signOutBtn = document.getElementById('signOutBtn');
+            const userInfo = document.getElementById('userInfo');
+            const quoteNameInput = document.getElementById('quoteNameInput');
+            const quoteNotesInput = document.getElementById('quoteNotesInput');
+            const saveQuoteBtn = document.getElementById('saveQuoteBtn');
+            const manageQuotesBtn = document.getElementById('manageQuotesBtn');
+            const exportQuoteBtn = document.getElementById('exportQuoteBtn');
+            const importQuoteInput = document.getElementById('importQuoteInput');
+            const saveStatusMsg = document.getElementById('saveStatusMsg');
+            const quotesModal = document.getElementById('quotesModal');
+            const closeQuotesModal = document.getElementById('closeQuotesModal');
+            const quotesList = document.getElementById('quotesList');
+            const timeRangeSelect = document.getElementById('timeRangeSelect');
+            const monthSelect = document.getElementById('monthSelect');
+            const searchQuoteInput = document.getElementById('searchQuoteInput');
+
+            // Collapsible Quote Tools
+            const quoteToolsToggle = document.getElementById('quoteToolsToggle');
+            const quoteToolsPanel = document.getElementById('quoteToolsPanel');
+            const quoteToolsChevron = document.getElementById('quoteToolsChevron');
+            const quoteToolsContent = document.getElementById('quoteToolsContent');
+            const quoteToolsLocked = document.getElementById('quoteToolsLocked');
+
+            quoteToolsToggle?.addEventListener('click', () => {
+                const isHidden = quoteToolsPanel.classList.contains('hidden');
+                quoteToolsPanel.classList.toggle('hidden');
+                // Rotate chevron when expanded
+                if (quoteToolsChevron) {
+                    quoteToolsChevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+            });
 
             const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
 
@@ -477,11 +738,7 @@
                         }
                         
                         totalAnnualSubscriptionEquiv += moduleAnnualCost;
-                        let perUserLabelPrice = displayPricePerUser;
-                        if (!isAnnual) {
-                            perUserLabelPrice = module.no_discount ? module.monthly_price_per_user : displayPricePerUser * pricing.monthly_premium_factor;
-                        }
-                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(perUserLabelPrice, 2)} / user / month`;
+                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
                         const monthlyModuleCost = moduleAnnualCost / 12;
                         let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
                         
@@ -495,8 +752,9 @@
 
                     const discountPercent = parseFloat(aeDiscountInput.value) || 0;
                     const totalBeforeDiscount = totalAnnualSubscriptionEquiv;
-                    const discountAmount = discountPercent > 0 ? (totalBeforeDiscount * (discountPercent / 100)) : 0;
-                    totalAnnualSubscriptionEquiv = totalBeforeDiscount - discountAmount;
+                    if (discountPercent > 0) {
+                        totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
+                    }
                     
                     const implementationBase = isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * pricing.monthly_premium_factor;
 
@@ -561,24 +819,11 @@
 
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
+                        const discountAmount = totalBeforeDiscount - totalAnnualSubscriptionEquiv;
                         const discountAmountDisplay = isAnnual ? discountAmount : discountAmount / 12 * pricing.monthly_premium_factor;
                         summaryDiscount.textContent = `${formatCurrency(discountAmountDisplay)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
-                    }
-
-                    // Update hidden monthly discount field for internal use (always monthly, include monthly premium), prefixed with '-'
-                    const internalMonthlyDiscountValue = (discountAmount / 12) * pricing.monthly_premium_factor;
-                    if (internalMonthlyDiscountInput) {
-                        internalMonthlyDiscountInput.value = `-${formatCurrency(internalMonthlyDiscountValue)}`;
-                    }
-                    if (aeDiscountAmountDisplay) {
-                        if (discountPercent > 0) {
-                            aeDiscountAmountDisplay.classList.remove('hidden');
-                            aeDiscountAmountDisplay.textContent = `-${formatCurrency(internalMonthlyDiscountValue)}`;
-                        } else {
-                            aeDiscountAmountDisplay.classList.add('hidden');
-                        }
                     }
                     
                     const paymentDueToday = isAnnual ? currentAnnualTotal + totalOneTimeCharges : currentMonthlyTotal + totalOneTimeCharges;
@@ -601,6 +846,319 @@
                     console.error("An error occurred during calculation:", error);
                 }
             }
+
+            // ===== Firebase Init (replace with your project's config) =====
+            const firebaseConfig = window.FIREBASE_CONFIG || {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_AUTH_DOMAIN",
+                projectId: "YOUR_PROJECT_ID",
+            };
+            let app = null, auth = null, db = null, currentUser = null;
+            try {
+                if (firebaseConfig && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
+                    app = firebase.initializeApp(firebaseConfig);
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                }
+            } catch (e) {
+                console.warn('Firebase not initialized:', e);
+            }
+
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    currentUser = user || null;
+                    if (currentUser) {
+                        userInfo.textContent = `${currentUser.email}`;
+                        userInfo.classList.remove('hidden');
+                        signOutBtn.classList.remove('hidden');
+                        signInBtn.classList.add('hidden');
+                        // Unlock quote tools content when signed in
+                        quoteToolsLocked?.classList.add('hidden');
+                        quoteToolsContent?.classList.remove('hidden');
+                    } else {
+                        userInfo.textContent = '';
+                        userInfo.classList.add('hidden');
+                        signOutBtn.classList.add('hidden');
+                        signInBtn.classList.remove('hidden');
+                        // Lock quote tools when signed out
+                        quoteToolsContent?.classList.add('hidden');
+                        quoteToolsLocked?.classList.remove('hidden');
+                    }
+                });
+
+                signInBtn?.addEventListener('click', async () => {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    try {
+                        await auth.signInWithPopup(provider);
+                    } catch (e) {
+                        // Fallback for environments not supporting popups (e.g., file:// or Safari)
+                        if (e && (e.code === 'auth/operation-not-supported-in-this-environment' || e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user')) {
+                            try {
+                                await auth.signInWithRedirect(provider);
+                                return;
+                            } catch (e2) {
+                                alert('Sign-in failed (redirect): ' + e2.message);
+                                return;
+                            }
+                        }
+                        alert('Sign-in failed: ' + e.message);
+                    }
+                });
+                signOutBtn?.addEventListener('click', async () => {
+                    try { await auth.signOut(); } catch (e) { alert('Sign-out failed: ' + e.message); }
+                });
+            } else {
+                // Hide auth buttons if Firebase not configured
+                signInBtn?.classList.add('hidden');
+                signOutBtn?.classList.add('hidden');
+            }
+
+            // Warn if running from file:// which breaks Firebase Auth
+            try {
+                if (!location.protocol.startsWith('http')) {
+                    const warn = document.createElement('div');
+                    warn.className = 'fixed bottom-2 left-2 right-2 md:left-auto md:right-2 z-50 bg-yellow-100 text-yellow-900 border border-yellow-300 rounded px-3 py-2 text-xs shadow';
+                    warn.textContent = 'Firebase Auth requires http/https. Please run via a local server (e.g., VS Code Live Server or python -m http.server).';
+                    document.body.appendChild(warn);
+                }
+            } catch {}
+
+            // ===== Quote Persistence (Cloud first, local fallback) =====
+            const LS_KEY = 'canopy_quotes_v1';
+            function localReadAll() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
+            function localWriteAll(arr) { localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+            function makeId() { return 'q_' + Math.random().toString(36).slice(2, 10); }
+            function computeCurrentFolder(ts) {
+                const d = ts ? new Date(ts) : new Date();
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                return `${y}-${m}`; // e.g., 2025-08
+            }
+
+            async function cloudUpsertQuote(doc) {
+                if (!db || !currentUser) return null;
+                const ref = db.collection('quotes').doc(doc.id || makeId());
+                await ref.set({ ...doc, aeId: currentUser.uid, aeEmail: currentUser.email }, { merge: true });
+                return ref.id;
+            }
+            async function cloudListQuotes() {
+                if (!db || !currentUser) return [];
+                try {
+                    const snap = await db.collection('quotes')
+                        .where('aeId', '==', currentUser.uid)
+                        .orderBy('savedAt', 'desc')
+                        .get();
+                    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                } catch (e) {
+                    console.warn('cloudListQuotes falling back (likely missing index):', e);
+                    const snap = await db.collection('quotes')
+                        .where('aeId', '==', currentUser.uid)
+                        .get();
+                    const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    return arr.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+                }
+            }
+            async function cloudDeleteQuote(id) {
+                if (!db || !currentUser) return false;
+                await db.collection('quotes').doc(id).delete();
+                return true;
+            }
+
+            function getCurrentState() {
+                const modulesState = {};
+                document.querySelectorAll('.module-user-input').forEach(input => {
+                    modulesState[input.dataset.key] = parseInt(input.value) || 0;
+                });
+                const selectedMigrations = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]'))
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+                return {
+                    isAnnual,
+                    isProTier,
+                    additionalClients: parseInt(additionalClientsInput.value) || 0,
+                    premiumOnboarding: !!premiumOnboardingCheck.checked,
+                    implementationFee: implementationFeeInput.value,
+                    manualImplFeeSet: !!manualImplFeeSet,
+                    aeDiscount: parseFloat(aeDiscountInput.value) || 0,
+                    filecabinetClients: parseInt(document.getElementById('filecabinet_clients')?.value || 0),
+                    modules: modulesState,
+                    dataMigrations: selectedMigrations,
+                    savedAt: Date.now()
+                };
+            }
+            function applyState(state) {
+                if (!state) return;
+                if (typeof state.isAnnual === 'boolean' && state.isAnnual !== isAnnual) {
+                    (state.isAnnual ? annualBtn : monthlyBtn).click();
+                }
+                if (typeof state.isProTier === 'boolean' && state.isProTier !== isProTier) {
+                    (state.isProTier ? proTierBtn : standardTierBtn).click();
+                }
+                additionalClientsInput.value = state.additionalClients ?? 0;
+                premiumOnboardingCheck.checked = !!state.premiumOnboarding;
+                manualImplFeeSet = !!state.manualImplFeeSet;
+                implementationFeeInput.value = state.implementationFee ?? '';
+                aeDiscountInput.value = state.aeDiscount ?? 0;
+                Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]')).forEach(cb => {
+                    cb.checked = (state.dataMigrations || []).includes(cb.value);
+                });
+                const filecabinetInputWrap = document.getElementById('filecabinetClientInput');
+                if (filecabinetInputWrap) {
+                    const fcSelected = (state.dataMigrations || []).includes('filecabinet');
+                    filecabinetInputWrap.style.display = fcSelected ? 'block' : 'none';
+                }
+                const fc = document.getElementById('filecabinet_clients');
+                if (fc) fc.value = state.filecabinetClients ?? 0;
+                Object.entries(state.modules || {}).forEach(([key, users]) => {
+                    const el = document.getElementById(`${key}_users`);
+                    if (el) el.value = users;
+                });
+                if (quoteNotesInput) quoteNotesInput.value = state.notes ?? '';
+                calculateAndRender();
+            }
+
+            async function upsertQuote(name, folder, state, existingId = null, notes = '') {
+                const doc = { id: existingId || makeId(), name, folder, state, notes, savedAt: Date.now() };
+                if (db && currentUser) {
+                    const id = await cloudUpsertQuote(doc);
+                    return id || doc.id;
+                } else {
+                    const all = localReadAll();
+                    const idx = all.findIndex(q => q.id === doc.id || (q.name.toLowerCase() === name.toLowerCase() && (q.folder || '') === (folder || '')));
+                    if (idx >= 0) all[idx] = doc; else all.push(doc);
+                    localWriteAll(all);
+                    return doc.id;
+                }
+            }
+
+            async function listQuotes() {
+                if (db && currentUser) return await cloudListQuotes();
+                return localReadAll();
+            }
+            async function deleteQuote(id) {
+                if (db && currentUser) return await cloudDeleteQuote(id);
+                const all = localReadAll().filter(q => q.id !== id); localWriteAll(all); return true;
+            }
+
+            async function renderQuotesList() {
+                const all = await listQuotes();
+                const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
+                const rangeVal = timeRangeSelect?.value || 'all';
+                const monthVal = monthSelect?.value || 'all';
+
+                // Populate month dropdown from available quotes (yyyy-mm)
+                if (monthSelect && !monthSelect.dataset.populated) {
+                    const months = Array.from(new Set((all || []).map(q => (q.folder || computeCurrentFolder(q.savedAt))))).sort().reverse();
+                    const opts = ['<option value="all">All months</option>'].concat(months.map(m => `<option value="${m}">${m}</option>`));
+                    monthSelect.innerHTML = opts.join('');
+                    monthSelect.dataset.populated = 'true';
+                }
+
+                const now = Date.now();
+                const rangeMs = rangeVal === '30' ? 30*24*60*60*1000 : rangeVal === '60' ? 60*24*60*60*1000 : null;
+
+                const filtered = (all || [])
+                    .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
+                    .filter(q => (rangeMs ? ((now - (q.savedAt || 0)) <= rangeMs) : true))
+                    .filter(q => (monthVal !== 'all' ? ((q.folder || computeCurrentFolder(q.savedAt)) === monthVal) : true))
+                    .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+                if (!quotesList) return;
+                if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
+                quotesList.innerHTML = filtered.map(q => `
+                    <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
+                        <div>
+                            <div class="font-medium text-slate-800">${q.name}</div>
+                            <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>
+                            <button data-act="rename" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Rename</button>
+                            <button data-act="export" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-700 text-white rounded">Export</button>
+                            <button data-act="delete" data-id="${q.id}" class="px-2 py-1 text-xs bg-rose-600 text-white rounded">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+                quotesList.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const id = e.currentTarget.getAttribute('data-id');
+                        const act = e.currentTarget.getAttribute('data-act');
+                        const items = await listQuotes();
+                        const item = items.find(q => q.id === id);
+                        if (!item) return;
+                        if (act === 'load') {
+                            applyState(item.state);
+                            if (quoteNameInput) quoteNameInput.value = item.name;
+                            if (quoteNotesInput) quoteNotesInput.value = item.notes ?? '';
+                        } else if (act === 'rename') {
+                            const newName = prompt('New quote name:', item.name) || item.name;
+                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '');
+                            renderQuotesList();
+                        } else if (act === 'export') {
+                            const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
+                            const blob = new Blob([JSON.stringify(withFolder, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                        } else if (act === 'delete') {
+                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
+                        }
+                    });
+                });
+            }
+
+            // Bindings
+            saveQuoteBtn?.addEventListener('click', async () => {
+                try {
+                    if (!currentUser) {
+                        alert('Please sign in to save quotes.');
+                        return;
+                    }
+                    const name = (quoteNameInput?.value || '').trim();
+                    if (!name) { if (saveStatusMsg) saveStatusMsg.textContent = 'Please enter a quote name.'; return; }
+                    // Prepare state and folder
+                    const state = getCurrentState();
+                    const folder = computeCurrentFolder(state.savedAt);
+                    const notes = (quoteNotesInput?.value || '').trim();
+                    // Check existing by name
+                    let existingId = null;
+                    const items = await listQuotes();
+                    const exists = (items || []).find(q => q.name && q.name.toLowerCase() === name.toLowerCase());
+                    if (exists) existingId = exists.id;
+                    await upsertQuote(name, folder, state, existingId, notes);
+                    if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                } catch (err) {
+                    console.error('Save failed:', err);
+                    alert('Save failed: ' + (err && err.message ? err.message : err));
+                }
+            });
+            manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
+            closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
+            searchQuoteInput?.addEventListener('input', renderQuotesList);
+            timeRangeSelect?.addEventListener('change', renderQuotesList);
+            monthSelect?.addEventListener('change', renderQuotesList);
+            exportQuoteBtn?.addEventListener('click', () => {
+                const name = (quoteNameInput?.value || 'CanopyQuote');
+                const state = getCurrentState();
+                const notes = (quoteNotesInput?.value || '').trim();
+                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, savedAt: state.savedAt };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+            });
+            importQuoteInput?.addEventListener('change', async (e) => {
+                const file = e.target.files?.[0]; if (!file) return;
+                try {
+                    const text = await file.text(); const obj = JSON.parse(text);
+                    if (obj && obj.state) {
+                        const folder = obj.folder || computeCurrentFolder(obj.state?.savedAt || obj.savedAt || Date.now());
+                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null, obj.notes || '');
+                        applyState(obj.state);
+                        if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
+                        if (quoteNotesInput) quoteNotesInput.value = obj.notes || '';
+                        if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                    } else { alert('Invalid quote file.'); }
+                } catch (err) { alert('Failed to import: ' + err.message); }
+                finally { e.target.value = ''; }
+            });
             
             function createToggleHandler(stateUpdater, activeBtn, inactiveBtn) {
                 return () => {
@@ -613,21 +1171,98 @@
             }
 
             async function generatePdf() {
-                const bodyEl = document.querySelector('body');
                 try {
-                    bodyEl.classList.add('pdf-capture-mode');
-                    const calculatorElement = document.getElementById('calculatorMain');
+                    console.log("Starting PDF generation...");
+                    
+                    // Check if html2canvas is available
+                    if (typeof html2canvas === 'undefined') {
+                        throw new Error("HTML2Canvas library not loaded");
+                    }
+                    
+                    // Check if jsPDF is available
+                    if (typeof window.jspdf === 'undefined') {
+                        throw new Error("jsPDF library not loaded");
+                    }
                     
                     const { jsPDF } = window.jspdf;
-
-                    const canvas = await html2canvas(calculatorElement, {
-                        scale: 3, 
+                    
+                    // Create a temporary container for PDF generation
+                    const tempContainer = document.createElement('div');
+                    tempContainer.id = 'pdfContainer';
+                    tempContainer.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 1200px;
+                        height: 800px;
+                        background: white;
+                        padding: 40px;
+                        font-family: 'Inter', sans-serif;
+                        z-index: 9999;
+                        overflow: hidden;
+                        box-sizing: border-box;
+                    `;
+                    
+                    // Clone the calculator content
+                    const calculatorElement = document.getElementById('calculatorMain');
+                    if (!calculatorElement) {
+                        throw new Error("Calculator element not found");
+                    }
+                    
+                    // Create a deep clone and modify it for PDF
+                    const clonedContent = calculatorElement.cloneNode(true);
+                    
+                    // Apply PDF-specific styles to the cloned content
+                    clonedContent.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        margin: 0;
+                        padding: 0;
+                        background: white;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 20px;
+                    `;
+                    
+                    // Remove any problematic elements
+                    const downloadBtn = clonedContent.querySelector('#downloadPdfBtn');
+                    if (downloadBtn) {
+                        downloadBtn.remove();
+                    }
+                    
+                    tempContainer.appendChild(clonedContent);
+                    document.body.appendChild(tempContainer);
+                    
+                    console.log("Temporary container created, waiting for rendering...");
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    console.log("Starting HTML2Canvas capture...");
+                    
+                    // Capture the container
+                    const canvas = await html2canvas(tempContainer, {
+                        scale: 2,
                         useCORS: true,
-                        logging: false,
-                        backgroundColor: '#F8FAFC'
+                        logging: true,
+                        backgroundColor: '#FFFFFF',
+                        allowTaint: true,
+                        foreignObjectRendering: true,
+                        imageTimeout: 30000,
+                        removeContainer: false,
+                        width: 1200,
+                        height: 800,
+                        scrollX: 0,
+                        scrollY: 0
                     });
+                    
+                    console.log("Canvas created, dimensions:", canvas.width, "x", canvas.height);
 
-                    const imgData = canvas.toDataURL('image/png');
+                    if (canvas.width === 0 || canvas.height === 0) {
+                        throw new Error("Canvas is empty - capture failed");
+                    }
+
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    console.log("Image data created, length:", imgData.length);
+                    
                     const pdf = new jsPDF({ 
                         orientation: 'landscape',
                         unit: 'pt', 
@@ -635,17 +1270,39 @@
                     });
                     
                     const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
                     
-                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    console.log("PDF dimensions:", pdfWidth, "x", pdfHeight);
+                    
+                    // Calculate scaling to fit the image properly
+                    const scaleX = pdfWidth / canvas.width;
+                    const scaleY = pdfHeight / canvas.height;
+                    const scale = Math.min(scaleX, scaleY);
+                    
+                    const finalWidth = canvas.width * scale;
+                    const finalHeight = canvas.height * scale;
+                    
+                    // Center the image on the page
+                    const x = (pdfWidth - finalWidth) / 2;
+                    const y = (pdfHeight - finalHeight) / 2;
+                    
+                    console.log("Adding image to PDF...");
+                    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                    
+                    console.log("Saving PDF...");
                     pdf.save('Canopy-Quote.pdf');
+                    
+                    console.log("PDF generation completed successfully");
 
                 } catch(err) {
                     console.error("Failed to generate PDF:", err);
-                    // Replaced alert with a console log for a better user experience in this environment
-                    console.log("Sorry, there was an error generating the PDF. Please try again.");
+                    alert("Sorry, there was an error generating the PDF. Please try again. Error: " + err.message);
                 } finally {
-                    bodyEl.classList.remove('pdf-capture-mode');
+                    // Clean up the temporary container
+                    const tempContainer = document.querySelector('div[style*="z-index: 9999"]');
+                    if (tempContainer) {
+                        document.body.removeChild(tempContainer);
+                    }
                 }
             }
 
@@ -691,7 +1348,10 @@
                 filecabinetClientsInput.addEventListener('input', calculateAndRender);
             }
             aeDiscountInput.addEventListener('input', calculateAndRender);
-            downloadPdfBtn.addEventListener('click', generatePdf);
+            downloadPdfBtn.addEventListener('click', () => {
+                console.log("Download button clicked");
+                generatePdf();
+            });
             
             populateDataMigrationOptions();
             renderModules();

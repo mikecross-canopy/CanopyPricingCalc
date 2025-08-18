@@ -613,6 +613,14 @@
             });
 
             const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
+            function escapeHtml(str = '') {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
 
             function populateDataMigrationOptions() {
                 dataMigrationDropdown.innerHTML = '';
@@ -1066,9 +1074,10 @@
                 if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
                 quotesList.innerHTML = filtered.map(q => `
                     <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
-                        <div>
-                            <div class="font-medium text-slate-800">${q.name}</div>
+                        <div class="min-w-0">
+                            <div class="font-medium text-slate-800">${escapeHtml(q.name)}</div>
                             <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
+                            ${q.notes && q.notes.trim() ? `<div class=\"text-xs text-slate-600 truncate\" title=\"${escapeHtml(q.notes)}\">Notes: ${escapeHtml(q.notes)}</div>` : ''}
                         </div>
                         <div class="flex items-center gap-2">
                             <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>

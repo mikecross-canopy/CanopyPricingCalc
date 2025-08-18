@@ -446,31 +446,15 @@
                 <button id="signInBtn" class="text-xs px-2 py-1 rounded bg-teal-500 text-slate-900 hover:bg-teal-400">Sign In</button>
                 <button id="signOutBtn" class="hidden text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Sign Out</button>
             </div>
-            <div id="quoteToolsLocked" class="text-xs text-slate-300">Sign in to view and use quote tools.</div>
-            <div id="quoteToolsContent" class="hidden space-y-2">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote name (e.g., ACME Renewal)">
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button id="saveQuoteBtn" class="px-3 py-1 rounded bg-teal-400 text-slate-900 font-semibold text-sm hover:bg-teal-300">Save Quote</button>
-                    <button id="manageQuotesBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600">Manage Quotes</button>
-                    <button id="exportQuoteBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600" title="Export current quote JSON">Export</button>
-                    <label class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 cursor-pointer">
-                        Import
-                        <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
-                    </label>
-                    <p id="saveStatusMsg" class="text-xs text-slate-300 ml-auto"></p>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Quotes Modal -->
     <div id="quotesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-slate-900 font-bold">Saved Quotes</h3>
                 <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote Name">
             </div>
             <div class="grid grid-cols-3 gap-2 mb-3">
                 <input id="filterFolderInput" type="text" placeholder="Filter by folder" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
@@ -903,6 +887,12 @@
             function localReadAll() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
             function localWriteAll(arr) { localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
             function makeId() { return 'q_' + Math.random().toString(36).slice(2, 10); }
+            function computeCurrentFolder(ts) {
+                const d = ts ? new Date(ts) : new Date();
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                return `${y}-${m}`; // e.g., 2025-08
+            }
 
             async function cloudUpsertQuote(doc) {
                 if (!db || !currentUser) return null;
@@ -1011,22 +1001,24 @@
             async function renderQuotesList() {
                 const all = await listQuotes();
                 const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
+                const folderFilter = (filterFolderInput?.value || '').toLowerCase();
                 const filtered = (all || [])
                     .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
-                    .sort((a, b) => b.savedAt - a.savedAt);
+                    .filter(q => (folderFilter ? ((q.folder || '').toLowerCase().includes(folderFilter)) : true))
+                    .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
                 if (!quotesList) return;
                 if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
                 quotesList.innerHTML = filtered.map(q => `
                     <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
                         <div>
-                            <div class="text-sm font-semibold text-slate-800">${q.name}</div>
-                            <div class="text-xs text-slate-500">Saved: ${new Date(q.savedAt).toLocaleString()}</div>
+                            <div class="font-medium text-slate-800">${q.name}</div>
+                            <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
                         </div>
-                        <div class="flex gap-2">
-                            <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-teal-500 text-white">Load</button>
-                            <button data-act="export" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-slate-700 text-white">Export</button>
-                            <button data-act="rename" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-slate-200 text-slate-800">Rename</button>
-                            <button data-act="delete" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-red-600 text-white">Delete</button>
+                        <div class="flex items-center gap-2">
+                            <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>
+                            <button data-act="rename" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Rename</button>
+                            <button data-act="export" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-700 text-white rounded">Export</button>
+                            <button data-act="delete" data-id="${q.id}" class="px-2 py-1 text-xs bg-rose-600 text-white rounded">Delete</button>
                         </div>
                     </div>
                 `).join('');
@@ -1039,19 +1031,18 @@
                         if (!item) return;
                         if (act === 'load') {
                             applyState(item.state);
-                            quotesModal?.classList.add('hidden');
                             if (quoteNameInput) quoteNameInput.value = item.name;
-                            if (saveStatusMsg) { saveStatusMsg.textContent = `Loaded "${item.name}"`; setTimeout(() => saveStatusMsg.textContent = '', 2000); }
-                        } else if (act === 'delete') {
-                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
                         } else if (act === 'rename') {
                             const newName = prompt('New quote name:', item.name) || item.name;
-                            await upsertQuote(newName, '', item.state, item.id);
+                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id);
                             renderQuotesList();
                         } else if (act === 'export') {
-                            const blob = new Blob([JSON.stringify(item, null, 2)], { type: 'application/json' });
+                            const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
+                            const blob = new Blob([JSON.stringify(withFolder, null, 2)], { type: 'application/json' });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                        } else if (act === 'delete') {
+                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
                         }
                     });
                 });
@@ -1066,13 +1057,16 @@
                     }
                     const name = (quoteNameInput?.value || '').trim();
                     if (!name) { if (saveStatusMsg) saveStatusMsg.textContent = 'Please enter a quote name.'; return; }
+                    // Prepare state and folder
+                    const state = getCurrentState();
+                    const folder = computeCurrentFolder(state.savedAt);
                     // Check existing by name
                     let existingId = null;
                     let items = [];
                     try { items = await listQuotes(); } catch (e) { console.warn('List before save failed, continuing to save:', e); }
                     const exists = (items || []).find(q => q.name && q.name.toLowerCase() === name.toLowerCase());
                     if (exists) existingId = exists.id;
-                    await upsertQuote(name, '', getCurrentState(), existingId);
+                    await upsertQuote(name, folder, state, existingId);
                     if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
                 } catch (err) {
                     console.error('Save failed:', err);
@@ -1082,9 +1076,11 @@
             manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
             closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
             searchQuoteInput?.addEventListener('input', renderQuotesList);
+            filterFolderInput?.addEventListener('input', renderQuotesList);
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
-                const payload = { id: makeId(), name, folder: '', state: getCurrentState(), savedAt: Date.now() };
+                const state = getCurrentState();
+                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, savedAt: state.savedAt };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
@@ -1094,7 +1090,8 @@
                 try {
                     const text = await file.text(); const obj = JSON.parse(text);
                     if (obj && obj.state) {
-                        const id = await upsertQuote(obj.name || 'Imported Quote', '', obj.state, obj.id || null);
+                        const folder = obj.folder || computeCurrentFolder(obj.state?.savedAt || obj.savedAt || Date.now());
+                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null);
                         applyState(obj.state);
                         if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
                         if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }

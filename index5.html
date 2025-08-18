@@ -400,7 +400,7 @@
             width: 100%;
             max-width: none;
             margin: 0 auto;
-            padding: 36px 36px 56px;
+            padding: 28px 28px 40px;
             background: radial-gradient(1000px 600px at 50% -200px, rgba(11,230,199,0.25), transparent 65%),
                         linear-gradient(180deg, #f7fbff 0%, #eef3f8 100%);
             position: relative;
@@ -408,12 +408,13 @@
             min-height: 100vh;
         }
         .glass-header {
-            display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px;
         }
-        .glass-logo { height: 36px; width: auto; display: block; }
+        .glass-logo { height: 32px; width: auto; display: block; }
         .glass-title { font-weight: 800; font-size: 20px; color: #0f172a; letter-spacing: -0.01em; }
         .glass-subtitle { font-size: 12px; color: #64748b; margin-top: -2px; }
-        .glass-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: 100%; }
+        .glass-container { width: 100%; max-width: 1100px; margin: 0 auto; }
+        .glass-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: 100%; }
         .glass-card {
             background: rgba(255,255,255,0.55);
             border: 1px solid rgba(255,255,255,0.7);
@@ -423,20 +424,22 @@
             border-radius: 16px;
             overflow: hidden;
         }
-        .glass-grid .glass-card { min-height: 65vh; }
-        .glass-card .card-body { padding: 18px; }
-        .glass-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 11px; color: #0f172a; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06); }
+        .glass-card .card-body { padding: 16px 18px; }
+        .glass-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-weight: 700; font-size: 11px; color: #0f172a; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06); }
         .glass-pill-wrap { display: flex; justify-content: center; }
-        .glass-total { font-size: 44px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; margin: 6px 0 8px; }
-        .glass-line { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .glass-total { font-size: 40px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; margin: 6px 0 8px; }
+        .glass-line { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
         .glass-line + .glass-line { border-top: 1px dashed rgba(15,23,42,0.08); }
         .glass-muted { color: #64748b; }
         .glass-accent { color: #0BBFA9; font-weight: 800; }
-        .glass-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 13px; }
-        .glass-table th { text-align: left; color: #64748b; font-weight: 700; padding: 0 8px; font-size: 12px; }
+        .glass-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 12px; }
+        .glass-table th { text-align: left; color: #64748b; font-weight: 700; padding: 0 8px 6px; font-size: 11px; }
         .glass-row { background: rgba(255,255,255,0.7); border: 1px solid rgba(15,23,42,0.06); border-radius: 10px; overflow: hidden; }
-        .glass-cell { padding: 10px 12px; }
+        .glass-cell { padding: 8px 12px; }
         .glass-right { text-align: right; font-weight: 700; color: #0f172a; }
+        .glass-section-title { margin-top: 12px; margin-bottom: 2px; font-weight: 800; color:#0f172a; }
+        .glass-divider { height: 1px; background: rgba(15,23,42,0.06); margin: 8px 0; }
+        .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
 
     </style>
 </head>
@@ -953,7 +956,9 @@
                     });
                     const implFeeText = document.getElementById('implementationFeeInput')?.value || '';
 
-                    // Layout grid
+                    // Layout grid inside a centered container
+                    const container = document.createElement('div');
+                    container.className = 'glass-container';
                     const grid = document.createElement('div');
                     grid.className = 'glass-grid';
 
@@ -967,8 +972,13 @@
                           <div class="glass-line" style="margin-top:10px;"><span class="glass-muted">Billing</span><span>${isAnnualTxt}</span></div>
                           
 
-                          <div style="margin-top:12px; font-weight:800; color:#0f172a;">Modules</div>
-                          <table class="glass-table" style="margin-top:6px;">
+                          <div class="glass-section-title">Modules</div>
+                          <table class="glass-table" style="margin-top:4px;">
+                            <colgroup>
+                              <col style="width:auto;" />
+                              <col style="width:80px;" />
+                              <col style="width:120px;" />
+                            </colgroup>
                             <thead><tr>
                               <th>Module</th>
                               <th class="glass-right">Users</th>
@@ -983,26 +993,17 @@
                             <span class="glass-muted">Data Migration</span>
                             <span style="text-align:right; max-width:65%;">${(migrations.length ? migrations.join(', ') : 'None')}</span>
                           </div>
-                          ${discountRow && !discountRow.classList.contains('hidden') ? `<div class="glass-line"><span class="glass-muted">Discount</span><span class="glass-accent">${discountText}</span></div>` : ''}
                         </div>
                     `;
 
-                    // Populate modules rows
+                    // Populate modules table rows
                     const tbody = left.querySelector('#glassModulesTbody');
                     if (tbody) {
-                        modules.forEach(m => {
+                        tbody.innerHTML = '';
+                        for (const m of modules) {
                             const tr = document.createElement('tr');
                             tr.className = 'glass-row';
-                            tr.innerHTML = `
-                                <td class="glass-cell">${m.label}</td>
-                                <td class="glass-cell glass-right">${m.users}</td>
-                                <td class="glass-cell glass-right">${m.total}</td>
-                            `;
-                            tbody.appendChild(tr);
-                        });
-                        if (modules.length === 0) {
-                            const tr = document.createElement('tr'); tr.className = 'glass-row';
-                            tr.innerHTML = `<td class="glass-cell" colspan="3"><span class="glass-muted">No modules selected</span></td>`;
+                            tr.innerHTML = `<td class="glass-cell">${m.label}</td><td class="glass-cell glass-right num">${m.users}</td><td class="glass-cell glass-right num">${m.total}</td>`;
                             tbody.appendChild(tr);
                         }
                     }
@@ -1013,16 +1014,18 @@
                     right.innerHTML = `
                         <div class="card-body">
                           <div class="glass-pill-wrap"><div class="glass-pill">Summary</div></div>
-                          <div class="glass-total">${summaryTotal}</div>
-                          <div class="glass-line"><span class="glass-muted">Per Month</span><span>${perMonth}</span></div>
-                          <div class="glass-line"><span class="glass-muted">One-Time</span><span>${oneTime}</span></div>
+                          <div class="glass-total num">${summaryTotal}</div>
+                          <div class="glass-line"><span class="glass-muted">Per Month</span><span class="num">${perMonth}</span></div>
+                          <div class="glass-line"><span class="glass-muted">One-Time</span><span class="num">${oneTime}</span></div>
                           <div style="margin-top:14px; font-size:11px;" class="glass-muted">All prices in USD. This quote is for discussion purposes and subject to order form terms.</div>
                         </div>
                     `;
 
+                    // Assemble grid and container
                     grid.appendChild(left);
                     grid.appendChild(right);
-                    root.appendChild(grid);
+                    container.appendChild(grid);
+                    root.appendChild(container);
 
                     // Mount into DOM (off-screen container to avoid layout shifts)
                     const mount = document.createElement('div');

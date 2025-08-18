@@ -469,6 +469,17 @@
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
         }
+        /* Aqua accents for inputs/selects focus */
+        #quoteToolsPanel input:focus,
+        #quoteToolsPanel textarea:focus,
+        #timeRangeSelect:focus,
+        #monthSelect:focus,
+        #searchQuoteInput:focus {
+            outline: 2px solid var(--brand-aqua) !important;
+            outline-offset: 0 !important;
+            border-color: transparent !important;
+            box-shadow: 0 0 0 2px var(--brand-aqua) inset !important;
+        }
         /* Primary/secondary actions */
         #saveQuoteBtn {
             background-color: var(--brand-blue) !important;
@@ -480,11 +491,17 @@
             color: #0f172a !important;
             border: 1px solid var(--brand-blue) !important;
         }
+        #manageQuotesBtn:hover {
+            background-color: var(--brand-aqua) !important;
+            color: #0f172a !important;
+            border-color: var(--brand-aqua) !important;
+        }
         #exportQuoteBtn {
             background-color: var(--brand-white) !important;
             color: #0f172a !important;
             border: 1px solid #e2e8f0 !important;
         }
+        #exportQuoteBtn:hover { border-color: var(--brand-aqua) !important; color: #0f172a !important; }
         #signInBtn {
             background-color: var(--brand-aqua) !important;
             color: #0f172a !important;
@@ -498,16 +515,50 @@
         /* Saved Quotes modal refinements */
         #quotesModal .bg-white { background-color: var(--brand-white) !important; }
         #quotesModal h3 { color: #0f172a !important; }
+        #quotesModal #closeQuotesModal:hover { color: var(--brand-aqua) !important; }
         #clearTagFiltersBtn {
             background-color: var(--brand-white) !important;
             color: #334155 !important;
             border: 1px solid #e2e8f0 !important;
         }
+        #clearTagFiltersBtn:hover { border-color: var(--brand-aqua) !important; color: #0f172a !important; }
         #timeRangeSelect, #monthSelect, #searchQuoteInput {
             background-color: var(--brand-white) !important;
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
         }
+        /* Checkbox accent */
+        #pinnedOnlyCheck { accent-color: var(--brand-aqua); }
+        .main-container input[type="checkbox"] { accent-color: var(--brand-aqua); }
+        /* Toggle chevron and hover */
+        #quoteToolsToggle:hover { box-shadow: 0 0 0 2px rgba(11,230,199,0.3) inset; }
+        #quoteToolsChevron { color: var(--brand-aqua); }
+        /* Tag chips: unselected and selected states use aqua */
+        #tagFilters [data-tag] { cursor: pointer; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 8px; background: var(--brand-white); color: #334155; }
+        #tagFilters [data-tag].bg-slate-800,
+        #tagFilters [data-tag].text-white { background: var(--brand-aqua) !important; color: #0f172a !important; border-color: var(--brand-aqua) !important; }
+        #tagFilters [data-tag].bg-slate-200,
+        #tagFilters [data-tag].text-slate-700 { background: var(--brand-white) !important; color: #334155 !important; }
+        #tagFilters [data-tag]:hover { border-color: var(--brand-aqua) !important; }
+
+        /* Quotes list rows subtle aqua hover and selected accent (actual rows are direct children divs) */
+        #quotesList > div:hover { background: rgba(11,230,199,0.06) !important; }
+        #quotesList .active { outline: 2px solid var(--brand-aqua) !important; outline-offset: -2px; }
+        /* Action buttons inside Manage Saves list */
+        #quotesList button[data-act="load"] { background: var(--brand-aqua) !important; color: #0f172a !important; border: none !important; }
+        #quotesList button[data-act="load"]:hover { filter: brightness(0.96); }
+        #quotesList button[data-act="rename"],
+        #quotesList button[data-act="history"] { background: var(--brand-white) !important; color: #0f172a !important; border: 1px solid var(--brand-aqua) !important; }
+        #quotesList button[data-act="rename"]:hover,
+        #quotesList button[data-act="history"]:hover { background: rgba(11,230,199,0.12) !important; }
+        #quotesList button[data-act="export"] { background: var(--brand-blue) !important; color: var(--brand-white) !important; border: none !important; }
+        #quotesList button[data-act="export"]:hover { filter: brightness(0.95); }
+        #quotesList button[data-act="delete"] { background: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fecaca !important; }
+        #quotesList button[data-act="pin"] { background: var(--brand-white) !important; border: 1px solid #e2e8f0 !important; }
+
+        /* Aqua accent for links in panel */
+        #quoteToolsPanel a { color: var(--brand-aqua) !important; }
+        #quoteToolsPanel a:hover { text-decoration: underline; }
 
     </style>
 </head>

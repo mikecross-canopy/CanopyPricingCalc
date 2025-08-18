@@ -911,9 +911,21 @@
                 return ref.id;
             }
             async function cloudListQuotes() {
-                if (!db || !currentUser) return null;
-                const snap = await db.collection('quotes').where('aeId', '==', currentUser.uid).orderBy('savedAt', 'desc').get();
-                return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                if (!db || !currentUser) return [];
+                try {
+                    const snap = await db.collection('quotes')
+                        .where('aeId', '==', currentUser.uid)
+                        .orderBy('savedAt', 'desc')
+                        .get();
+                    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                } catch (e) {
+                    console.warn('cloudListQuotes falling back (likely missing index):', e);
+                    const snap = await db.collection('quotes')
+                        .where('aeId', '==', currentUser.uid)
+                        .get();
+                    const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    return arr.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+                }
             }
             async function cloudDeleteQuote(id) {
                 if (!db || !currentUser) return false;
@@ -1047,21 +1059,25 @@
 
             // Bindings
             saveQuoteBtn?.addEventListener('click', async () => {
-                if (!currentUser) {
-                    alert('Please sign in to save quotes.');
-                    return;
+                try {
+                    if (!currentUser) {
+                        alert('Please sign in to save quotes.');
+                        return;
+                    }
+                    const name = (quoteNameInput?.value || '').trim();
+                    if (!name) { if (saveStatusMsg) saveStatusMsg.textContent = 'Please enter a quote name.'; return; }
+                    // Check existing by name
+                    let existingId = null;
+                    let items = [];
+                    try { items = await listQuotes(); } catch (e) { console.warn('List before save failed, continuing to save:', e); }
+                    const exists = (items || []).find(q => q.name && q.name.toLowerCase() === name.toLowerCase());
+                    if (exists) existingId = exists.id;
+                    await upsertQuote(name, '', getCurrentState(), existingId);
+                    if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                } catch (err) {
+                    console.error('Save failed:', err);
+                    alert('Save failed: ' + (err && err.message ? err.message : err));
                 }
-                const name = (quoteNameInput?.value || '').trim();
-                if (!name) { if (saveStatusMsg) saveStatusMsg.textContent = 'Please enter a quote name.'; return; }
-                // Overwrite check for local only (Firestore uses id; we keep same id if name+folder unchanged by searching first)
-                let existingId = null;
-                const items = await listQuotes();
-                const exists = (items || []).find(q => q.name.toLowerCase() === name.toLowerCase());
-                if (exists) {
-                    existingId = exists.id;
-                }
-                await upsertQuote(name, '', getCurrentState(), existingId);
-                if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
             });
             manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
             closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));

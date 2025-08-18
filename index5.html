@@ -560,7 +560,27 @@
         #quotesList button[data-act="export"] { background: var(--brand-blue) !important; color: var(--brand-white) !important; border: none !important; }
         #quotesList button[data-act="export"]:hover { filter: brightness(0.95); }
         #quotesList button[data-act="delete"] { background: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fecaca !important; }
-        #quotesList button[data-act="pin"] { background: var(--brand-white) !important; border: 1px solid #e2e8f0 !important; }
+        /* Pin star themed to Aqua */
+        #quotesList button[data-act="pin"] {
+            color: #94a3b8 !important; /* muted when not pinned */
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            border-radius: 6px !important;
+            padding: 0 6px !important;
+            transition: all 150ms ease;
+        }
+        /* Hover accent for unpinned */
+        #quotesList button[data-act="pin"]:hover {
+            color: var(--brand-aqua) !important;
+            background: rgba(11,230,199,0.10) !important;
+            border-color: rgba(11,230,199,0.35) !important;
+        }
+        /* When pinned (markup uses text-amber-500), force Aqua theme */
+        #quotesList button[data-act="pin"].text-amber-500 {
+            color: var(--brand-aqua) !important;
+            background: rgba(11,230,199,0.12) !important;
+            border-color: rgba(11,230,199,0.45) !important;
+        }
 
         /* Aqua accent for links in panel */
         #quoteToolsPanel a { color: var(--brand-aqua) !important; }

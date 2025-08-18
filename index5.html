@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canopy Interactive Pricing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Ensure libraries are loaded
+        window.addEventListener('load', function() {
+            console.log("Window loaded, checking libraries again...");
+            console.log("html2canvas available:", typeof html2canvas !== 'undefined');
+            console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+        });
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs (Compat for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    <script>
+        // Provided Firebase config (set on window for compat init below)
+        window.FIREBASE_CONFIG = {
+          apiKey: "AIzaSyBceVpzCfvVY6JnbMCaK1Ye0zsnY9LOyI8",
+          authDomain: "ae-pricing-calculator.firebaseapp.com",
+          projectId: "ae-pricing-calculator",
+          storageBucket: "ae-pricing-calculator.firebasestorage.app",
+          messagingSenderId: "25810838101",
+          appId: "1:25810838101:web:9379152608fe8b8f9e6adc",
+          measurementId: "G-LQ8N00DH40"
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+        }
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: 4rem; right: 15%;
+            width: 300px; height: 300px;
+            background-color: #0BE6C7;
+            border-radius: 50%;
+            z-index: 0;
+            filter: blur(50px);
+            opacity: 0.3;
+        }
+        .card-wrapper { position: relative; z-index: 1; }
+        
+        .firm-toggle {
+            background-color: #e5e7eb;
+            display: flex;
+            padding: 0.15rem;
+            border-radius: 9999px;
+        }
+        .firm-toggle button {
+            flex: 1; padding: 0.2rem 0;
+            font-size: 0.65rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .firm-toggle button.active { background-color: #111827; color: white; box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06); }
+
+        .billing-toggle {
+            background-color: #f3f4f6;
+            display: flex;
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+        }
+        .billing-toggle button {
+            flex: 1;
+            padding: 0.4rem 0;
+            font-size: 0.8rem; font-weight: 600;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .billing-toggle button.active {
+            background-color: #0BE6C7;
+            color: #111827;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06);
+        }
+        
+        .pricing-card, .summary-card {
+            background-color: white;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -2px rgba(0,0,0,.05);
+        }
+        .summary-card { background-color: #111827; color: white; }
+
+        .pricing-item {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .pricing-item:last-child { border-bottom: none; }
+
+        .item-label { color: #111827; }
+        .item-sublabel, .input-label { color: #6b7280; }
+        .item-value, .item-input-container { color: #374151; text-align: right; }
+        
+        .item-input, .item-select {
+            width: 100%; font-weight: 600;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .item-input { text-align: right; }
+        .item-select { text-align: left; -moz-appearance: none; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em;}
+        .item-input:focus, .item-select:focus { outline: 2px solid #0BE6C7; border-color: transparent; }
+
+        .summary-total-lg { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .summary-line-item { border-bottom: 1px solid #374151; }
+        .summary-line-item:last-of-type { border-bottom: none; }
+        .summary-label { color: #9ca3af; }
+        .summary-value { color: white; }
+        .switch-monthly-link { border-top: 1px solid #374151; color: #0BE6C7; }
+
+        .ce-input {
+            background-color: #1e293b;
+            color: white;
+            border: 1px solid #374151;
+            border-radius: 0.375rem;
+            width: 4.5rem;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: right;
+        }
+        .ce-input:focus {
+            outline: 2px solid #0BE6C7;
+            border-color: transparent;
+        }
+        
+        .discreet-input {
+            color: #cbd5e1 !important;
+        }
+        .discreet-input::placeholder {
+            color: #e2e8f0;
+        }
+        
+        /* Hide number input spinners */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+        
+        /* Styles applied only during PDF capture to fix rendering issues */
+        .pdf-capture-mode .billing-toggle button,
+        .pdf-capture-mode .firm-toggle button {
+            display: grid;
+            place-items: center;
+        }
+        
+        /* Fix text alignment and positioning issues in PDF */
+        .pdf-capture-mode .item-input,
+        .pdf-capture-mode .item-select {
+            text-align: center !important;
+            padding: 0.5rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .pdf-capture-mode .ce-input {
+            text-align: center !important;
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .pdf-capture-mode .pricing-item {
+            padding: 1rem 1.5rem !important;
+            gap: 1.5rem !important;
+        }
+        
+        .pdf-capture-mode .summary-card {
+            padding: 2rem !important;
+        }
+        
+        .pdf-capture-mode .summary-total-lg {
+            font-size: 4rem !important;
+            line-height: 1 !important;
+        }
+        
+        /* Ensure proper button text centering */
+        .pdf-capture-mode button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        
+        /* Fix input container alignment */
+        .pdf-capture-mode .item-input-container {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            justify-content: center !important;
+        }
+        
+        /* Ensure proper grid alignment */
+        .pdf-capture-mode .pricing-item {
+            display: grid !important;
+            grid-template-columns: 2.5fr 1fr 1fr !important;
+            align-items: center !important;
+        }
+        
+        /* Fix summary section alignment */
+        .pdf-capture-mode .summary-line-item {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        
+        /* Ensure the entire page is properly styled for PDF */
+        .pdf-capture-mode {
+            background-color: #F8FAFC !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        .pdf-capture-mode .main-container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 2rem !important;
+        }
+        
+        .pdf-capture-mode .card-wrapper {
+            width: 100% !important;
+            max-width: none !important;
+        }
+        
+        /* Ensure all styles are applied to the cloned content */
+        #pdfContainer, #pdfContainer * {
+            box-sizing: border-box !important;
+        }
+        
+        #pdfContainer .pricing-card {
+            background: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        #pdfContainer .summary-card {
+            background: #111827 !important;
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            border-radius: 8px !important;
+        }
+        
+        #pdfContainer .billing-toggle button,
+        #pdfContainer .firm-toggle button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        
+        #pdfContainer .item-input,
+        #pdfContainer .item-select {
+            text-align: center !important;
+            padding: 8px !important;
+            font-size: 14px !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 6px !important;
+        }
+        
+        #pdfContainer .ce-input {
+            text-align: center !important;
+            padding: 6px 8px !important;
+            font-size: 14px !important;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="relative min-h-screen flex flex-col items-center justify-center p-4 main-container">
+        
+        <header class="text-center w-full max-w-4xl mx-auto z-10">
+            <div class="flex justify-start items-center mb-1">
+                <div class="flex items-center space-x-2">
+                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
+                </div>
+                <div class="ml-auto flex items-center gap-3">
+                    <div class="firm-toggle w-48">
+                        <button class="active">Growing Firms</button>
+                        <button onclick="window.location.href='SmallFirm2.html'">Small Firms</button>
+                    </div>
+                    <!-- Auth Controls -->
+                    <div class="flex items-center gap-2">
+                        <div id="userInfo" class="hidden text-xs text-slate-700 bg-white/70 rounded px-2 py-1"></div>
+                        <button id="signInBtn" class="text-xs px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700">Sign In</button>
+                        <button id="signOutBtn" class="hidden text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-0">Pricing</h1>
+            <p class="text-xs text-slate-600">Customize Canopy to fit your practice with our modular pricing</p>
+        </header>
+
+        <main id="calculatorMain" class="mt-2 grid grid-cols-1 lg:grid-cols-5 gap-6 w-full max-w-4xl mx-auto card-wrapper">
+
+            <div class="lg:col-span-3 p-4 rounded-xl pricing-card">
+                
+                <div class="flex justify-between items-center space-x-4">
+                    <div class="billing-toggle w-1/2">
+                        <button id="annualBtn" class="active">Annual</button>
+                        <button id="monthlyBtn">Monthly</button>
+                    </div>
+                    <div class="billing-toggle w-1/2">
+                        <button id="proTierBtn" class="active">Pro</button>
+                        <button id="standardTierBtn">Standard</button>
+                    </div>
+                </div>
+
+                <div class="mt-4 border border-slate-200 rounded-lg">
+                    <div class="p-4 bg-blue-600 text-white rounded-t-lg">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 id="ceTitle" class="font-bold">Client Engagement Platform</h3>
+                                <p id="ceSublabel" class="text-xs opacity-80">$175 / month, 2,500 clients, unlimited users</p>
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <label for="additionalClientsInput" class="text-xs opacity-80">Addtl. Clients:</label>
+                                    <input type="number" id="additionalClientsInput" min="0" value="0" class="ce-input">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p id="ceTotalLabel" class="text-sm opacity-80">Annual Total</p>
+                                <p id="ceTotal" class="font-bold text-lg">$2,100</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="modulesContainer"></div>
+                    
+                    <div class="p-4 bg-slate-50 rounded-b-lg">
+                        <h4 class="font-bold item-label mb-2">Implementation + Data Migration</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex items-end space-x-2">
+                                <div class="flex items-center pb-1 space-x-1.5">
+                                    <input type="checkbox" id="premiumOnboardingCheck" class="h-4 w-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500">
+                                    <label for="premiumOnboardingCheck" class="text-xs font-semibold text-gray-700">Premium</label>
+                                </div>
+                                <div class="flex-grow">
+                                    <label class="input-label text-xs block text-right mb-1">Implementation</label>
+                                    <input type="text" id="implementationFeeInput" class="item-input">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="input-label text-xs block text-right mb-1">Data Migration</label>
+                                <div class="relative">
+                                    <button id="dataMigrationToggle" class="item-select w-full text-left flex justify-between items-center" type="button">
+                                        <span id="dataMigrationDisplay">Select options...</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="dataMigrationDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-32 overflow-y-auto">
+                                        <!-- Checkbox options will be populated here -->
+                                    </div>
+                                </div>
+                                <div id="filecabinetClientInput" class="mt-2" style="display: none;">
+                                    <label class="input-label text-xs block text-right mb-1">FileCabinet Client Count:</label>
+                                    <input type="number" id="filecabinet_clients" min="0" value="0" class="item-input w-full" placeholder="Enter client count">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-200 mt-4 pt-3">
+                            <div class="flex justify-end">
+                                 <div class="w-1/4">
+                                     <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 p-6 rounded-xl summary-card flex flex-col">
+                <div class="text-center">
+                    <p id="summaryBigTotal" class="summary-total-lg">$2,100</p>
+                </div>
+                
+                <div class="mt-6 space-y-3 flex-grow">
+                    <div class="flex justify-between items-center py-3 summary-line-item">
+                        <span class="summary-label">Per Month</span>
+                        <span id="summaryPerMonth" class="text-lg font-bold summary-value">$175</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 summary-line-item">
+                        <span class="summary-label">One-Time Charges</span>
+                        <span id="summaryOneTime" class="text-lg font-bold summary-value">$1,500</span>
+                    </div>
+                    <div id="summaryDiscountRow" class="hidden flex justify-between items-center py-3 summary-line-item text-teal-400">
+                        <span class="summary-label">Discount</span>
+                        <span id="summaryDiscount" class="text-lg font-bold">0%</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 summary-line-item">
+                        <span class="summary-label">Payment Due Today</span>
+                        <span id="summarySinglePayment" class="text-lg font-bold summary-value">$3,600</span>
+                    </div>
+                </div>
+                
+                <div class="mt-auto pt-4 text-center">
+                    <a href="#" id="summarySwitchLink" class="font-bold text-base switch-monthly-link block py-3">
+                        <span id="summarySwitchText">OR SWITCH TO MONTHLY!</span>
+                        <br>
+                        <span id="summarySwitchPrice" class="text-xl">$210</span>
+                    </a>
+                    <div class="mt-2">
+                        <button id="downloadPdfBtn" class="mx-auto p-1 text-slate-500 hover:text-white transition-colors" title="Download as PDF">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </button>
+                    </div>
+                    <!-- Save/Load Controls -->
+                    <div class="mt-4 space-y-2 text-left">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote name (e.g., ACME Renewal)">
+                            <input id="quoteFolderInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Folder (e.g., AE-JaneDoe)">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="saveQuoteBtn" class="px-3 py-1 rounded bg-teal-400 text-slate-900 font-semibold text-sm hover:bg-teal-300">Save Quote</button>
+                            <button id="manageQuotesBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600">Manage Quotes</button>
+                            <button id="exportQuoteBtn" class="ml-auto px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600" title="Export current quote JSON">Export</button>
+                            <label class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 cursor-pointer">
+                                Import
+                                <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
+                            </label>
+                        </div>
+                        <p id="saveStatusMsg" class="text-xs text-slate-300"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Quotes Modal -->
+    <div id="quotesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-slate-900 font-bold">Saved Quotes</h3>
+                <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <input id="filterFolderInput" type="text" placeholder="Filter by folder" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
+                <input id="searchQuoteInput" type="text" placeholder="Search by name" class="col-span-2 px-2 py-1 rounded border border-slate-300 text-sm">
+            </div>
+            <div id="quotesList" class="max-h-72 overflow-y-auto border border-slate-200 rounded"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Test if libraries are loaded
+            console.log("DOM loaded, checking libraries...");
+            console.log("html2canvas available:", typeof html2canvas !== 'undefined');
+            console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+            
+            if (typeof html2canvas === 'undefined') {
+                console.error("HTML2Canvas not loaded!");
+            }
+            if (typeof window.jspdf === 'undefined') {
+                console.error("jsPDF not loaded!");
+            }
+            const pricing = {
+                monthly_premium_factor: 1.20,
+                implementation_minimum_fee: 1500,
+                implementation_standard_percent: 0.15,
+                implementation_premium_percent: 0.20,
+                additional_client_rate: 0.12,
+                base_client_engagement: {
+                    standard: { name: "Client Engagement - Standard", monthly_rate: 150, description: "/ month, 2,500 clients, unlimited users" },
+                    pro: { name: "Client Engagement - Pro", monthly_rate: 175, description: "/ month, 2,500 clients, unlimited users" }
+                },
+                modules: {
+                    doc_manage: { name: "Document Management", base_price: 40 },
+                    workflow: { name: "Workflow", base_price: { standard: 35, pro: 45 } },
+                    time_bill: { name: "Time & Billing", base_price: { standard: 25, pro: 35 } },
+                    tax_res: { name: "Tax Resolution", annual_price_per_user: 600, monthly_price_per_user: 60, no_discount: true },
+                },
+                module_discounts: [
+                    { max_users: 3, discount: 0 },
+                    { max_users: 9, discount: 0.10 },
+                    { max_users: Infinity, discount: 0.15 }
+                ],
+                data_migration_options: {
+                    none: { name: "None", price: 0 },
+                    filecabinet: { name: "FileCabinet", base_price: 1000, base_clients: 500, additional_client_rate: 2 },
+                    smartvault: { name: "SmartVault", price: 500 },
+                    upload: { name: "Upload Only", price: 500 },
+                    revver: { name: "Revver", price: 1500 },
+                    general: { name: "General Data Migration", price: 750 }
+                }
+            };
+
+            let isAnnual = true;
+            let isProTier = true;
+            let manualImplFeeSet = false;
+
+            const annualBtn = document.getElementById('annualBtn');
+            const monthlyBtn = document.getElementById('monthlyBtn');
+            const proTierBtn = document.getElementById('proTierBtn');
+            const standardTierBtn = document.getElementById('standardTierBtn');
+            const modulesContainer = document.getElementById('modulesContainer');
+            const implementationFeeInput = document.getElementById('implementationFeeInput');
+            const dataMigrationToggle = document.getElementById('dataMigrationToggle');
+            const dataMigrationDropdown = document.getElementById('dataMigrationDropdown');
+            const dataMigrationDisplay = document.getElementById('dataMigrationDisplay');
+            const premiumOnboardingCheck = document.getElementById('premiumOnboardingCheck');
+            const additionalClientsInput = document.getElementById('additionalClientsInput');
+            const aeDiscountInput = document.getElementById('aeDiscountInput');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            
+            const ceTitle = document.getElementById('ceTitle');
+            const ceSublabel = document.getElementById('ceSublabel');
+            const ceTotalLabel = document.getElementById('ceTotalLabel');
+            const ceTotal = document.getElementById('ceTotal');
+            const summaryBigTotal = document.getElementById('summaryBigTotal');
+            const summaryPerMonth = document.getElementById('summaryPerMonth');
+            const summaryOneTime = document.getElementById('summaryOneTime');
+            const summaryDiscountRow = document.getElementById('summaryDiscountRow');
+            const summaryDiscount = document.getElementById('summaryDiscount');
+            const summarySinglePayment = document.getElementById('summarySinglePayment');
+            const summarySwitchLink = document.getElementById('summarySwitchLink');
+            const summarySwitchText = document.getElementById('summarySwitchText');
+            const summarySwitchPrice = document.getElementById('summarySwitchPrice');
+            // Auth and Cloud elements
+            const signInBtn = document.getElementById('signInBtn');
+            const signOutBtn = document.getElementById('signOutBtn');
+            const userInfo = document.getElementById('userInfo');
+            const quoteNameInput = document.getElementById('quoteNameInput');
+            const quoteFolderInput = document.getElementById('quoteFolderInput');
+            const saveQuoteBtn = document.getElementById('saveQuoteBtn');
+            const manageQuotesBtn = document.getElementById('manageQuotesBtn');
+            const exportQuoteBtn = document.getElementById('exportQuoteBtn');
+            const importQuoteInput = document.getElementById('importQuoteInput');
+            const saveStatusMsg = document.getElementById('saveStatusMsg');
+            const quotesModal = document.getElementById('quotesModal');
+            const closeQuotesModal = document.getElementById('closeQuotesModal');
+            const quotesList = document.getElementById('quotesList');
+            const filterFolderInput = document.getElementById('filterFolderInput');
+            const searchQuoteInput = document.getElementById('searchQuoteInput');
+
+            const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
+
+            function populateDataMigrationOptions() {
+                dataMigrationDropdown.innerHTML = '';
+                for (const key in pricing.data_migration_options) {
+                    const option = pricing.data_migration_options[key];
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `migration_${key}`;
+                    checkbox.value = key;
+                    checkbox.className = 'h-3 w-3 rounded border-gray-300 text-teal-500 focus:ring-teal-500 mr-2';
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `migration_${key}`;
+                    label.className = 'text-xs text-gray-700 cursor-pointer flex-1';
+                    
+                    // Handle different pricing structures
+                    if (option.price !== undefined) {
+                        label.textContent = `${option.name} (${formatCurrency(option.price)})`;
+                    } else if (option.base_price !== undefined) {
+                        label.textContent = `${option.name} (${formatCurrency(option.additional_client_rate)} per client, ${formatCurrency(option.base_price)} minimum)`;
+                    }
+                    
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    
+                    checkbox.addEventListener('change', () => {
+                        updateDataMigrationDisplay();
+                        // Show/hide FileCabinet client input based on selection
+                        const filecabinetSelected = document.getElementById('migration_filecabinet')?.checked;
+                        const filecabinetInput = document.getElementById('filecabinetClientInput');
+                        if (filecabinetInput) {
+                            filecabinetInput.style.display = filecabinetSelected ? 'block' : 'none';
+                        }
+                        calculateAndRender();
+                    });
+                    
+                    dataMigrationDropdown.appendChild(div);
+                }
+            }
+            
+            function updateDataMigrationDisplay() {
+                const selectedOptions = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => pricing.data_migration_options[checkbox.value].name);
+                
+                if (selectedOptions.length === 0) {
+                    dataMigrationDisplay.textContent = 'Select options...';
+                } else if (selectedOptions.length === 1) {
+                    dataMigrationDisplay.textContent = selectedOptions[0];
+                } else {
+                    dataMigrationDisplay.textContent = `${selectedOptions.length} options selected`;
+                }
+            }
+
+            function renderModules() {
+                modulesContainer.innerHTML = '';
+                for (const key in pricing.modules) {
+                    const module = pricing.modules[key];
+                    const div = document.createElement('div');
+                    div.className = 'pricing-item';
+                    
+                    let initialPrice = module.base_price;
+                    if (typeof initialPrice === 'object' && initialPrice !== null) {
+                        initialPrice = isProTier ? initialPrice.pro : initialPrice.standard;
+                    }
+                    const perUserPrice = module.no_discount ? formatCurrency(module.monthly_price_per_user, 2) : formatCurrency(initialPrice, 2);
+
+                    div.innerHTML = `
+                        <div>
+                            <h4 class="font-bold item-label">${module.name}</h4>
+                            <p id="${key}_sublabel" class="text-xs item-sublabel">${perUserPrice} / user / month</p>
+                        </div>
+                        <div class="item-input-container">
+                            <label class="input-label text-xs block mb-1">Users</label>
+                            <input type="number" id="${key}_users" value="0" min="0" data-key="${key}" class="item-input module-user-input">
+                        </div>
+                        <div class="item-value">
+                            <p class="input-label text-xs block mb-1">Total</p>
+                            <p id="${key}_total" class="font-bold text-base">$0</p>
+                        </div>
+                    `;
+                    modulesContainer.appendChild(div);
+                }
+                document.querySelectorAll('.module-user-input').forEach(input => input.addEventListener('input', calculateAndRender));
+            }
+
+            function getModuleDiscount(userCount) {
+                const tier = pricing.module_discounts.find(t => userCount <= t.max_users);
+                return tier ? tier.discount : 0;
+            }
+
+            function calculateAndRender() {
+                try {
+                    const ceTierKey = isProTier ? 'pro' : 'standard';
+                    const ceData = pricing.base_client_engagement[ceTierKey];
+                    
+                    const additionalClients = parseInt(additionalClientsInput.value) || 0;
+                    const additionalClientsAnnualCost = additionalClients * pricing.additional_client_rate * 12;
+
+                    let totalAnnualSubscriptionEquiv = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
+                    
+                    document.querySelectorAll('.module-user-input').forEach(input => {
+                        const moduleKey = input.dataset.key;
+                        const userCount = parseInt(input.value) || 0;
+                        const module = pricing.modules[moduleKey];
+                        let moduleAnnualCost = 0;
+                        let displayPricePerUser = 0;
+
+                        if (module.no_discount) {
+                            moduleAnnualCost = module.annual_price_per_user * userCount;
+                            displayPricePerUser = module.monthly_price_per_user;
+                        } else {
+                            let basePrice = module.base_price;
+                            if (typeof basePrice === 'object' && basePrice !== null) {
+                                basePrice = isProTier ? basePrice.pro : basePrice.standard;
+                            }
+                            const discount = getModuleDiscount(userCount);
+                            const discountedPricePerUser = basePrice * (1 - discount);
+                            moduleAnnualCost = discountedPricePerUser * userCount * 12;
+                            displayPricePerUser = discountedPricePerUser;
+                        }
+                        
+                        totalAnnualSubscriptionEquiv += moduleAnnualCost;
+                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
+                        const monthlyModuleCost = moduleAnnualCost / 12;
+                        let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
+                        
+                        if (!isAnnual && !module.no_discount) {
+                             displayPrice *= pricing.monthly_premium_factor;
+                        } else if (!isAnnual && module.no_discount) {
+                            displayPrice = module.monthly_price_per_user * userCount;
+                        }
+                        document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(displayPrice) + (isAnnual ? '/yr' : '/mo');
+                    });
+
+                    const discountPercent = parseFloat(aeDiscountInput.value) || 0;
+                    const totalBeforeDiscount = totalAnnualSubscriptionEquiv;
+                    if (discountPercent > 0) {
+                        totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
+                    }
+                    
+                    const implementationBase = isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * pricing.monthly_premium_factor;
+
+                    const isPremiumChecked = premiumOnboardingCheck.checked;
+                    const implementationPercent = isPremiumChecked 
+                        ? pricing.implementation_premium_percent
+                        : pricing.implementation_standard_percent;
+                    
+                    // Calculate migration fees from multiple selections
+                    let migrationFee = 0;
+                    const selectedOptions = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                        .map(checkbox => checkbox.value);
+                    
+                    selectedOptions.forEach(optionKey => {
+                        const option = pricing.data_migration_options[optionKey];
+                        
+                        if (option.price !== undefined) {
+                            // Fixed price option
+                            migrationFee += option.price;
+                        } else if (option.base_price !== undefined) {
+                            // Tiered pricing (FileCabinet)
+                            const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
+                            if (clientCount > 0) {
+                                let optionFee = option.base_price;
+                                if (clientCount > option.base_clients) {
+                                    const additionalClients = clientCount - option.base_clients;
+                                    optionFee += additionalClients * option.additional_client_rate;
+                                }
+                                migrationFee += optionFee;
+                            }
+                        }
+                    });
+                    
+                    let percentageBasedFee = implementationBase * implementationPercent;
+                    let calculatedImplFee = Math.max(percentageBasedFee, pricing.implementation_minimum_fee);
+                    
+                    let finalImplFee;
+                    if (manualImplFeeSet) {
+                        finalImplFee = parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0;
+                    } else {
+                        finalImplFee = calculatedImplFee; 
+                        implementationFeeInput.value = formatCurrency(finalImplFee);
+                    }
+                    
+                    let totalOneTimeCharges = finalImplFee + migrationFee;
+
+                    const currentMonthlyTotal = totalAnnualSubscriptionEquiv / 12 * (isAnnual ? 1 : pricing.monthly_premium_factor);
+                    const currentAnnualTotal = totalAnnualSubscriptionEquiv;
+
+                    const displayedMonthlyRate = isAnnual ? ceData.monthly_rate : ceData.monthly_rate * pricing.monthly_premium_factor;
+                    const ceBaseAnnual = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
+                    const ceBaseMonthly = (ceData.monthly_rate * pricing.monthly_premium_factor) + (additionalClientsAnnualCost / 12 * pricing.monthly_premium_factor);
+
+                    ceTitle.textContent = ceData.name;
+                    ceSublabel.textContent = `${formatCurrency(displayedMonthlyRate)} ${ceData.description}`;
+                    ceTotal.textContent = isAnnual ? `${formatCurrency(ceBaseAnnual)}/yr` : `${formatCurrency(ceBaseMonthly)}/mo`;
+                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total';
+
+
+                    summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
+                    summaryOneTime.textContent = formatCurrency(totalOneTimeCharges);
+
+                    if (discountPercent > 0) {
+                        summaryDiscountRow.classList.remove('hidden');
+                        const discountAmount = totalBeforeDiscount - totalAnnualSubscriptionEquiv;
+                        const discountAmountDisplay = isAnnual ? discountAmount : discountAmount / 12 * pricing.monthly_premium_factor;
+                        summaryDiscount.textContent = `${formatCurrency(discountAmountDisplay)} (${discountPercent}%)`;
+                    } else {
+                        summaryDiscountRow.classList.add('hidden');
+                    }
+                    
+                    const paymentDueToday = isAnnual ? currentAnnualTotal + totalOneTimeCharges : currentMonthlyTotal + totalOneTimeCharges;
+                    summarySinglePayment.textContent = formatCurrency(paymentDueToday);
+                    
+                    summarySwitchLink.style.display = 'block';
+
+                    if (isAnnual) {
+                        summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
+                        summarySwitchText.textContent = 'OR SWITCH TO MONTHLY!';
+                        const switchToMonthlyPrice = totalAnnualSubscriptionEquiv / 12 * pricing.monthly_premium_factor;
+                        summarySwitchPrice.textContent = formatCurrency(switchToMonthlyPrice);
+                    } else {
+                        summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal);
+                        summarySwitchText.textContent = 'OR SWITCH TO ANNUAL!';
+                        summarySwitchPrice.textContent = formatCurrency(totalAnnualSubscriptionEquiv);
+                    }
+
+                } catch (error) {
+                    console.error("An error occurred during calculation:", error);
+                }
+            }
+
+            // ===== Firebase Init (replace with your project's config) =====
+            const firebaseConfig = window.FIREBASE_CONFIG || {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_AUTH_DOMAIN",
+                projectId: "YOUR_PROJECT_ID",
+            };
+            let app = null, auth = null, db = null, currentUser = null;
+            try {
+                if (firebaseConfig && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
+                    app = firebase.initializeApp(firebaseConfig);
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                }
+            } catch (e) {
+                console.warn('Firebase not initialized:', e);
+            }
+
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    currentUser = user || null;
+                    if (currentUser) {
+                        userInfo.textContent = `${currentUser.email}`;
+                        userInfo.classList.remove('hidden');
+                        signOutBtn.classList.remove('hidden');
+                        signInBtn.classList.add('hidden');
+                        // Default folder hint per AE
+                        if (!quoteFolderInput.value) quoteFolderInput.value = `AE-${(currentUser.email || '').split('@')[0]}`;
+                    } else {
+                        userInfo.textContent = '';
+                        userInfo.classList.add('hidden');
+                        signOutBtn.classList.add('hidden');
+                        signInBtn.classList.remove('hidden');
+                    }
+                });
+
+                signInBtn?.addEventListener('click', async () => {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    try {
+                        await auth.signInWithPopup(provider);
+                    } catch (e) {
+                        // Fallback for environments not supporting popups (e.g., file:// or Safari)
+                        if (e && (e.code === 'auth/operation-not-supported-in-this-environment' || e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user')) {
+                            try {
+                                await auth.signInWithRedirect(provider);
+                                return;
+                            } catch (e2) {
+                                alert('Sign-in failed (redirect): ' + e2.message);
+                                return;
+                            }
+                        }
+                        alert('Sign-in failed: ' + e.message);
+                    }
+                });
+                signOutBtn?.addEventListener('click', async () => {
+                    try { await auth.signOut(); } catch (e) { alert('Sign-out failed: ' + e.message); }
+                });
+            } else {
+                // Hide auth buttons if Firebase not configured
+                signInBtn?.classList.add('hidden');
+                signOutBtn?.classList.add('hidden');
+            }
+
+            // Warn if running from file:// which breaks Firebase Auth
+            try {
+                if (!location.protocol.startsWith('http')) {
+                    const warn = document.createElement('div');
+                    warn.className = 'fixed bottom-2 left-2 right-2 md:left-auto md:right-2 z-50 bg-yellow-100 text-yellow-900 border border-yellow-300 rounded px-3 py-2 text-xs shadow';
+                    warn.textContent = 'Firebase Auth requires http/https. Please run via a local server (e.g., VS Code Live Server or python -m http.server).';
+                    document.body.appendChild(warn);
+                }
+            } catch {}
+
+            // ===== Quote Persistence (Cloud first, local fallback) =====
+            const LS_KEY = 'canopy_quotes_v1';
+            function localReadAll() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
+            function localWriteAll(arr) { localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+            function makeId() { return 'q_' + Math.random().toString(36).slice(2, 10); }
+
+            async function cloudUpsertQuote(doc) {
+                if (!db || !currentUser) return null;
+                const ref = db.collection('quotes').doc(doc.id || makeId());
+                await ref.set({ ...doc, aeId: currentUser.uid, aeEmail: currentUser.email }, { merge: true });
+                return ref.id;
+            }
+            async function cloudListQuotes() {
+                if (!db || !currentUser) return null;
+                const snap = await db.collection('quotes').where('aeId', '==', currentUser.uid).orderBy('savedAt', 'desc').get();
+                return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            }
+            async function cloudDeleteQuote(id) {
+                if (!db || !currentUser) return false;
+                await db.collection('quotes').doc(id).delete();
+                return true;
+            }
+
+            function getCurrentState() {
+                const modulesState = {};
+                document.querySelectorAll('.module-user-input').forEach(input => {
+                    modulesState[input.dataset.key] = parseInt(input.value) || 0;
+                });
+                const selectedMigrations = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]'))
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+                return {
+                    isAnnual,
+                    isProTier,
+                    additionalClients: parseInt(additionalClientsInput.value) || 0,
+                    premiumOnboarding: !!premiumOnboardingCheck.checked,
+                    implementationFee: implementationFeeInput.value,
+                    manualImplFeeSet: !!manualImplFeeSet,
+                    aeDiscount: parseFloat(aeDiscountInput.value) || 0,
+                    filecabinetClients: parseInt(document.getElementById('filecabinet_clients')?.value || 0),
+                    modules: modulesState,
+                    dataMigrations: selectedMigrations,
+                    savedAt: Date.now()
+                };
+            }
+            function applyState(state) {
+                if (!state) return;
+                if (typeof state.isAnnual === 'boolean' && state.isAnnual !== isAnnual) {
+                    (state.isAnnual ? annualBtn : monthlyBtn).click();
+                }
+                if (typeof state.isProTier === 'boolean' && state.isProTier !== isProTier) {
+                    (state.isProTier ? proTierBtn : standardTierBtn).click();
+                }
+                additionalClientsInput.value = state.additionalClients ?? 0;
+                premiumOnboardingCheck.checked = !!state.premiumOnboarding;
+                manualImplFeeSet = !!state.manualImplFeeSet;
+                implementationFeeInput.value = state.implementationFee ?? '';
+                aeDiscountInput.value = state.aeDiscount ?? 0;
+                Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]')).forEach(cb => {
+                    cb.checked = (state.dataMigrations || []).includes(cb.value);
+                });
+                const filecabinetInputWrap = document.getElementById('filecabinetClientInput');
+                if (filecabinetInputWrap) {
+                    const fcSelected = (state.dataMigrations || []).includes('filecabinet');
+                    filecabinetInputWrap.style.display = fcSelected ? 'block' : 'none';
+                }
+                const fc = document.getElementById('filecabinet_clients');
+                if (fc) fc.value = state.filecabinetClients ?? 0;
+                Object.entries(state.modules || {}).forEach(([key, users]) => {
+                    const el = document.getElementById(`${key}_users`);
+                    if (el) el.value = users;
+                });
+                calculateAndRender();
+            }
+
+            async function upsertQuote(name, folder, state, existingId = null) {
+                const doc = { id: existingId || makeId(), name, folder, state, savedAt: Date.now() };
+                if (db && currentUser) {
+                    const id = await cloudUpsertQuote(doc);
+                    return id || doc.id;
+                } else {
+                    const all = localReadAll();
+                    const idx = all.findIndex(q => q.id === doc.id || (q.name.toLowerCase() === name.toLowerCase() && (q.folder || '') === (folder || '')));
+                    if (idx >= 0) all[idx] = doc; else all.push(doc);
+                    localWriteAll(all);
+                    return doc.id;
+                }
+            }
+
+            async function listQuotes() {
+                if (db && currentUser) return await cloudListQuotes();
+                return localReadAll();
+            }
+            async function deleteQuote(id) {
+                if (db && currentUser) return await cloudDeleteQuote(id);
+                const all = localReadAll().filter(q => q.id !== id); localWriteAll(all); return true;
+            }
+
+            async function renderQuotesList() {
+                const all = await listQuotes();
+                const folderFilter = (filterFolderInput?.value || '').toLowerCase();
+                const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
+                const filtered = (all || [])
+                    .filter(q => (folderFilter ? (q.folder || '').toLowerCase().includes(folderFilter) : true))
+                    .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
+                    .sort((a, b) => (a.folder || '').localeCompare(b.folder || '') || b.savedAt - a.savedAt);
+                if (!quotesList) return;
+                if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
+                quotesList.innerHTML = filtered.map(q => `
+                    <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800">${q.name}</div>
+                            <div class="text-xs text-slate-500">Folder: ${q.folder || '(none)'} • Saved: ${new Date(q.savedAt).toLocaleString()}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-teal-500 text-white">Load</button>
+                            <button data-act="export" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-slate-700 text-white">Export</button>
+                            <button data-act="rename" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-slate-200 text-slate-800">Rename</button>
+                            <button data-act="delete" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-red-600 text-white">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+                quotesList.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const id = e.currentTarget.getAttribute('data-id');
+                        const act = e.currentTarget.getAttribute('data-act');
+                        const items = await listQuotes();
+                        const item = items.find(q => q.id === id);
+                        if (!item) return;
+                        if (act === 'load') {
+                            applyState(item.state);
+                            quotesModal?.classList.add('hidden');
+                            if (quoteNameInput) quoteNameInput.value = item.name;
+                            if (quoteFolderInput) quoteFolderInput.value = item.folder || '';
+                            if (saveStatusMsg) { saveStatusMsg.textContent = `Loaded "${item.name}"`; setTimeout(() => saveStatusMsg.textContent = '', 2000); }
+                        } else if (act === 'delete') {
+                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
+                        } else if (act === 'rename') {
+                            const newName = prompt('New quote name:', item.name) || item.name;
+                            const newFolder = prompt('New folder:', item.folder || '') ?? (item.folder || '');
+                            await upsertQuote(newName, newFolder, item.state, item.id);
+                            renderQuotesList();
+                        } else if (act === 'export') {
+                            const blob = new Blob([JSON.stringify(item, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a'); a.href = url; a.download = `${item.folder ? item.folder + '_' : ''}${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                        }
+                    });
+                });
+            }
+
+            // Bindings
+            saveQuoteBtn?.addEventListener('click', async () => {
+                const name = (quoteNameInput?.value || '').trim();
+                const folder = (quoteFolderInput?.value || '').trim();
+                if (!name) { if (saveStatusMsg) saveStatusMsg.textContent = 'Please enter a quote name.'; return; }
+                // Overwrite check for local only (Firestore uses id; we keep same id if name+folder unchanged by searching first)
+                let existingId = null;
+                const items = await listQuotes();
+                const exists = (items || []).find(q => (q.name || '').toLowerCase() === name.toLowerCase() && (q.folder || '') === folder);
+                if (exists) {
+                    if (!confirm('A quote with this name in this folder exists. Overwrite?')) return;
+                    existingId = exists.id;
+                }
+                await upsertQuote(name, folder, getCurrentState(), existingId);
+                if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}"${folder ? ' in ' + folder : ''}.`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+            });
+            manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
+            closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
+            filterFolderInput?.addEventListener('input', renderQuotesList);
+            searchQuoteInput?.addEventListener('input', renderQuotesList);
+            exportQuoteBtn?.addEventListener('click', () => {
+                const name = (quoteNameInput?.value || 'CanopyQuote');
+                const folder = (quoteFolderInput?.value || '');
+                const payload = { id: makeId(), name, folder, state: getCurrentState(), savedAt: Date.now() };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `${folder ? folder + '_' : ''}${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+            });
+            importQuoteInput?.addEventListener('change', async (e) => {
+                const file = e.target.files?.[0]; if (!file) return;
+                try {
+                    const text = await file.text(); const obj = JSON.parse(text);
+                    if (obj && obj.state) {
+                        const id = await upsertQuote(obj.name || 'Imported Quote', obj.folder || '', obj.state, obj.id || null);
+                        applyState(obj.state);
+                        if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
+                        if (quoteFolderInput) quoteFolderInput.value = obj.folder || '';
+                        if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                    } else { alert('Invalid quote file.'); }
+                } catch (err) { alert('Failed to import: ' + err.message); }
+                finally { e.target.value = ''; }
+            });
+            
+            function createToggleHandler(stateUpdater, activeBtn, inactiveBtn) {
+                return () => {
+                    stateUpdater();
+                    activeBtn.classList.add('active');
+                    inactiveBtn.classList.remove('active');
+                    manualImplFeeSet = false;
+                    calculateAndRender();
+                };
+            }
+
+            async function generatePdf() {
+                try {
+                    console.log("Starting PDF generation...");
+                    
+                    // Check if html2canvas is available
+                    if (typeof html2canvas === 'undefined') {
+                        throw new Error("HTML2Canvas library not loaded");
+                    }
+                    
+                    // Check if jsPDF is available
+                    if (typeof window.jspdf === 'undefined') {
+                        throw new Error("jsPDF library not loaded");
+                    }
+                    
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Create a temporary container for PDF generation
+                    const tempContainer = document.createElement('div');
+                    tempContainer.id = 'pdfContainer';
+                    tempContainer.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 1200px;
+                        height: 800px;
+                        background: white;
+                        padding: 40px;
+                        font-family: 'Inter', sans-serif;
+                        z-index: 9999;
+                        overflow: hidden;
+                        box-sizing: border-box;
+                    `;
+                    
+                    // Clone the calculator content
+                    const calculatorElement = document.getElementById('calculatorMain');
+                    if (!calculatorElement) {
+                        throw new Error("Calculator element not found");
+                    }
+                    
+                    // Create a deep clone and modify it for PDF
+                    const clonedContent = calculatorElement.cloneNode(true);
+                    
+                    // Apply PDF-specific styles to the cloned content
+                    clonedContent.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        margin: 0;
+                        padding: 0;
+                        background: white;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 20px;
+                    `;
+                    
+                    // Remove any problematic elements
+                    const downloadBtn = clonedContent.querySelector('#downloadPdfBtn');
+                    if (downloadBtn) {
+                        downloadBtn.remove();
+                    }
+                    
+                    tempContainer.appendChild(clonedContent);
+                    document.body.appendChild(tempContainer);
+                    
+                    console.log("Temporary container created, waiting for rendering...");
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    console.log("Starting HTML2Canvas capture...");
+                    
+                    // Capture the container
+                    const canvas = await html2canvas(tempContainer, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: true,
+                        backgroundColor: '#FFFFFF',
+                        allowTaint: true,
+                        foreignObjectRendering: true,
+                        imageTimeout: 30000,
+                        removeContainer: false,
+                        width: 1200,
+                        height: 800,
+                        scrollX: 0,
+                        scrollY: 0
+                    });
+                    
+                    console.log("Canvas created, dimensions:", canvas.width, "x", canvas.height);
+
+                    if (canvas.width === 0 || canvas.height === 0) {
+                        throw new Error("Canvas is empty - capture failed");
+                    }
+
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    console.log("Image data created, length:", imgData.length);
+                    
+                    const pdf = new jsPDF({ 
+                        orientation: 'landscape',
+                        unit: 'pt', 
+                        format: 'letter' 
+                    });
+                    
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    
+                    console.log("PDF dimensions:", pdfWidth, "x", pdfHeight);
+                    
+                    // Calculate scaling to fit the image properly
+                    const scaleX = pdfWidth / canvas.width;
+                    const scaleY = pdfHeight / canvas.height;
+                    const scale = Math.min(scaleX, scaleY);
+                    
+                    const finalWidth = canvas.width * scale;
+                    const finalHeight = canvas.height * scale;
+                    
+                    // Center the image on the page
+                    const x = (pdfWidth - finalWidth) / 2;
+                    const y = (pdfHeight - finalHeight) / 2;
+                    
+                    console.log("Adding image to PDF...");
+                    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                    
+                    console.log("Saving PDF...");
+                    pdf.save('Canopy-Quote.pdf');
+                    
+                    console.log("PDF generation completed successfully");
+
+                } catch(err) {
+                    console.error("Failed to generate PDF:", err);
+                    alert("Sorry, there was an error generating the PDF. Please try again. Error: " + err.message);
+                } finally {
+                    // Clean up the temporary container
+                    const tempContainer = document.querySelector('div[style*="z-index: 9999"]');
+                    if (tempContainer) {
+                        document.body.removeChild(tempContainer);
+                    }
+                }
+            }
+
+            annualBtn.addEventListener('click', createToggleHandler(() => isAnnual = true, annualBtn, monthlyBtn));
+            monthlyBtn.addEventListener('click', createToggleHandler(() => isAnnual = false, monthlyBtn, annualBtn));
+            
+            // --- CHANGE IS HERE ---
+            // Removed renderModules() from the tier change handlers to preserve input values.
+            proTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = true; calculateAndRender(); }, proTierBtn, standardTierBtn));
+            standardTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = false; calculateAndRender(); }, standardTierBtn, proTierBtn));
+            // --- END OF CHANGE ---
+
+
+            implementationFeeInput.addEventListener('input', () => {
+                manualImplFeeSet = true;
+                calculateAndRender();
+            });
+            implementationFeeInput.addEventListener('blur', (e) => {
+                const numericValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
+                e.target.value = formatCurrency(numericValue);
+            });
+            // Toggle dropdown visibility
+            dataMigrationToggle.addEventListener('click', () => {
+                const isVisible = dataMigrationDropdown.classList.contains('hidden');
+                dataMigrationDropdown.classList.toggle('hidden', !isVisible);
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dataMigrationToggle.contains(e.target) && !dataMigrationDropdown.contains(e.target)) {
+                    dataMigrationDropdown.classList.add('hidden');
+                }
+            });
+            premiumOnboardingCheck.addEventListener('change', () => {
+                manualImplFeeSet = false;
+                calculateAndRender();
+            });
+            additionalClientsInput.addEventListener('input', calculateAndRender);
+            
+            // Add event listener for FileCabinet client input
+            const filecabinetClientsInput = document.getElementById('filecabinet_clients');
+            if (filecabinetClientsInput) {
+                filecabinetClientsInput.addEventListener('input', calculateAndRender);
+            }
+            aeDiscountInput.addEventListener('input', calculateAndRender);
+            downloadPdfBtn.addEventListener('click', () => {
+                console.log("Download button clicked");
+                generatePdf();
+            });
+            
+            populateDataMigrationOptions();
+            renderModules();
+            calculateAndRender();
+        });
+    </script>
+</body>
+</html>

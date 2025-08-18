@@ -459,6 +459,10 @@
                         <label for="quoteNotesInput" class="text-[11px] text-slate-300 mt-1">Notes</label>
                         <textarea id="quoteNotesInput" rows="2" placeholder="Notes (optional)" class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs"></textarea>
                     </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-300">
+                        <input id="pinQuoteCheck" type="checkbox" class="h-3 w-3 rounded border-slate-500 bg-slate-800">
+                        <label for="pinQuoteCheck">Pin/star this quote</label>
+                    </div>
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
                             <button id="saveQuoteBtn" class="text-xs px-3 py-1 rounded bg-emerald-500 text-slate-900 hover:bg-emerald-400">Save Quote</button>
@@ -584,6 +588,7 @@
             const userInfo = document.getElementById('userInfo');
             const quoteNameInput = document.getElementById('quoteNameInput');
             const quoteNotesInput = document.getElementById('quoteNotesInput');
+            const pinQuoteCheck = document.getElementById('pinQuoteCheck');
             const saveQuoteBtn = document.getElementById('saveQuoteBtn');
             const manageQuotesBtn = document.getElementById('manageQuotesBtn');
             const exportQuoteBtn = document.getElementById('exportQuoteBtn');
@@ -595,6 +600,9 @@
             const timeRangeSelect = document.getElementById('timeRangeSelect');
             const monthSelect = document.getElementById('monthSelect');
             const searchQuoteInput = document.getElementById('searchQuoteInput');
+
+            // Pagination state
+            let quotesPage = 1; const QUOTES_PAGE_SIZE = 20;
 
             // Collapsible Quote Tools
             const quoteToolsToggle = document.getElementById('quoteToolsToggle');
@@ -620,6 +628,28 @@
                     .replace(/>/g, '&gt;')
                     .replace(/"/g, '&quot;')
                     .replace(/'/g, '&#039;');
+            }
+
+            function parseTags(notes = '') {
+                const tags = new Set();
+                const re = /#([a-zA-Z0-9_\-]+)/g;
+                let m; while ((m = re.exec(notes)) !== null) { tags.add(m[1].toLowerCase()); }
+                return Array.from(tags);
+            }
+
+            function debounce(fn, wait = 300) {
+                let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
+            }
+
+            async function trackEvent(type, meta = {}) {
+                try {
+                    const payload = { type, ts: Date.now(), aeId: currentUser?.uid || null, aeEmail: currentUser?.email || null, ...meta };
+                    if (db && currentUser) {
+                        await db.collection('analytics').add(payload);
+                    } else {
+                        console.debug('[analytics]', payload);
+                    }
+                } catch(e) { console.warn('trackEvent failed', e); }
             }
 
             function populateDataMigrationOptions() {
@@ -1025,8 +1055,8 @@
                 calculateAndRender();
             }
 
-            async function upsertQuote(name, folder, state, existingId = null, notes = '') {
-                const doc = { id: existingId || makeId(), name, folder, state, notes, savedAt: Date.now() };
+            async function upsertQuote(name, folder, state, existingId = null, notes = '', pinned = false, tags = []) {
+                const doc = { id: existingId || makeId(), name, folder, state, notes, pinned: !!pinned, tags: tags || [], savedAt: Date.now() };
                 if (db && currentUser) {
                     const id = await cloudUpsertQuote(doc);
                     return id || doc.id;
@@ -1050,7 +1080,8 @@
 
             async function renderQuotesList() {
                 const all = await listQuotes();
-                const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
+                const rawFilter = (searchQuoteInput?.value || '').toLowerCase().trim();
+                const nameFilter = rawFilter;
                 const rangeVal = timeRangeSelect?.value || 'all';
                 const monthVal = monthSelect?.value || 'all';
 
@@ -1066,18 +1097,47 @@
                 const rangeMs = rangeVal === '30' ? 30*24*60*60*1000 : rangeVal === '60' ? 60*24*60*60*1000 : null;
 
                 const filtered = (all || [])
-                    .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
+                    .filter(q => {
+                        if (!nameFilter) return true;
+                        // tag search if starts with '#'
+                        if (nameFilter.startsWith('#')) {
+                            const tag = nameFilter.slice(1);
+                            const tags = (q.tags || parseTags(q.notes || '')).map(t => String(t).toLowerCase());
+                            return tags.includes(tag);
+                        }
+                        const nm = (q.name || '').toLowerCase();
+                        const notes = (q.notes || '').toLowerCase();
+                        return nm.includes(nameFilter) || notes.includes(nameFilter);
+                    })
                     .filter(q => (rangeMs ? ((now - (q.savedAt || 0)) <= rangeMs) : true))
                     .filter(q => (monthVal !== 'all' ? ((q.folder || computeCurrentFolder(q.savedAt)) === monthVal) : true))
-                    .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+                    // sort pinned first, then recent
+                    .sort((a, b) => {
+                        const ap = a.pinned ? 1 : 0; const bp = b.pinned ? 1 : 0;
+                        if (bp !== ap) return bp - ap;
+                        return (b.savedAt || 0) - (a.savedAt || 0);
+                    });
                 if (!quotesList) return;
                 if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
-                quotesList.innerHTML = filtered.map(q => `
+
+                // pagination slice
+                const total = filtered.length;
+                const pages = Math.max(1, Math.ceil(total / QUOTES_PAGE_SIZE));
+                if (quotesPage > pages) quotesPage = pages;
+                const start = (quotesPage - 1) * QUOTES_PAGE_SIZE;
+                const end = start + QUOTES_PAGE_SIZE;
+                const pageItems = filtered.slice(start, end);
+
+                quotesList.innerHTML = pageItems.map(q => `
                     <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
                         <div class="min-w-0">
-                            <div class="font-medium text-slate-800">${escapeHtml(q.name)}</div>
+                            <div class="flex items-center gap-2">
+                                <button data-act="pin" data-id="${q.id}" class="text-xs ${q.pinned ? 'text-amber-500' : 'text-slate-400'} hover:text-amber-500" title="${q.pinned ? 'Unpin' : 'Pin'}">${q.pinned ? '★' : '☆'}</button>
+                                <div class="font-medium text-slate-800 truncate">${escapeHtml(q.name)}</div>
+                            </div>
                             <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
                             ${q.notes && q.notes.trim() ? `<div class=\"text-xs text-slate-600 truncate\" title=\"${escapeHtml(q.notes)}\">Notes: ${escapeHtml(q.notes)}</div>` : ''}
+                            ${(q.tags && q.tags.length ? q.tags : parseTags(q.notes || '')).map(t => `<span class=\"inline-block text-[10px] px-1.5 py-0.5 mr-1 mt-1 rounded bg-slate-200 text-slate-700\">#${escapeHtml(t)}</span>`).join('')}
                         </div>
                         <div class="flex items-center gap-2">
                             <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>
@@ -1087,6 +1147,18 @@
                         </div>
                     </div>
                 `).join('');
+
+                // pager footer
+                quotesList.insertAdjacentHTML('beforeend', `
+                    <div class=\"flex items-center justify-between px-3 py-2\">
+                        <div class=\"text-xs text-slate-500\">Showing ${start + 1}-${Math.min(end, total)} of ${total}</div>
+                        <div class=\"flex items-center gap-2\">
+                            <button id=\"quotesPrevPage\" class=\"px-2 py-1 text-xs rounded ${quotesPage<=1?'bg-slate-100 text-slate-400':'bg-slate-200 text-slate-800 hover:bg-slate-300'}\" ${quotesPage<=1?'disabled':''}>Prev</button>
+                            <div class=\"text-xs text-slate-600\">Page ${quotesPage} / ${pages}</div>
+                            <button id=\"quotesNextPage\" class=\"px-2 py-1 text-xs rounded ${quotesPage>=pages?'bg-slate-100 text-slate-400':'bg-slate-200 text-slate-800 hover:bg-slate-300'}\" ${quotesPage>=pages?'disabled':''}>Next</button>
+                        </div>
+                    </div>
+                `);
                 quotesList.querySelectorAll('button').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         const id = e.currentTarget.getAttribute('data-id');
@@ -1098,20 +1170,34 @@
                             applyState(item.state);
                             if (quoteNameInput) quoteNameInput.value = item.name;
                             if (quoteNotesInput) quoteNotesInput.value = item.notes ?? '';
+                            if (pinQuoteCheck) pinQuoteCheck.checked = !!item.pinned;
+                            trackEvent('load', { quoteId: item.id, name: item.name });
                         } else if (act === 'rename') {
                             const newName = prompt('New quote name:', item.name) || item.name;
-                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '');
+                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '', !!item.pinned, item.tags || parseTags(item.notes||''));
+                            trackEvent('rename', { quoteId: item.id, from: item.name, to: newName });
                             renderQuotesList();
                         } else if (act === 'export') {
                             const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
                             const blob = new Blob([JSON.stringify(withFolder, null, 2)], { type: 'application/json' });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                            trackEvent('export_item', { quoteId: item.id, name: item.name });
                         } else if (act === 'delete') {
-                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
+                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); trackEvent('delete', { quoteId: item.id, name: item.name }); renderQuotesList(); }
+                        } else if (act === 'pin') {
+                            await upsertQuote(item.name, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '', !item.pinned, item.tags || parseTags(item.notes||''));
+                            trackEvent(item.pinned ? 'unpin' : 'pin', { quoteId: item.id, name: item.name });
+                            renderQuotesList();
                         }
                     });
                 });
+
+                // pager handlers
+                const prevBtn = document.getElementById('quotesPrevPage');
+                const nextBtn = document.getElementById('quotesNextPage');
+                prevBtn?.addEventListener('click', () => { if (quotesPage > 1) { quotesPage--; renderQuotesList(); } });
+                nextBtn?.addEventListener('click', () => { const pagesCalc = Math.max(1, Math.ceil(filtered.length / QUOTES_PAGE_SIZE)); if (quotesPage < pagesCalc) { quotesPage++; renderQuotesList(); } });
             }
 
             // Bindings
@@ -1127,13 +1213,31 @@
                     const state = getCurrentState();
                     const folder = computeCurrentFolder(state.savedAt);
                     const notes = (quoteNotesInput?.value || '').trim();
-                    // Check existing by name
-                    let existingId = null;
+                    const pinned = !!pinQuoteCheck?.checked;
+                    const tags = parseTags(notes);
                     const items = await listQuotes();
-                    const exists = (items || []).find(q => q.name && q.name.toLowerCase() === name.toLowerCase());
-                    if (exists) existingId = exists.id;
-                    await upsertQuote(name, folder, state, existingId, notes);
+                    // Duplicate detection (same name in same folder)
+                    const dup = (items || []).find(q => (q.name || '').toLowerCase() === name.toLowerCase() && (q.folder || computeCurrentFolder(q.savedAt)) === folder);
+                    let targetName = name;
+                    let existingId = null;
+                    if (dup) {
+                        const replace = confirm(`A quote named "${name}" already exists in ${folder}. Click OK to replace it, or Cancel for more options.`);
+                        if (replace) {
+                            existingId = dup.id;
+                        } else {
+                            const saveCopy = confirm('Save a copy instead? (OK = Save Copy, Cancel = Abort)');
+                            if (!saveCopy) { if (saveStatusMsg) saveStatusMsg.textContent = 'Save canceled.'; return; }
+                            // generate unique copy name
+                            let suffix = 1; let base = name + ' (copy';
+                            let candidate = `${name} (copy)`;
+                            const lowerItems = (items || []).map(q => (q.name || '').toLowerCase());
+                            while (lowerItems.includes(candidate.toLowerCase())) { suffix++; candidate = `${base} ${suffix})`; }
+                            targetName = candidate;
+                        }
+                    }
+                    const id = await upsertQuote(targetName, folder, state, existingId, notes, pinned, tags);
                     if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                    trackEvent('save', { quoteId: id, name: targetName, folder, pinned, tags });
                 } catch (err) {
                     console.error('Save failed:', err);
                     alert('Save failed: ' + (err && err.message ? err.message : err));
@@ -1141,17 +1245,21 @@
             });
             manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
             closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
-            searchQuoteInput?.addEventListener('input', renderQuotesList);
-            timeRangeSelect?.addEventListener('change', renderQuotesList);
-            monthSelect?.addEventListener('change', renderQuotesList);
+            const debouncedRender = debounce(() => { quotesPage = 1; renderQuotesList(); }, 250);
+            searchQuoteInput?.addEventListener('input', debouncedRender);
+            timeRangeSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
+            monthSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
                 const state = getCurrentState();
                 const notes = (quoteNotesInput?.value || '').trim();
-                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, savedAt: state.savedAt };
+                const pinned = !!pinQuoteCheck?.checked;
+                const tags = parseTags(notes);
+                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, pinned, tags, savedAt: state.savedAt };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                trackEvent('export', { name, pinned, tags });
             });
             importQuoteInput?.addEventListener('change', async (e) => {
                 const file = e.target.files?.[0]; if (!file) return;
@@ -1159,11 +1267,13 @@
                     const text = await file.text(); const obj = JSON.parse(text);
                     if (obj && obj.state) {
                         const folder = obj.folder || computeCurrentFolder(obj.state?.savedAt || obj.savedAt || Date.now());
-                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null, obj.notes || '');
+                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null, obj.notes || '', !!obj.pinned, obj.tags || parseTags(obj.notes || ''));
                         applyState(obj.state);
                         if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
                         if (quoteNotesInput) quoteNotesInput.value = obj.notes || '';
+                        if (pinQuoteCheck) pinQuoteCheck.checked = !!obj.pinned;
                         if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                        trackEvent('import', { quoteId: id, name: obj.name, folder, pinned: !!obj.pinned, tags: obj.tags || [] });
                     } else { alert('Invalid quote file.'); }
                 } catch (err) { alert('Failed to import: ' + err.message); }
                 finally { e.target.value = ''; }

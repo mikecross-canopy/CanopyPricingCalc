@@ -306,7 +306,7 @@
                 </div>
 
     <!-- History Modal -->
-    <div id="historyModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div id="historyModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[9999]">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-slate-900 font-bold">Version History</h3>
@@ -720,8 +720,7 @@
                 try { localStorage.setItem(`versions_${id}`, JSON.stringify(arr)); } catch {}
             }
             async function saveVersion(prevDoc, nextDoc, action = 'update') {
-                try {
-                    const version = {
+                const version = {
                         ts: Date.now(),
                         action,
                         nameBefore: prevDoc?.name ?? null,
@@ -736,22 +735,36 @@
                         stateBefore: prevDoc?.state ?? null,
                         stateAfter: nextDoc?.state ?? null,
                     };
-                    if (db && currentUser && prevDoc?.id) {
-                        await db.collection('quotes').doc(prevDoc.id).collection('versions').add(version);
-                    } else if (prevDoc?.id) {
-                        const arr = localVersionsRead(prevDoc.id); arr.unshift(version); localVersionsWrite(prevDoc.id, arr);
+                if (prevDoc?.id) {
+                    if (db && currentUser) {
+                        try {
+                            await db.collection('quotes').doc(prevDoc.id).collection('versions').add(version);
+                            return;
+                        } catch(e) {
+                            console.warn('saveVersion cloud failed, falling back to local', e);
+                        }
                     }
-                } catch (e) { console.warn('saveVersion failed', e); }
+                    const arr = localVersionsRead(prevDoc.id); arr.unshift(version); localVersionsWrite(prevDoc.id, arr);
+                } else {
+                    console.warn('saveVersion skipped: missing prevDoc.id');
+                }
             }
             async function listVersions(id) {
-                try {
-                    if (db && currentUser) {
+                if (db && currentUser) {
+                    try {
                         const snap = await db.collection('quotes').doc(id).collection('versions').orderBy('ts','desc').limit(50).get();
-                        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    } else {
+                        const cloud = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        // Merge with local if any exist (ensure unique by ts)
+                        const local = localVersionsRead(id);
+                        const byTs = new Map();
+                        [...cloud, ...local].forEach(v => { byTs.set(v.ts, v); });
+                        return Array.from(byTs.values()).sort((a,b)=>b.ts-a.ts).slice(0,50);
+                    } catch(e) {
+                        console.warn('listVersions cloud failed, using local', e);
                         return localVersionsRead(id);
                     }
-                } catch(e) { console.warn('listVersions failed', e); return []; }
+                }
+                return localVersionsRead(id);
             }
 
             async function fetchAnalytics(range) {
@@ -1331,6 +1344,7 @@
                             renderQuotesList();
                         } else if (act === 'history') {
                             // Open history modal and render versions for this item
+                            if (quotesModal) quotesModal.classList.add('hidden');
                             historyModal?.classList.remove('hidden');
                             if (historyList) historyList.innerHTML = '<div class="p-3 text-slate-500 text-sm">Loading...</div>';
                             const versions = await listVersions(item.id);
@@ -1476,7 +1490,7 @@
             openAnalyticsBtn?.addEventListener('click', () => { analyticsModal?.classList.remove('hidden'); renderAnalytics(); });
             closeAnalyticsModal?.addEventListener('click', () => analyticsModal?.classList.add('hidden'));
             analyticsRange?.addEventListener('change', renderAnalytics);
-            closeHistoryModal?.addEventListener('click', () => historyModal?.classList.add('hidden'));
+            closeHistoryModal?.addEventListener('click', () => { historyModal?.classList.add('hidden'); if (quotesModal) quotesModal.classList.remove('hidden'); });
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
                 const state = getCurrentState();

@@ -395,6 +395,49 @@
             width: 100% !important;
         }
 
+        /* ================= Glass PDF Theme (PDF-only render container) ================ */
+        .pdf-glass-root {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 28px;
+            background: radial-gradient(1200px 600px at 85% -100px, rgba(11,230,199,0.25), transparent 60%),
+                        linear-gradient(180deg, #f7fbff 0%, #eef3f8 100%);
+            position: relative;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        }
+        .glass-header {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+        }
+        .glass-logo { height: 28px; width: auto; display: block; }
+        .glass-title { font-weight: 800; font-size: 20px; color: #0f172a; letter-spacing: -0.01em; }
+        .glass-subtitle { font-size: 12px; color: #64748b; margin-top: -2px; }
+        .glass-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; }
+        .glass-card {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.4);
+            backdrop-filter: blur(14px) saturate(120%);
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .glass-card .card-body { padding: 18px; }
+        .glass-pill {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 11px;
+            color: #0f172a; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06);
+        }
+        .glass-total { font-size: 44px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; margin: 6px 0 8px; }
+        .glass-line { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .glass-line + .glass-line { border-top: 1px dashed rgba(15,23,42,0.08); }
+        .glass-muted { color: #64748b; }
+        .glass-accent { color: #0BBFA9; font-weight: 800; }
+        .glass-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 13px; }
+        .glass-table th { text-align: left; color: #64748b; font-weight: 700; padding: 0 8px; font-size: 12px; }
+        .glass-row { background: rgba(255,255,255,0.7); border: 1px solid rgba(15,23,42,0.06); border-radius: 10px; overflow: hidden; }
+        .glass-cell { padding: 10px 12px; }
+        .glass-right { text-align: right; font-weight: 700; color: #0f172a; }
+
     </style>
 </head>
 <body>
@@ -848,6 +891,190 @@
                     const arr = localVersionsRead(prevDoc.id); arr.unshift(version); localVersionsWrite(prevDoc.id, arr);
                 } else {
                     console.warn('saveVersion skipped: missing prevDoc.id');
+                }
+            }
+
+            async function generatePdfGlass() {
+                try {
+                    if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
+                    if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
+                    const { jsPDF } = window.jspdf;
+
+                    // Ensure up-to-date values
+                    const state = getCurrentState();
+
+                    // Build a temporary glass-themed container
+                    const root = document.createElement('div');
+                    root.className = 'pdf-glass-root';
+
+                    // Header
+                    const header = document.createElement('div');
+                    header.className = 'glass-header';
+                    header.innerHTML = `
+                        <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="glass-logo" onerror="this.style.display='none'" />
+                        <div>
+                          <div class="glass-title">Pricing Proposal</div>
+                          <div class="glass-subtitle">${(document.getElementById('quoteNameInput')?.value || 'Untitled Quote')} • ${new Date().toLocaleDateString()}</div>
+                        </div>
+                    `;
+                    root.appendChild(header);
+
+                    // Collect DOM-derived values so we match on-screen numbers
+                    const summaryTotal = document.getElementById('summaryBigTotal')?.textContent?.trim() || '';
+                    const perMonth = document.getElementById('summaryPerMonth')?.textContent?.trim() || '';
+                    const oneTime = document.getElementById('summaryOneTime')?.textContent?.trim() || '';
+                    const discountRow = document.getElementById('summaryDiscountRow');
+                    const discountText = document.getElementById('summaryDiscount')?.textContent?.trim() || '';
+                    const planTitle = document.getElementById('ceTitle')?.textContent?.trim() || 'Client Engagement Platform';
+                    const planSub = document.getElementById('ceSublabel')?.textContent?.trim() || '';
+                    const isAnnualTxt = state.isAnnual ? 'Annual' : 'Monthly';
+                    const tierTxt = state.isProTier ? 'Pro' : 'Standard';
+
+                    // Modules list from DOM
+                    const modules = [];
+                    document.querySelectorAll('.module-user-input').forEach(input => {
+                        const key = input.dataset.key;
+                        const label = document.getElementById(`${key}_name`)?.textContent?.trim() || key;
+                        const users = parseInt(input.value) || 0;
+                        const totalEl = document.getElementById(`${key}_total`);
+                        const total = totalEl ? totalEl.textContent.trim() : '';
+                        if (users > 0 || total) modules.push({ label, users, total });
+                    });
+
+                    // Data migration selections
+                    const migrations = Array.from(document.querySelectorAll('#dataMigrationDropdown input[type="checkbox"]:checked')).map(cb => {
+                        const id = cb.value;
+                        const row = cb.closest('div');
+                        const text = row ? row.textContent.trim() : id;
+                        return text;
+                    });
+                    const implFeeText = document.getElementById('implementationFeeInput')?.value || '';
+
+                    // Layout grid
+                    const grid = document.createElement('div');
+                    grid.className = 'glass-grid';
+
+                    // Left: Configuration card
+                    const left = document.createElement('div');
+                    left.className = 'glass-card';
+                    left.innerHTML = `
+                        <div class="card-body">
+                          <div class="glass-pill">${planTitle}</div>
+                          <div class="glass-muted" style="margin-top:6px;">${planSub}</div>
+                          <div class="glass-line" style="margin-top:10px;"><span class="glass-muted">Billing</span><span>${isAnnualTxt}</span></div>
+                          <div class="glass-line"><span class="glass-muted">Tier</span><span>${tierTxt}</span></div>
+
+                          <div style="margin-top:12px; font-weight:800; color:#0f172a;">Modules</div>
+                          <table class="glass-table" style="margin-top:6px;">
+                            <thead><tr>
+                              <th>Module</th>
+                              <th class="glass-right">Users</th>
+                              <th class="glass-right">Total</th>
+                            </tr></thead>
+                            <tbody id="glassModulesTbody"></tbody>
+                          </table>
+
+                          <div style="margin-top:14px; font-weight:800; color:#0f172a;">Implementation & Migration</div>
+                          <div class="glass-line"><span class="glass-muted">Implementation</span><span>${implFeeText || '-'}</span></div>
+                          <div class="glass-line" style="align-items:flex-start;">
+                            <span class="glass-muted">Data Migration</span>
+                            <span style="text-align:right; max-width:65%;">${(migrations.length ? migrations.join(', ') : 'None')}</span>
+                          </div>
+                          ${discountRow && !discountRow.classList.contains('hidden') ? `<div class="glass-line"><span class="glass-muted">Discount</span><span class="glass-accent">${discountText}</span></div>` : ''}
+                        </div>
+                    `;
+
+                    // Populate modules rows
+                    const tbody = left.querySelector('#glassModulesTbody');
+                    if (tbody) {
+                        modules.forEach(m => {
+                            const tr = document.createElement('tr');
+                            tr.className = 'glass-row';
+                            tr.innerHTML = `
+                                <td class="glass-cell">${m.label}</td>
+                                <td class="glass-cell glass-right">${m.users}</td>
+                                <td class="glass-cell glass-right">${m.total}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                        if (modules.length === 0) {
+                            const tr = document.createElement('tr'); tr.className = 'glass-row';
+                            tr.innerHTML = `<td class="glass-cell" colspan="3"><span class="glass-muted">No modules selected</span></td>`;
+                            tbody.appendChild(tr);
+                        }
+                    }
+
+                    // Right: Totals card
+                    const right = document.createElement('div');
+                    right.className = 'glass-card';
+                    right.innerHTML = `
+                        <div class="card-body">
+                          <div class="glass-pill">Summary</div>
+                          <div class="glass-total">${summaryTotal}</div>
+                          <div class="glass-line"><span class="glass-muted">Per Month</span><span>${perMonth}</span></div>
+                          <div class="glass-line"><span class="glass-muted">One-Time</span><span>${oneTime}</span></div>
+                          <div style="margin-top:14px; font-size:11px;" class="glass-muted">All prices in USD. This quote is for discussion purposes and subject to order form terms.</div>
+                        </div>
+                    `;
+
+                    grid.appendChild(left);
+                    grid.appendChild(right);
+                    root.appendChild(grid);
+
+                    // Mount into DOM (off-screen container to avoid layout shifts)
+                    const mount = document.createElement('div');
+                    mount.id = 'pdfGlassMount';
+                    mount.style.position = 'fixed';
+                    mount.style.left = '-10000px';
+                    mount.style.top = '0';
+                    mount.style.width = '100%';
+                    mount.appendChild(root);
+                    document.body.appendChild(mount);
+
+                    // Stabilize and wait for assets
+                    document.body.classList.add('pdf-capture-mode');
+                    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
+                    const imgs = Array.from(mount.querySelectorAll('img'));
+                    await Promise.all(imgs.map(img => new Promise(res => { if (img.complete) return res(); img.onload = img.onerror = () => res(); })));
+
+                    // Render only our root
+                    const canvas = await html2canvas(root, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        windowWidth: root.scrollWidth,
+                        windowHeight: root.scrollHeight,
+                        scrollX: 0,
+                        scrollY: 0
+                    });
+
+                    const { width: cW, height: cH } = canvas;
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'pt', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth;
+                    const imgHeight = cH * (imgWidth / cW);
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('Canopy-Quote-Glass.pdf');
+                } catch (err) {
+                    console.error('Glass PDF export failed:', err);
+                    alert('PDF export failed: ' + err.message);
+                } finally {
+                    document.body.classList.remove('pdf-capture-mode');
+                    const mount = document.getElementById('pdfGlassMount');
+                    if (mount) mount.remove();
                 }
             }
             async function listVersions(id) {
@@ -1762,9 +1989,10 @@
                 filecabinetClientsInput.addEventListener('input', calculateAndRender);
             }
             aeDiscountInput.addEventListener('input', calculateAndRender);
-            downloadPdfBtn.addEventListener('click', () => {
-                console.log("Download button clicked");
-                generatePdf();
+            downloadPdfBtn.addEventListener('click', (e) => {
+                // Default to new glass export. Hold Alt/Option for legacy export.
+                if (e && (e.altKey || e.metaKey)) { generatePdf(); }
+                else { generatePdfGlass(); }
             });
             
             populateDataMigrationOptions();

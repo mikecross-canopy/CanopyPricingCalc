@@ -247,6 +247,12 @@
             margin: 0 !important;
             padding: 2rem !important;
         }
+        /* Remove decorative blob circle in PDF */
+        .pdf-capture-mode .main-container::before {
+            content: none !important;
+            display: none !important;
+            opacity: 0 !important;
+        }
         
         .pdf-capture-mode .card-wrapper {
             width: 100% !important;
@@ -292,6 +298,49 @@
             text-align: center !important;
             padding: 6px 8px !important;
             font-size: 14px !important;
+        }
+
+        /* Stabilize images for html2canvas rendering */
+        .pdf-capture-mode img {
+            max-width: 100% !important;
+            height: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto !important; /* keep logos centered */
+        }
+
+        /* Unify input heights and true centering */
+        .pdf-capture-mode .item-input,
+        .pdf-capture-mode .item-select,
+        .pdf-capture-mode .ce-input {
+            height: 36px !important;
+            line-height: 36px !important;
+            padding: 0 10px !important;
+            text-align: center !important;
+        }
+        .pdf-capture-mode .module-user-input {
+            height: 36px !important;
+            line-height: 36px !important;
+            text-align: center !important;
+        }
+
+        /* Reduce visual noise in PDF */
+        .pdf-capture-mode .pricing-card,
+        .pdf-capture-mode .summary-card {
+            box-shadow: none !important;
+        }
+
+        /* Normalize button heights and text centering */
+        .pdf-capture-mode button {
+            height: 36px !important;
+            line-height: 36px !important;
+            padding: 0 12px !important;
+            text-align: center !important;
+        }
+
+        /* Checkbox vertical alignment */
+        .pdf-capture-mode input[type="checkbox"] {
+            vertical-align: middle !important;
         }
 
     </style>

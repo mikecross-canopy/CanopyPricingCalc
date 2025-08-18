@@ -1547,137 +1547,61 @@
 
             async function generatePdf() {
                 try {
-                    console.log("Starting PDF generation...");
-                    
-                    // Check if html2canvas is available
-                    if (typeof html2canvas === 'undefined') {
-                        throw new Error("HTML2Canvas library not loaded");
-                    }
-                    
-                    // Check if jsPDF is available
-                    if (typeof window.jspdf === 'undefined') {
-                        throw new Error("jsPDF library not loaded");
-                    }
-                    
+                    // Ensure libraries
+                    if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
+                    if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
                     const { jsPDF } = window.jspdf;
-                    
-                    // Create a temporary container for PDF generation
-                    const tempContainer = document.createElement('div');
-                    tempContainer.id = 'pdfContainer';
-                    tempContainer.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 1200px;
-                        height: 800px;
-                        background: white;
-                        padding: 40px;
-                        font-family: 'Inter', sans-serif;
-                        z-index: 9999;
-                        overflow: hidden;
-                        box-sizing: border-box;
-                    `;
-                    
-                    // Clone the calculator content
-                    const calculatorElement = document.getElementById('calculatorMain');
-                    if (!calculatorElement) {
-                        throw new Error("Calculator element not found");
-                    }
-                    
-                    // Create a deep clone and modify it for PDF
-                    const clonedContent = calculatorElement.cloneNode(true);
-                    
-                    // Apply PDF-specific styles to the cloned content
-                    clonedContent.style.cssText = `
-                        width: 100%;
-                        height: 100%;
-                        margin: 0;
-                        padding: 0;
-                        background: white;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
-                    `;
-                    
-                    // Remove any problematic elements
-                    const downloadBtn = clonedContent.querySelector('#downloadPdfBtn');
-                    if (downloadBtn) {
-                        downloadBtn.remove();
-                    }
-                    
-                    tempContainer.appendChild(clonedContent);
-                    document.body.appendChild(tempContainer);
-                    
-                    console.log("Temporary container created, waiting for rendering...");
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                    console.log("Starting HTML2Canvas capture...");
-                    
-                    // Capture the container
-                    const canvas = await html2canvas(tempContainer, {
+
+                    // Capture entire main container (fallback to body)
+                    const target = document.querySelector('.main-container') || document.body;
+
+                    // Stabilize layout during capture
+                    document.body.classList.add('pdf-capture-mode');
+
+                    // Wait for fonts and images
+                    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
+                    const imgs = Array.from(document.images);
+                    await Promise.all(imgs.map(img => new Promise(resolve => {
+                        if (img.complete) return resolve();
+                        img.onload = img.onerror = () => resolve();
+                    })));
+
+                    // Render full content as canvas
+                    const canvas = await html2canvas(target, {
                         scale: 2,
                         useCORS: true,
-                        logging: true,
-                        backgroundColor: '#FFFFFF',
-                        allowTaint: true,
-                        foreignObjectRendering: true,
-                        imageTimeout: 30000,
-                        removeContainer: false,
-                        width: 1200,
-                        height: 800,
+                        backgroundColor: '#ffffff',
+                        windowWidth: target.scrollWidth,
+                        windowHeight: target.scrollHeight,
                         scrollX: 0,
-                        scrollY: 0
+                        scrollY: -window.scrollY
                     });
-                    
-                    console.log("Canvas created, dimensions:", canvas.width, "x", canvas.height);
 
-                    if (canvas.width === 0 || canvas.height === 0) {
-                        throw new Error("Canvas is empty - capture failed");
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'pt', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+
+                    const imgWidth = pageWidth;
+                    const imgHeight = canvas.height * (imgWidth / canvas.width);
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight; // negative to move image up
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
                     }
 
-                    const imgData = canvas.toDataURL('image/png', 1.0);
-                    console.log("Image data created, length:", imgData.length);
-                    
-                    const pdf = new jsPDF({ 
-                        orientation: 'landscape',
-                        unit: 'pt', 
-                        format: 'letter' 
-                    });
-                    
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    
-                    console.log("PDF dimensions:", pdfWidth, "x", pdfHeight);
-                    
-                    // Calculate scaling to fit the image properly
-                    const scaleX = pdfWidth / canvas.width;
-                    const scaleY = pdfHeight / canvas.height;
-                    const scale = Math.min(scaleX, scaleY);
-                    
-                    const finalWidth = canvas.width * scale;
-                    const finalHeight = canvas.height * scale;
-                    
-                    // Center the image on the page
-                    const x = (pdfWidth - finalWidth) / 2;
-                    const y = (pdfHeight - finalHeight) / 2;
-                    
-                    console.log("Adding image to PDF...");
-                    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
-                    
-                    console.log("Saving PDF...");
                     pdf.save('Canopy-Quote.pdf');
-                    
-                    console.log("PDF generation completed successfully");
-
-                } catch(err) {
-                    console.error("Failed to generate PDF:", err);
-                    alert("Sorry, there was an error generating the PDF. Please try again. Error: " + err.message);
+                } catch (err) {
+                    console.error('PDF export failed:', err);
+                    alert('PDF export failed: ' + err.message);
                 } finally {
-                    // Clean up the temporary container
-                    const tempContainer = document.querySelector('div[style*="z-index: 9999"]');
-                    if (tempContainer) {
-                        document.body.removeChild(tempContainer);
-                    }
+                    document.body.classList.remove('pdf-capture-mode');
                 }
             }
 

@@ -398,21 +398,22 @@
         /* ================= Glass PDF Theme (PDF-only render container) ================ */
         .pdf-glass-root {
             width: 100%;
-            max-width: 1200px;
+            max-width: none;
             margin: 0 auto;
-            padding: 24px 28px;
-            background: radial-gradient(1200px 600px at 85% -100px, rgba(11,230,199,0.25), transparent 60%),
+            padding: 36px 36px 56px;
+            background: radial-gradient(1000px 600px at 50% -200px, rgba(11,230,199,0.25), transparent 65%),
                         linear-gradient(180deg, #f7fbff 0%, #eef3f8 100%);
             position: relative;
             font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
         }
         .glass-header {
-            display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+            display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 10px;
         }
-        .glass-logo { height: 28px; width: auto; display: block; }
+        .glass-logo { height: 36px; width: auto; display: block; }
         .glass-title { font-weight: 800; font-size: 20px; color: #0f172a; letter-spacing: -0.01em; }
         .glass-subtitle { font-size: 12px; color: #64748b; margin-top: -2px; }
-        .glass-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; }
+        .glass-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: 100%; }
         .glass-card {
             background: rgba(255,255,255,0.55);
             border: 1px solid rgba(255,255,255,0.7);
@@ -422,11 +423,10 @@
             border-radius: 16px;
             overflow: hidden;
         }
+        .glass-grid .glass-card { min-height: 65vh; }
         .glass-card .card-body { padding: 18px; }
-        .glass-pill {
-            display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 11px;
-            color: #0f172a; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06);
-        }
+        .glass-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 11px; color: #0f172a; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06); }
+        .glass-pill-wrap { display: flex; justify-content: center; }
         .glass-total { font-size: 44px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; margin: 6px 0 8px; }
         .glass-line { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 14px; }
         .glass-line + .glass-line { border-top: 1px dashed rgba(15,23,42,0.08); }
@@ -907,15 +907,11 @@
                     const root = document.createElement('div');
                     root.className = 'pdf-glass-root';
 
-                    // Header
+                    // Header: centered logo only (no title/subtitle)
                     const header = document.createElement('div');
                     header.className = 'glass-header';
                     header.innerHTML = `
                         <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="glass-logo" onerror="this.style.display='none'" />
-                        <div>
-                          <div class="glass-title">Pricing Proposal</div>
-                          <div class="glass-subtitle">${(document.getElementById('quoteNameInput')?.value || 'Untitled Quote')} • ${new Date().toLocaleDateString()}</div>
-                        </div>
                     `;
                     root.appendChild(header);
 
@@ -930,11 +926,18 @@
                     const isAnnualTxt = state.isAnnual ? 'Annual' : 'Monthly';
                     const tierTxt = state.isProTier ? 'Pro' : 'Standard';
 
-                    // Modules list from DOM
+                    // Modules list from DOM (with friendly name mapping)
                     const modules = [];
+                    const nameMap = {
+                        'doc_manage': 'Document Management',
+                        'workflow': 'Workflow',
+                        'time_bill': 'Time & Billing',
+                        'tax_res': 'Tax Resolution'
+                    };
                     document.querySelectorAll('.module-user-input').forEach(input => {
                         const key = input.dataset.key;
-                        const label = document.getElementById(`${key}_name`)?.textContent?.trim() || key;
+                        const rawLabel = document.getElementById(`${key}_name`)?.textContent?.trim() || key;
+                        const label = nameMap[key] || rawLabel;
                         const users = parseInt(input.value) || 0;
                         const totalEl = document.getElementById(`${key}_total`);
                         const total = totalEl ? totalEl.textContent.trim() : '';
@@ -959,10 +962,10 @@
                     left.className = 'glass-card';
                     left.innerHTML = `
                         <div class="card-body">
-                          <div class="glass-pill">${planTitle}</div>
+                          <div class="glass-pill-wrap"><div class="glass-pill">${planTitle} - ${tierTxt}</div></div>
                           <div class="glass-muted" style="margin-top:6px;">${planSub}</div>
                           <div class="glass-line" style="margin-top:10px;"><span class="glass-muted">Billing</span><span>${isAnnualTxt}</span></div>
-                          <div class="glass-line"><span class="glass-muted">Tier</span><span>${tierTxt}</span></div>
+                          
 
                           <div style="margin-top:12px; font-weight:800; color:#0f172a;">Modules</div>
                           <table class="glass-table" style="margin-top:6px;">
@@ -1009,7 +1012,7 @@
                     right.className = 'glass-card';
                     right.innerHTML = `
                         <div class="card-body">
-                          <div class="glass-pill">Summary</div>
+                          <div class="glass-pill-wrap"><div class="glass-pill">Summary</div></div>
                           <div class="glass-total">${summaryTotal}</div>
                           <div class="glass-line"><span class="glass-muted">Per Month</span><span>${perMonth}</span></div>
                           <div class="glass-line"><span class="glass-muted">One-Time</span><span>${oneTime}</span></div>

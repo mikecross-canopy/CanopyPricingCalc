@@ -434,6 +434,35 @@
         </main>
     </div>
 
+    <!-- Collapsible Quote Tools (starts collapsed) -->
+    <section class="w-full max-w-4xl mx-auto mt-4">
+        <button id="quoteToolsToggle" class="w-full flex items-center justify-between rounded-lg bg-slate-800 text-white px-4 py-2 shadow">
+            <span class="font-semibold text-sm">Quote Tools</span>
+            <span id="quoteToolsChevron" class="transition-transform">▾</span>
+        </button>
+        <div id="quoteToolsPanel" class="hidden rounded-b-lg bg-slate-900 text-white p-4 space-y-2">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+                <div id="userInfo" class="hidden text-xs text-slate-200 bg-slate-700/70 rounded px-2 py-1"></div>
+                <button id="signInBtn" class="text-xs px-2 py-1 rounded bg-teal-500 text-slate-900 hover:bg-teal-400">Sign In</button>
+                <button id="signOutBtn" class="hidden text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Sign Out</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote name (e.g., ACME Renewal)">
+                <input id="quoteFolderInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Folder (e.g., AE-jdoe)">
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button id="saveQuoteBtn" class="px-3 py-1 rounded bg-teal-400 text-slate-900 font-semibold text-sm hover:bg-teal-300">Save Quote</button>
+                <button id="manageQuotesBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600">Manage Quotes</button>
+                <button id="exportQuoteBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600" title="Export current quote JSON">Export</button>
+                <label class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 cursor-pointer">
+                    Import
+                    <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
+                </label>
+                <p id="saveStatusMsg" class="text-xs text-slate-300 ml-auto"></p>
+            </div>
+        </div>
+    </section>
+
     <!-- Quotes Modal -->
     <div id="quotesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">

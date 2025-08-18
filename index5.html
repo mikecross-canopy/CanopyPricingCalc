@@ -440,25 +440,27 @@
             <span class="font-semibold text-sm">Quote Tools</span>
             <span id="quoteToolsChevron" class="transition-transform">▾</span>
         </button>
-        <div id="quoteToolsPanel" class="hidden rounded-b-lg bg-slate-900 text-white p-4 space-y-2">
+        <div id="quoteToolsPanel" class="hidden rounded-b-lg bg-slate-900 text-white p-4 space-y-3">
             <div class="flex flex-wrap items-center gap-2 mb-1">
                 <div id="userInfo" class="hidden text-xs text-slate-200 bg-slate-700/70 rounded px-2 py-1"></div>
                 <button id="signInBtn" class="text-xs px-2 py-1 rounded bg-teal-500 text-slate-900 hover:bg-teal-400">Sign In</button>
                 <button id="signOutBtn" class="hidden text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Sign Out</button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote name (e.g., ACME Renewal)">
-                <input id="quoteFolderInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Folder (e.g., AE-jdoe)">
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <button id="saveQuoteBtn" class="px-3 py-1 rounded bg-teal-400 text-slate-900 font-semibold text-sm hover:bg-teal-300">Save Quote</button>
-                <button id="manageQuotesBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600">Manage Quotes</button>
-                <button id="exportQuoteBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600" title="Export current quote JSON">Export</button>
-                <label class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 cursor-pointer">
-                    Import
-                    <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
-                </label>
-                <p id="saveStatusMsg" class="text-xs text-slate-300 ml-auto"></p>
+            <div id="quoteToolsLocked" class="text-xs text-slate-300">Sign in to view and use quote tools.</div>
+            <div id="quoteToolsContent" class="hidden space-y-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote name (e.g., ACME Renewal)">
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="saveQuoteBtn" class="px-3 py-1 rounded bg-teal-400 text-slate-900 font-semibold text-sm hover:bg-teal-300">Save Quote</button>
+                    <button id="manageQuotesBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600">Manage Quotes</button>
+                    <button id="exportQuoteBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600" title="Export current quote JSON">Export</button>
+                    <label class="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 cursor-pointer">
+                        Import
+                        <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
+                    </label>
+                    <p id="saveStatusMsg" class="text-xs text-slate-300 ml-auto"></p>
+                </div>
             </div>
         </div>
     </section>
@@ -558,7 +560,6 @@
             const signOutBtn = document.getElementById('signOutBtn');
             const userInfo = document.getElementById('userInfo');
             const quoteNameInput = document.getElementById('quoteNameInput');
-            const quoteFolderInput = document.getElementById('quoteFolderInput');
             const saveQuoteBtn = document.getElementById('saveQuoteBtn');
             const manageQuotesBtn = document.getElementById('manageQuotesBtn');
             const exportQuoteBtn = document.getElementById('exportQuoteBtn');
@@ -574,6 +575,9 @@
             const quoteToolsToggle = document.getElementById('quoteToolsToggle');
             const quoteToolsPanel = document.getElementById('quoteToolsPanel');
             const quoteToolsChevron = document.getElementById('quoteToolsChevron');
+            const quoteToolsContent = document.getElementById('quoteToolsContent');
+            const quoteToolsLocked = document.getElementById('quoteToolsLocked');
+
             quoteToolsToggle?.addEventListener('click', () => {
                 const isHidden = quoteToolsPanel.classList.contains('hidden');
                 quoteToolsPanel.classList.toggle('hidden');
@@ -843,13 +847,17 @@
                         userInfo.classList.remove('hidden');
                         signOutBtn.classList.remove('hidden');
                         signInBtn.classList.add('hidden');
-                        // Default folder hint per AE
-                        if (!quoteFolderInput.value) quoteFolderInput.value = `AE-${(currentUser.email || '').split('@')[0]}`;
+                        // Unlock quote tools content when signed in
+                        quoteToolsLocked?.classList.add('hidden');
+                        quoteToolsContent?.classList.remove('hidden');
                     } else {
                         userInfo.textContent = '';
                         userInfo.classList.add('hidden');
                         signOutBtn.classList.add('hidden');
                         signInBtn.classList.remove('hidden');
+                        // Lock quote tools when signed out
+                        quoteToolsContent?.classList.add('hidden');
+                        quoteToolsLocked?.classList.remove('hidden');
                     }
                 });
 
@@ -990,19 +998,17 @@
 
             async function renderQuotesList() {
                 const all = await listQuotes();
-                const folderFilter = (filterFolderInput?.value || '').toLowerCase();
                 const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
                 const filtered = (all || [])
-                    .filter(q => (folderFilter ? (q.folder || '').toLowerCase().includes(folderFilter) : true))
                     .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
-                    .sort((a, b) => (a.folder || '').localeCompare(b.folder || '') || b.savedAt - a.savedAt);
+                    .sort((a, b) => b.savedAt - a.savedAt);
                 if (!quotesList) return;
                 if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
                 quotesList.innerHTML = filtered.map(q => `
                     <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
                         <div>
                             <div class="text-sm font-semibold text-slate-800">${q.name}</div>
-                            <div class="text-xs text-slate-500">Folder: ${q.folder || '(none)'} • Saved: ${new Date(q.savedAt).toLocaleString()}</div>
+                            <div class="text-xs text-slate-500">Saved: ${new Date(q.savedAt).toLocaleString()}</div>
                         </div>
                         <div class="flex gap-2">
                             <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs rounded bg-teal-500 text-white">Load</button>
@@ -1023,19 +1029,17 @@
                             applyState(item.state);
                             quotesModal?.classList.add('hidden');
                             if (quoteNameInput) quoteNameInput.value = item.name;
-                            if (quoteFolderInput) quoteFolderInput.value = item.folder || '';
                             if (saveStatusMsg) { saveStatusMsg.textContent = `Loaded "${item.name}"`; setTimeout(() => saveStatusMsg.textContent = '', 2000); }
                         } else if (act === 'delete') {
                             if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
                         } else if (act === 'rename') {
                             const newName = prompt('New quote name:', item.name) || item.name;
-                            const newFolder = prompt('New folder:', item.folder || '') ?? (item.folder || '');
-                            await upsertQuote(newName, newFolder, item.state, item.id);
+                            await upsertQuote(newName, '', item.state, item.id);
                             renderQuotesList();
                         } else if (act === 'export') {
                             const blob = new Blob([JSON.stringify(item, null, 2)], { type: 'application/json' });
                             const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a'); a.href = url; a.download = `${item.folder ? item.folder + '_' : ''}${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                            const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                         }
                     });
                 });
@@ -1043,41 +1047,40 @@
 
             // Bindings
             saveQuoteBtn?.addEventListener('click', async () => {
+                if (!currentUser) {
+                    alert('Please sign in to save quotes.');
+                    return;
+                }
                 const name = (quoteNameInput?.value || '').trim();
-                const folder = (quoteFolderInput?.value || '').trim();
                 if (!name) { if (saveStatusMsg) saveStatusMsg.textContent = 'Please enter a quote name.'; return; }
                 // Overwrite check for local only (Firestore uses id; we keep same id if name+folder unchanged by searching first)
                 let existingId = null;
                 const items = await listQuotes();
-                const exists = (items || []).find(q => (q.name || '').toLowerCase() === name.toLowerCase() && (q.folder || '') === folder);
+                const exists = (items || []).find(q => q.name.toLowerCase() === name.toLowerCase());
                 if (exists) {
-                    if (!confirm('A quote with this name in this folder exists. Overwrite?')) return;
                     existingId = exists.id;
                 }
-                await upsertQuote(name, folder, getCurrentState(), existingId);
-                if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}"${folder ? ' in ' + folder : ''}.`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                await upsertQuote(name, '', getCurrentState(), existingId);
+                if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
             });
             manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
             closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
-            filterFolderInput?.addEventListener('input', renderQuotesList);
             searchQuoteInput?.addEventListener('input', renderQuotesList);
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
-                const folder = (quoteFolderInput?.value || '');
-                const payload = { id: makeId(), name, folder, state: getCurrentState(), savedAt: Date.now() };
+                const payload = { id: makeId(), name, folder: '', state: getCurrentState(), savedAt: Date.now() };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = `${folder ? folder + '_' : ''}${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
             });
             importQuoteInput?.addEventListener('change', async (e) => {
                 const file = e.target.files?.[0]; if (!file) return;
                 try {
                     const text = await file.text(); const obj = JSON.parse(text);
                     if (obj && obj.state) {
-                        const id = await upsertQuote(obj.name || 'Imported Quote', obj.folder || '', obj.state, obj.id || null);
+                        const id = await upsertQuote(obj.name || 'Imported Quote', '', obj.state, obj.id || null);
                         applyState(obj.state);
                         if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
-                        if (quoteFolderInput) quoteFolderInput.value = obj.folder || '';
                         if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
                     } else { alert('Invalid quote file.'); }
                 } catch (err) { alert('Failed to import: ' + err.message); }

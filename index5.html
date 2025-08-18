@@ -362,18 +362,35 @@
             padding: 0 12px !important;
             text-align: center !important;
         }
-        /* Ensure billing toggles centered in PDF */
+        /* Ensure billing toggles centered in PDF and shrink buttons */
+        .pdf-capture-mode .billing-toggle { width: 100% !important; max-width: 820px !important; margin: 0.25rem auto 0.75rem !important; display: flex !important; align-items: center !important; }
         .pdf-capture-mode .billing-toggle button {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            height: 40px !important;
+            height: 32px !important; /* smaller button height in PDF */
+            padding: 0 10px !important;
+            font-size: 0.8rem !important;
             line-height: normal !important;
+            vertical-align: middle !important;
         }
 
         /* Checkbox vertical alignment */
         .pdf-capture-mode input[type="checkbox"] {
             vertical-align: middle !important;
+        }
+
+        /* Center Users label above input in PDF */
+        .pdf-capture-mode .item-input-container {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+        }
+        .pdf-capture-mode .item-input-container .input-label {
+            margin-bottom: 4px !important;
+            text-align: center !important;
+            width: 100% !important;
         }
 
     </style>

@@ -193,9 +193,9 @@
             gap: 1.5rem !important;
         }
         
-        .pdf-capture-mode .summary-card {
-            padding: 2rem !important;
-        }
+        .pdf-capture-mode .summary-card { padding: 1.25rem 1.5rem !important; }
+        .pdf-capture-mode #summaryBigTotal { margin-top: 0 !important; padding-top: 0 !important; }
+        .pdf-capture-mode .summary-card .text-center { margin-top: 0 !important; }
         
         .pdf-capture-mode .summary-total-lg {
             font-size: 4rem !important;
@@ -236,18 +236,30 @@
         .pdf-capture-mode {
             background-color: #F8FAFC !important;
             min-height: 100vh !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important; /* do not vertically center in PDF */
+            /* Avoid any layout jitter in capture */
+            -webkit-font-smoothing: antialiased !important;
+        }
+        .pdf-capture-mode *, .pdf-capture-mode *::before, .pdf-capture-mode *::after {
+            transition: none !important;
+            animation: none !important;
+            transform: none !important;
         }
         
         .pdf-capture-mode .main-container {
             width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 2rem !important;
+            max-width: 1200px !important; /* fill more of the PDF page */
+            margin: 0 auto !important;
+            padding: 0.5rem 2rem 1rem !important; /* tighter top padding */
+            position: relative !important;
         }
+        /* Prevent inner containers from constraining width */
+        .pdf-capture-mode .max-w-4xl { max-width: 1200px !important; width: 100% !important; }
+
+        /* Center the billing toggle block horizontally */
+        .pdf-capture-mode .billing-toggle { width: 100% !important; max-width: 920px !important; margin: 0.25rem auto 0.75rem !important; }
         /* Hide Firm size toggle in PDF */
         .pdf-capture-mode .firm-toggle { display: none !important; }
         /* Remove decorative blob circle in PDF */
@@ -255,6 +267,16 @@
             content: none !important;
             display: none !important;
             opacity: 0 !important;
+        }
+
+        /* Position the Canopy logo at top-left in PDF only */
+        .pdf-capture-mode header { position: relative !important; margin: 0 !important; padding-top: 0.5rem !important; }
+        .pdf-capture-mode header img[alt="Canopy Logo"] {
+            position: absolute !important;
+            top: 12px !important;
+            left: 16px !important;
+            margin: 0 !important;
+            transform: none !important;
         }
         
         .pdf-capture-mode .card-wrapper {

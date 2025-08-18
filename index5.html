@@ -455,6 +455,10 @@
                         <label for="quoteNameInput" class="text-[11px] text-slate-300">Quote Name</label>
                         <input id="quoteNameInput" type="text" placeholder="Enter a quote name..." class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs" />
                     </div>
+                    <div class="flex items-start gap-2">
+                        <label for="quoteNotesInput" class="text-[11px] text-slate-300 mt-1">Notes</label>
+                        <textarea id="quoteNotesInput" rows="2" placeholder="Notes (optional)" class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs"></textarea>
+                    </div>
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
                             <button id="saveQuoteBtn" class="text-xs px-3 py-1 rounded bg-emerald-500 text-slate-900 hover:bg-emerald-400">Save Quote</button>
@@ -484,12 +488,16 @@
                 <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
             </div>
             <!-- Quote name moved to Quote Tools panel -->
-            <div class="mt-2">
-                <textarea id="quoteNotesInput" rows="3" placeholder="Notes (optional)" class="w-full px-2 py-1 rounded border border-slate-300 text-sm"></textarea>
-            </div>
             <div class="grid grid-cols-3 gap-2 mb-3">
-                <input id="filterFolderInput" type="text" placeholder="Filter by folder" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
-                <input id="searchQuoteInput" type="text" placeholder="Search by name" class="col-span-2 px-2 py-1 rounded border border-slate-300 text-sm">
+                <select id="timeRangeSelect" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
+                    <option value="all">All time</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="60">Last 60 days</option>
+                </select>
+                <select id="monthSelect" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
+                    <option value="all">All months</option>
+                </select>
+                <input id="searchQuoteInput" type="text" placeholder="Search by name" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
             </div>
             <div id="quotesList" class="max-h-72 overflow-y-auto border border-slate-200 rounded"></div>
         </div>
@@ -584,7 +592,8 @@
             const quotesModal = document.getElementById('quotesModal');
             const closeQuotesModal = document.getElementById('closeQuotesModal');
             const quotesList = document.getElementById('quotesList');
-            const filterFolderInput = document.getElementById('filterFolderInput');
+            const timeRangeSelect = document.getElementById('timeRangeSelect');
+            const monthSelect = document.getElementById('monthSelect');
             const searchQuoteInput = document.getElementById('searchQuoteInput');
 
             // Collapsible Quote Tools
@@ -1034,10 +1043,24 @@
             async function renderQuotesList() {
                 const all = await listQuotes();
                 const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
-                const folderFilter = (filterFolderInput?.value || '').toLowerCase();
+                const rangeVal = timeRangeSelect?.value || 'all';
+                const monthVal = monthSelect?.value || 'all';
+
+                // Populate month dropdown from available quotes (yyyy-mm)
+                if (monthSelect && !monthSelect.dataset.populated) {
+                    const months = Array.from(new Set((all || []).map(q => (q.folder || computeCurrentFolder(q.savedAt))))).sort().reverse();
+                    const opts = ['<option value="all">All months</option>'].concat(months.map(m => `<option value="${m}">${m}</option>`));
+                    monthSelect.innerHTML = opts.join('');
+                    monthSelect.dataset.populated = 'true';
+                }
+
+                const now = Date.now();
+                const rangeMs = rangeVal === '30' ? 30*24*60*60*1000 : rangeVal === '60' ? 60*24*60*60*1000 : null;
+
                 const filtered = (all || [])
                     .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
-                    .filter(q => (folderFilter ? ((q.folder || '').toLowerCase().includes(folderFilter)) : true))
+                    .filter(q => (rangeMs ? ((now - (q.savedAt || 0)) <= rangeMs) : true))
+                    .filter(q => (monthVal !== 'all' ? ((q.folder || computeCurrentFolder(q.savedAt)) === monthVal) : true))
                     .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
                 if (!quotesList) return;
                 if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
@@ -1110,7 +1133,8 @@
             manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
             closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
             searchQuoteInput?.addEventListener('input', renderQuotesList);
-            filterFolderInput?.addEventListener('input', renderQuotesList);
+            timeRangeSelect?.addEventListener('change', renderQuotesList);
+            monthSelect?.addEventListener('change', renderQuotesList);
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
                 const state = getCurrentState();

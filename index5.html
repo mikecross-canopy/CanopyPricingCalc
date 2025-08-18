@@ -489,7 +489,10 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-slate-900 font-bold">Saved Quotes</h3>
-                <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+                <div class="flex items-center gap-2">
+                    <button id="openAnalyticsBtn" class="text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Analytics</button>
+                    <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+                </div>
             </div>
             <!-- Quote name moved to Quote Tools panel -->
             <div class="grid grid-cols-3 gap-2 mb-3">
@@ -501,9 +504,32 @@
                 <select id="monthSelect" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
                     <option value="all">All months</option>
                 </select>
-                <input id="searchQuoteInput" type="text" placeholder="Search by name" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
+                <input id="searchQuoteInput" type="text" placeholder="Search by name or notes (use #tag)" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800" />
             </div>
-            <div id="quotesList" class="max-h-72 overflow-y-auto border border-slate-200 rounded"></div>
+            <div class="flex items-center justify-between mb-2">
+                <div id="tagFilters" class="flex flex-wrap gap-1"></div>
+                <label class="flex items-center gap-1 text-xs text-slate-600"><input id="pinnedOnlyCheck" type="checkbox" class="h-3 w-3">Pinned only</label>
+            </div>
+            <div id="quotesList" class="border border-slate-200 rounded"></div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analyticsModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-slate-900 font-bold">Analytics</h3>
+                <button id="closeAnalyticsModal" class="text-slate-500 hover:text-slate-800">✕</button>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+                <select id="analyticsRange" class="px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
+                    <option value="30">Last 30 days</option>
+                    <option value="60">Last 60 days</option>
+                    <option value="all">All time</option>
+                </select>
+            </div>
+            <div id="analyticsSummary" class="text-sm text-slate-800"></div>
+            <div id="analyticsRecent" class="mt-3 max-h-64 overflow-auto text-xs text-slate-600"></div>
         </div>
     </div>
 
@@ -600,9 +626,18 @@
             const timeRangeSelect = document.getElementById('timeRangeSelect');
             const monthSelect = document.getElementById('monthSelect');
             const searchQuoteInput = document.getElementById('searchQuoteInput');
+            const tagFilters = document.getElementById('tagFilters');
+            const pinnedOnlyCheck = document.getElementById('pinnedOnlyCheck');
+            const openAnalyticsBtn = document.getElementById('openAnalyticsBtn');
+            const analyticsModal = document.getElementById('analyticsModal');
+            const closeAnalyticsModal = document.getElementById('closeAnalyticsModal');
+            const analyticsRange = document.getElementById('analyticsRange');
+            const analyticsSummary = document.getElementById('analyticsSummary');
+            const analyticsRecent = document.getElementById('analyticsRecent');
 
             // Pagination state
             let quotesPage = 1; const QUOTES_PAGE_SIZE = 20;
+            const selectedTags = new Set();
 
             // Collapsible Quote Tools
             const quoteToolsToggle = document.getElementById('quoteToolsToggle');
@@ -641,15 +676,59 @@
                 let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
             }
 
+            function localAnalyticsRead() {
+                try { return JSON.parse(localStorage.getItem('analyticsEvents') || '[]'); } catch { return []; }
+            }
+            function localAnalyticsWrite(arr) {
+                try { localStorage.setItem('analyticsEvents', JSON.stringify(arr)); } catch {}
+            }
+
             async function trackEvent(type, meta = {}) {
                 try {
                     const payload = { type, ts: Date.now(), aeId: currentUser?.uid || null, aeEmail: currentUser?.email || null, ...meta };
                     if (db && currentUser) {
                         await db.collection('analytics').add(payload);
                     } else {
-                        console.debug('[analytics]', payload);
+                        const arr = localAnalyticsRead(); arr.push(payload); localAnalyticsWrite(arr);
                     }
                 } catch(e) { console.warn('trackEvent failed', e); }
+            }
+
+            async function fetchAnalytics(range) {
+                const now = Date.now();
+                const since = range === '30' ? now - 30*24*60*60*1000 : range === '60' ? now - 60*24*60*60*1000 : 0;
+                if (db && currentUser) {
+                    let q = db.collection('analytics').where('aeId', '==', currentUser.uid);
+                    if (since) q = q.where('ts', '>=', since);
+                    const snap = await q.orderBy('ts', 'desc').limit(500).get();
+                    return snap.docs.map(d => d.data());
+                } else {
+                    return localAnalyticsRead().filter(e => (since ? e.ts >= since : true)).sort((a,b)=>b.ts-a.ts).slice(0,500);
+                }
+            }
+
+            async function renderAnalytics() {
+                if (!analyticsSummary || !analyticsRecent) return;
+                const range = analyticsRange?.value || '30';
+                const events = await fetchAnalytics(range);
+                const counts = events.reduce((acc, e) => { acc[e.type] = (acc[e.type]||0)+1; return acc; }, {});
+                const total = events.length;
+                analyticsSummary.innerHTML = `
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-2 rounded bg-slate-100">Total: <b>${total}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Saves: <b>${counts.save||0}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Loads: <b>${counts.load||0}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Renames: <b>${counts.rename||0}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Deletes: <b>${counts.delete||0}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Exports: <b>${(counts.export||0)+(counts.export_item||0)}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Imports: <b>${counts.import||0}</b></div>
+                        <div class="p-2 rounded bg-slate-100">Pins: <b>${counts.pin||0}</b> / Unpins: <b>${counts.unpin||0}</b></div>
+                    </div>`;
+                analyticsRecent.innerHTML = events.slice(0,50).map(e => `
+                    <div class="flex items-center justify-between border-b last:border-b-0 py-1">
+                        <div><b>${e.type}</b> <span class="text-slate-500">${e.name||e.quoteId||''}</span></div>
+                        <div class="text-slate-400">${new Date(e.ts).toLocaleString()}</div>
+                    </div>`).join('');
             }
 
             function populateDataMigrationOptions() {
@@ -1096,6 +1175,14 @@
                 const now = Date.now();
                 const rangeMs = rangeVal === '30' ? 30*24*60*60*1000 : rangeVal === '60' ? 60*24*60*60*1000 : null;
 
+                // Build tag chips from all quotes
+                if (tagFilters) {
+                    const tagCounts = {};
+                    (all||[]).forEach(q => (q.tags && q.tags.length ? q.tags : parseTags(q.notes||'')).forEach(t => { const k=String(t).toLowerCase(); tagCounts[k]=(tagCounts[k]||0)+1; }));
+                    const sorted = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).slice(0,30);
+                    tagFilters.innerHTML = sorted.map(([t,c]) => `<button data-tag="${escapeHtml(t)}" class="text-[10px] px-1.5 py-0.5 rounded ${selectedTags.has(t)?'bg-slate-800 text-white':'bg-slate-200 text-slate-700'}">#${escapeHtml(t)} (${c})</button>`).join('');
+                }
+
                 const filtered = (all || [])
                     .filter(q => {
                         if (!nameFilter) return true;
@@ -1109,6 +1196,8 @@
                         const notes = (q.notes || '').toLowerCase();
                         return nm.includes(nameFilter) || notes.includes(nameFilter);
                     })
+                    .filter(q => (selectedTags.size ? (q.tags || parseTags(q.notes || '')).some(t => selectedTags.has(String(t).toLowerCase())) : true))
+                    .filter(q => (pinnedOnlyCheck?.checked ? !!q.pinned : true))
                     .filter(q => (rangeMs ? ((now - (q.savedAt || 0)) <= rangeMs) : true))
                     .filter(q => (monthVal !== 'all' ? ((q.folder || computeCurrentFolder(q.savedAt)) === monthVal) : true))
                     // sort pinned first, then recent
@@ -1249,6 +1338,17 @@
             searchQuoteInput?.addEventListener('input', debouncedRender);
             timeRangeSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
             monthSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
+            pinnedOnlyCheck?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
+            tagFilters?.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-tag]'); if (!el) return;
+                const tag = el.getAttribute('data-tag');
+                if (selectedTags.has(tag)) { selectedTags.delete(tag); el.classList.remove('bg-slate-800','text-white'); el.classList.add('bg-slate-200','text-slate-700'); }
+                else { selectedTags.add(tag); el.classList.add('bg-slate-800','text-white'); el.classList.remove('bg-slate-200','text-slate-700'); }
+                quotesPage = 1; renderQuotesList();
+            });
+            openAnalyticsBtn?.addEventListener('click', () => { analyticsModal?.classList.remove('hidden'); renderAnalytics(); });
+            closeAnalyticsModal?.addEventListener('click', () => analyticsModal?.classList.add('hidden'));
+            analyticsRange?.addEventListener('change', renderAnalytics);
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
                 const state = getCurrentState();

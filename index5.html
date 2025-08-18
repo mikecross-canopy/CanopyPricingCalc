@@ -446,6 +446,30 @@
                 <button id="signInBtn" class="text-xs px-2 py-1 rounded bg-teal-500 text-slate-900 hover:bg-teal-400">Sign In</button>
                 <button id="signOutBtn" class="hidden text-xs px-2 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Sign Out</button>
             </div>
+            <div id="quoteToolsLocked" class="text-xs text-slate-300 bg-slate-800/60 rounded p-3">
+                Sign in to save and manage quotes.
+            </div>
+            <div id="quoteToolsContent" class="hidden">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <button id="saveQuoteBtn" class="text-xs px-3 py-1 rounded bg-emerald-500 text-slate-900 hover:bg-emerald-400">Save Quote</button>
+                        <button id="manageQuotesBtn" class="text-xs px-3 py-1 rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Manage Quotes</button>
+                        <span id="saveStatusMsg" class="text-[11px] text-slate-300"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] text-slate-400 mr-1">Local Options:</span>
+                        <button id="exportQuoteBtn" class="text-xs px-3 py-1 rounded bg-slate-700 text-white hover:bg-slate-600">Export</button>
+                        <label class="text-xs px-3 py-1 rounded bg-slate-700 text-white hover:bg-slate-600 cursor-pointer">
+                            Import
+                            <input id="importQuoteInput" type="file" accept="application/json" class="hidden">
+                        </label>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Tip: Use Manage Quotes to name and filter by month-folder.</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Quotes Modal -->
     <div id="quotesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
@@ -455,6 +479,9 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <input id="quoteNameInput" type="text" class="w-full px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-sm" placeholder="Quote Name">
+            </div>
+            <div class="mt-2">
+                <textarea id="quoteNotesInput" rows="3" placeholder="Notes (optional)" class="w-full px-2 py-1 rounded border border-slate-300 text-sm"></textarea>
             </div>
             <div class="grid grid-cols-3 gap-2 mb-3">
                 <input id="filterFolderInput" type="text" placeholder="Filter by folder" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
@@ -544,6 +571,7 @@
             const signOutBtn = document.getElementById('signOutBtn');
             const userInfo = document.getElementById('userInfo');
             const quoteNameInput = document.getElementById('quoteNameInput');
+            const quoteNotesInput = document.getElementById('quoteNotesInput');
             const saveQuoteBtn = document.getElementById('saveQuoteBtn');
             const manageQuotesBtn = document.getElementById('manageQuotesBtn');
             const exportQuoteBtn = document.getElementById('exportQuoteBtn');
@@ -972,11 +1000,12 @@
                     const el = document.getElementById(`${key}_users`);
                     if (el) el.value = users;
                 });
+                if (quoteNotesInput) quoteNotesInput.value = state.notes ?? '';
                 calculateAndRender();
             }
 
-            async function upsertQuote(name, folder, state, existingId = null) {
-                const doc = { id: existingId || makeId(), name, folder, state, savedAt: Date.now() };
+            async function upsertQuote(name, folder, state, existingId = null, notes = '') {
+                const doc = { id: existingId || makeId(), name, folder, state, notes, savedAt: Date.now() };
                 if (db && currentUser) {
                     const id = await cloudUpsertQuote(doc);
                     return id || doc.id;
@@ -1032,9 +1061,10 @@
                         if (act === 'load') {
                             applyState(item.state);
                             if (quoteNameInput) quoteNameInput.value = item.name;
+                            if (quoteNotesInput) quoteNotesInput.value = item.notes ?? '';
                         } else if (act === 'rename') {
                             const newName = prompt('New quote name:', item.name) || item.name;
-                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id);
+                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '');
                             renderQuotesList();
                         } else if (act === 'export') {
                             const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
@@ -1060,13 +1090,13 @@
                     // Prepare state and folder
                     const state = getCurrentState();
                     const folder = computeCurrentFolder(state.savedAt);
+                    const notes = (quoteNotesInput?.value || '').trim();
                     // Check existing by name
                     let existingId = null;
-                    let items = [];
-                    try { items = await listQuotes(); } catch (e) { console.warn('List before save failed, continuing to save:', e); }
+                    const items = await listQuotes();
                     const exists = (items || []).find(q => q.name && q.name.toLowerCase() === name.toLowerCase());
                     if (exists) existingId = exists.id;
-                    await upsertQuote(name, folder, state, existingId);
+                    await upsertQuote(name, folder, state, existingId, notes);
                     if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
                 } catch (err) {
                     console.error('Save failed:', err);
@@ -1080,7 +1110,8 @@
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
                 const state = getCurrentState();
-                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, savedAt: state.savedAt };
+                const notes = (quoteNotesInput?.value || '').trim();
+                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, savedAt: state.savedAt };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
@@ -1091,9 +1122,10 @@
                     const text = await file.text(); const obj = JSON.parse(text);
                     if (obj && obj.state) {
                         const folder = obj.folder || computeCurrentFolder(obj.state?.savedAt || obj.savedAt || Date.now());
-                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null);
+                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null, obj.notes || '');
                         applyState(obj.state);
                         if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
+                        if (quoteNotesInput) quoteNotesInput.value = obj.notes || '';
                         if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
                     } else { alert('Invalid quote file.'); }
                 } catch (err) { alert('Failed to import: ' + err.message); }

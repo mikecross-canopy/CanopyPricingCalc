@@ -58,17 +58,19 @@
             display: flex;
             padding: 0.15rem;
             border-radius: 9999px;
+            overflow: visible;
         }
         .firm-toggle button {
             flex: 1;
-            height: 28px; line-height: 28px;
-            padding: 0 10px;
-            font-size: 0.7rem;
+            height: 34px;
+            padding: 0 12px;
+            font-size: 0.75rem;
             font-weight: 700;
             border-radius: 9999px;
             transition: all 0.2s ease-in-out;
             display: inline-flex; align-items: center; justify-content: center;
-            text-align: center;
+            line-height: normal; text-align: center; white-space: nowrap;
+            min-width: 110px; /* ensure text fits (Growing/Small Firms) */
         }
         .firm-toggle button.active { background-color: #111827; color: white; box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06); }
 
@@ -80,13 +82,13 @@
         }
         .billing-toggle button {
             flex: 1;
-            height: 36px; line-height: 36px;
+            height: 40px; /* taller to avoid vertical clipping */
             padding: 0 12px;
             font-size: 0.85rem; font-weight: 700;
             border-radius: 0.375rem;
             transition: all 0.2s ease-in-out;
             display: inline-flex; align-items: center; justify-content: center;
-            text-align: center;
+            line-height: normal; text-align: center;
         }
         .billing-toggle button.active {
             background-color: #0BE6C7;
@@ -246,6 +248,8 @@
             margin: 0 !important;
             padding: 2rem !important;
         }
+        /* Hide Firm size toggle in PDF */
+        .pdf-capture-mode .firm-toggle { display: none !important; }
         /* Remove decorative blob circle in PDF */
         .pdf-capture-mode .main-container::before {
             content: none !important;
@@ -331,10 +335,18 @@
 
         /* Normalize button heights and text centering */
         .pdf-capture-mode button {
-            height: 36px !important;
-            line-height: 36px !important;
+            height: 40px !important;
+            line-height: normal !important;
             padding: 0 12px !important;
             text-align: center !important;
+        }
+        /* Ensure billing toggles centered in PDF */
+        .pdf-capture-mode .billing-toggle button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 40px !important;
+            line-height: normal !important;
         }
 
         /* Checkbox vertical alignment */
@@ -350,7 +362,7 @@
         <header class="text-center w-full max-w-4xl mx-auto z-10">
             <div class="flex justify-start items-center mb-1">
                 <div class="flex items-center space-x-2">
-                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="site-logo absolute left-4 top-4 h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
+                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
                 </div>
 
     <!-- History Modal -->

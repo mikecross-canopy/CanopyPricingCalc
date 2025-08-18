@@ -739,11 +739,11 @@
                     if (db && currentUser) {
                         try {
                             await db.collection('quotes').doc(prevDoc.id).collection('versions').add(version);
-                            return;
                         } catch(e) {
-                            console.warn('saveVersion cloud failed, falling back to local', e);
+                            console.warn('saveVersion cloud failed, will still persist locally', e);
                         }
                     }
+                    // Always persist locally as well to ensure UI can show immediately
                     const arr = localVersionsRead(prevDoc.id); arr.unshift(version); localVersionsWrite(prevDoc.id, arr);
                 } else {
                     console.warn('saveVersion skipped: missing prevDoc.id');
@@ -758,7 +758,8 @@
                         const local = localVersionsRead(id);
                         const byTs = new Map();
                         [...cloud, ...local].forEach(v => { byTs.set(v.ts, v); });
-                        return Array.from(byTs.values()).sort((a,b)=>b.ts-a.ts).slice(0,50);
+                        const merged = Array.from(byTs.values()).sort((a,b)=>b.ts-a.ts).slice(0,50);
+                        return merged;
                     } catch(e) {
                         console.warn('listVersions cloud failed, using local', e);
                         return localVersionsRead(id);

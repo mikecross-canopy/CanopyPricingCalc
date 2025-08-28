@@ -58,17 +58,25 @@
             display: flex;
             padding: 0.15rem;
             border-radius: 9999px;
+            overflow: hidden; /* keep text within rounded pill */
         }
         .firm-toggle button {
-            flex: 1; padding: 0.2rem 0;
-            font-size: 0.65rem;
-            font-weight: 600;
+            flex: 1;
+            height: 34px;
+            padding: 0 14px; /* a touch more horizontal room */
+            font-size: 0.75rem;
+            font-weight: 700;
             border-radius: 9999px;
             transition: all 0.2s ease-in-out;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center;
+            line-height: normal; text-align: center; white-space: nowrap;
+            min-width: 110px; /* ensure text fits (Growing/Small Firms) */
+        }
+        /* Nudge right option even further left for true visual centering */
+        .firm-toggle button:last-child {
+            transform: translateX(-24px);
+            padding-left: 24px; /* more left padding */
+            padding-right: 6px;  /* less right padding */
         }
         .firm-toggle button.active { background-color: #111827; color: white; box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06); }
 
@@ -80,14 +88,13 @@
         }
         .billing-toggle button {
             flex: 1;
-            padding: 0.4rem 0;
-            font-size: 0.8rem; font-weight: 600;
+            height: 40px; /* taller to avoid vertical clipping */
+            padding: 0 12px;
+            font-size: 0.85rem; font-weight: 700;
             border-radius: 0.375rem;
             transition: all 0.2s ease-in-out;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center;
+            line-height: normal; text-align: center;
         }
         .billing-toggle button.active {
             background-color: #0BE6C7;
@@ -192,9 +199,9 @@
             gap: 1.5rem !important;
         }
         
-        .pdf-capture-mode .summary-card {
-            padding: 2rem !important;
-        }
+        .pdf-capture-mode .summary-card { padding: 1.25rem 1.5rem !important; }
+        .pdf-capture-mode #summaryBigTotal { margin-top: 0 !important; padding-top: 0 !important; }
+        .pdf-capture-mode .summary-card .text-center { margin-top: 0 !important; }
         
         .pdf-capture-mode .summary-total-lg {
             font-size: 4rem !important;
@@ -235,17 +242,49 @@
         .pdf-capture-mode {
             background-color: #F8FAFC !important;
             min-height: 100vh !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important; /* do not vertically center in PDF */
+            /* Avoid any layout jitter in capture */
+            -webkit-font-smoothing: antialiased !important;
+        }
+        .pdf-capture-mode *, .pdf-capture-mode *::before, .pdf-capture-mode *::after {
+            transition: none !important;
+            animation: none !important;
+            transform: none !important;
         }
         
         .pdf-capture-mode .main-container {
             width: 100% !important;
-            max-width: none !important;
+            max-width: 1200px !important; /* fill more of the PDF page */
+            margin: 0 auto !important;
+            padding: 0.5rem 2rem 1rem !important; /* tighter top padding */
+            position: relative !important;
+        }
+        /* Prevent inner containers from constraining width */
+        .pdf-capture-mode .max-w-4xl { max-width: 1200px !important; width: 100% !important; }
+
+        /* Center the billing toggle block horizontally */
+        .pdf-capture-mode .billing-toggle { width: 100% !important; max-width: 920px !important; margin: 0.25rem auto 0.75rem !important; }
+        /* Hide Firm size toggle in PDF */
+        .pdf-capture-mode .firm-toggle { display: none !important; }
+        /* Remove decorative blob circle in PDF */
+        .pdf-capture-mode .main-container::before {
+            content: none !important;
+            display: none !important;
+            opacity: 0 !important;
+        }
+        /* Fallback: hide AE discount input in PDF */
+        .pdf-capture-mode #aeDiscountInput { display: none !important; }
+
+        /* Position the Canopy logo at top-left in PDF only */
+        .pdf-capture-mode header { position: relative !important; margin: 0 !important; padding-top: 0.5rem !important; }
+        .pdf-capture-mode header img[alt="Canopy Logo"] {
+            position: absolute !important;
+            top: 12px !important;
+            left: 16px !important;
             margin: 0 !important;
-            padding: 2rem !important;
+            transform: none !important;
         }
         
         .pdf-capture-mode .card-wrapper {
@@ -294,6 +333,265 @@
             font-size: 14px !important;
         }
 
+        /* Stabilize images for html2canvas rendering */
+        .pdf-capture-mode img {
+            max-width: 100% !important;
+            height: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto !important; /* keep logos centered */
+        }
+
+        /* Unify input heights and true centering */
+        .pdf-capture-mode .item-input,
+        .pdf-capture-mode .item-select,
+        .pdf-capture-mode .ce-input {
+            height: 36px !important;
+            line-height: 36px !important;
+            padding: 0 10px !important;
+            text-align: center !important;
+        }
+        .pdf-capture-mode .module-user-input {
+            height: 36px !important;
+            line-height: 36px !important;
+            text-align: center !important;
+        }
+
+        /* Reduce visual noise in PDF */
+        .pdf-capture-mode .pricing-card,
+        .pdf-capture-mode .summary-card {
+            box-shadow: none !important;
+        }
+
+        /* Normalize button heights and text centering */
+        .pdf-capture-mode button {
+            height: 40px !important;
+            line-height: normal !important;
+            padding: 0 12px !important;
+            text-align: center !important;
+        }
+        /* Ensure billing toggles centered in PDF and shrink buttons */
+        .pdf-capture-mode .billing-toggle { width: 100% !important; max-width: 820px !important; margin: 0.25rem auto 0.75rem !important; display: flex !important; align-items: center !important; }
+        .pdf-capture-mode .billing-toggle button {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 32px !important; /* smaller button height in PDF */
+            padding: 0 10px !important;
+            font-size: 0.8rem !important;
+            line-height: normal !important;
+            vertical-align: middle !important;
+        }
+
+        /* Checkbox vertical alignment */
+        .pdf-capture-mode input[type="checkbox"] {
+            vertical-align: middle !important;
+        }
+
+        /* Center Users label above input in PDF */
+        .pdf-capture-mode .item-input-container {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+        }
+        .pdf-capture-mode .item-input-container .input-label {
+            margin-bottom: 4px !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+
+        /* ================= Glass PDF Theme (PDF-only render container) ================ */
+        .pdf-glass-root {
+            width: 100%;
+            max-width: none;
+            margin: 0 auto;
+            padding: 28px 28px 40px;
+            background: radial-gradient(1000px 600px at 50% -200px, rgba(11,230,199,0.25), transparent 65%),
+                        linear-gradient(180deg, #f7fbff 0%, #eef3f8 100%);
+            position: relative;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .glass-header {
+            display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px;
+        }
+        .glass-logo { height: 32px; width: auto; display: block; }
+        .glass-title { font-weight: 800; font-size: 20px; color: #0f172a; letter-spacing: -0.01em; }
+        .glass-subtitle { font-size: 12px; color: #64748b; margin-top: -2px; }
+        .glass-container { width: 100%; max-width: 1100px; margin: 0 auto; }
+        .glass-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: 100%; }
+        .glass-card {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.4);
+            backdrop-filter: blur(14px) saturate(120%);
+            -webkit-backdrop-filter: blur(14px) saturate(120%);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .glass-card .card-body { padding: 16px 18px; }
+        .glass-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-weight: 700; font-size: 11px; color: #0f172a; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06); }
+        .glass-pill-wrap { display: flex; justify-content: center; }
+        .glass-total { font-size: 40px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; margin: 6px 0 8px; }
+        .glass-line { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .glass-line + .glass-line { border-top: 1px dashed rgba(15,23,42,0.08); }
+        .glass-muted { color: #64748b; }
+        .glass-accent { color: #0BBFA9; font-weight: 800; }
+        .glass-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 12px; }
+        .glass-table th { text-align: left; color: #64748b; font-weight: 700; padding: 0 8px 6px; font-size: 11px; }
+        .glass-row { background: rgba(255,255,255,0.7); border: 1px solid rgba(15,23,42,0.06); border-radius: 10px; overflow: hidden; }
+        .glass-cell { padding: 8px 12px; }
+        .glass-right { text-align: right; font-weight: 700; color: #0f172a; }
+        .glass-section-title { margin-top: 12px; margin-bottom: 2px; font-weight: 800; color:#0f172a; }
+        .glass-divider { height: 1px; background: rgba(15,23,42,0.06); margin: 8px 0; }
+        .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
+
+        /* ================= Brand Theme (Save/Manage views) ================ */
+        :root {
+            --brand-black: #000000;
+            --brand-blue: #2B4BFF;
+            --brand-aqua: #0BE6C7;
+            --brand-gray: #F1F3F7;
+            --brand-white: #FFFFFF;
+        }
+        /* Quote Tools toggle */
+        #quoteToolsToggle {
+            background-color: var(--brand-black) !important;
+            color: var(--brand-white) !important;
+            border-color: transparent !important;
+        }
+        /* Quote Tools panel */
+        #quoteToolsPanel {
+            background-color: var(--brand-gray) !important;
+            color: #0f172a !important;
+        }
+        #quoteToolsPanel .text-slate-300,
+        #quoteToolsPanel .text-slate-200,
+        #quoteToolsPanel .text-slate-400 { color: #475569 !important; }
+        /* Signed-in email pill: subtle glassy aqua */
+        #quoteToolsPanel #userInfo {
+            background: rgba(11, 230, 199, 0.14) !important;
+            border: 1px solid rgba(11, 230, 199, 0.35) !important;
+            color: #0f172a !important;
+            font-weight: 600 !important;
+            backdrop-filter: blur(6px) saturate(120%);
+            -webkit-backdrop-filter: blur(6px) saturate(120%);
+            box-shadow: 0 1px 2px rgba(2, 6, 23, 0.06), inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+        #quoteToolsPanel input,
+        #quoteToolsPanel textarea {
+            background-color: var(--brand-white) !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        /* Aqua accents for inputs/selects focus */
+        #quoteToolsPanel input:focus,
+        #quoteToolsPanel textarea:focus,
+        #timeRangeSelect:focus,
+        #monthSelect:focus,
+        #searchQuoteInput:focus {
+            outline: 2px solid rgba(11,230,199,0.55) !important;
+            outline-offset: 0 !important;
+            border-color: transparent !important;
+            box-shadow: 0 0 0 2px rgba(11,230,199,0.25) inset !important;
+        }
+        /* Primary/secondary actions */
+        #saveQuoteBtn {
+            background-color: var(--brand-blue) !important;
+            color: var(--brand-white) !important;
+            border: none !important;
+        }
+        #manageQuotesBtn {
+            background-color: var(--brand-white) !important;
+            color: #0f172a !important;
+            border: 1px solid var(--brand-blue) !important;
+        }
+        #manageQuotesBtn:hover { background: rgba(11,230,199,0.10) !important; border-color: var(--brand-aqua) !important; }
+        #exportQuoteBtn {
+            background-color: var(--brand-white) !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        #exportQuoteBtn:hover { border-color: var(--brand-aqua) !important; color: #0f172a !important; }
+        #signInBtn {
+            background-color: var(--brand-aqua) !important;
+            color: #0f172a !important;
+            border: none !important;
+        }
+        #signOutBtn {
+            background-color: var(--brand-white) !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        /* Saved Quotes modal refinements */
+        #quotesModal .bg-white { background-color: var(--brand-white) !important; }
+        #quotesModal h3 { color: #0f172a !important; }
+        #quotesModal #closeQuotesModal:hover { color: var(--brand-aqua) !important; filter: drop-shadow(0 1px 0 rgba(11,230,199,0.25)); }
+        #clearTagFiltersBtn {
+            background-color: var(--brand-white) !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        #clearTagFiltersBtn:hover { border-color: var(--brand-aqua) !important; color: #0f172a !important; }
+        #timeRangeSelect, #monthSelect, #searchQuoteInput {
+            background-color: var(--brand-white) !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        /* Checkbox accent */
+        #pinnedOnlyCheck { accent-color: var(--brand-aqua); }
+        .main-container input[type="checkbox"] { accent-color: var(--brand-aqua); }
+        /* Toggle chevron and hover */
+        #quoteToolsToggle:hover { box-shadow: 0 0 0 2px rgba(11,230,199,0.3) inset; }
+        #quoteToolsChevron { color: var(--brand-aqua); }
+        /* Tag chips: unselected and selected states use aqua */
+        #tagFilters [data-tag] { cursor: pointer; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 8px; background: var(--brand-white); color: #334155; }
+        #tagFilters [data-tag].bg-slate-800,
+        #tagFilters [data-tag].text-white { background: var(--brand-aqua) !important; color: #0f172a !important; border-color: var(--brand-aqua) !important; }
+        #tagFilters [data-tag].bg-slate-200,
+        #tagFilters [data-tag].text-slate-700 { background: var(--brand-white) !important; color: #334155 !important; }
+        #tagFilters [data-tag]:hover { border-color: var(--brand-aqua) !important; }
+
+        /* Quotes list rows subtle aqua hover and selected accent (actual rows are direct children divs) */
+        #quotesList > div:hover { background: rgba(11,230,199,0.04) !important; }
+        #quotesList .active { outline: 2px solid var(--brand-aqua) !important; outline-offset: -2px; }
+        /* Action buttons inside Manage Saves list */
+        #quotesList button[data-act="load"] { background: var(--brand-aqua) !important; color: #0f172a !important; border: none !important; }
+        #quotesList button[data-act="load"]:hover { filter: brightness(0.96); }
+        #quotesList button[data-act="rename"],
+        #quotesList button[data-act="history"] { background: var(--brand-white) !important; color: #0f172a !important; border: 1px solid var(--brand-aqua) !important; }
+        #quotesList button[data-act="rename"]:hover,
+        #quotesList button[data-act="history"]:hover { background: rgba(11,230,199,0.12) !important; }
+        #quotesList button[data-act="export"] { background: var(--brand-blue) !important; color: var(--brand-white) !important; border: none !important; }
+        #quotesList button[data-act="export"]:hover { filter: brightness(0.95); }
+        #quotesList button[data-act="delete"] { background: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fecaca !important; }
+        /* Pin star themed to Aqua */
+        #quotesList button[data-act="pin"] {
+            color: #94a3b8 !important; /* muted when not pinned */
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            border-radius: 6px !important;
+            padding: 0 6px !important;
+            transition: all 150ms ease;
+        }
+        /* Hover accent for unpinned */
+        #quotesList button[data-act="pin"]:hover {
+            color: var(--brand-aqua) !important;
+            background: rgba(11,230,199,0.10) !important;
+            border-color: rgba(11,230,199,0.35) !important;
+        }
+        /* When pinned (markup uses text-amber-500), force Aqua theme */
+        #quotesList button[data-act="pin"].text-amber-500 {
+            color: var(--brand-aqua) !important;
+            background: rgba(11,230,199,0.12) !important;
+            border-color: rgba(11,230,199,0.45) !important;
+        }
+
+        /* Aqua accent for links in panel */
+        #quoteToolsPanel a { color: var(--brand-aqua) !important; }
+        #quoteToolsPanel a:hover { text-decoration: underline; }
+
     </style>
 </head>
 <body>
@@ -304,6 +602,17 @@
                 <div class="flex items-center space-x-2">
                     <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
                 </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[9999]">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-slate-900 font-bold">Version History</h3>
+                <button id="closeHistoryModal" class="text-slate-500 hover:text-slate-800">✕</button>
+            </div>
+            <div id="historyList" class="border border-slate-200 rounded max-h-96 overflow-auto text-sm"></div>
+        </div>
+    </div>
                 <div class="ml-auto">
                     <div class="firm-toggle w-48">
                         <button class="active">Growing Firms</button>
@@ -417,7 +726,7 @@
                     </div>
                 </div>
                 
-                <div class="mt-auto pt-4 text-center">
+                <div class="mt-auto pt-4 text-center relative">
                     <a href="#" id="summarySwitchLink" class="font-bold text-base switch-monthly-link block py-3">
                         <span id="summarySwitchText">OR SWITCH TO MONTHLY!</span>
                         <br>
@@ -426,9 +735,7 @@
                     <div class="mt-2">
                         <button id="downloadPdfBtn" class="mx-auto p-1 text-slate-500 hover:text-white transition-colors" title="Download as PDF">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        </button>
                     </div>
-                    
                 </div>
             </div>
         </main>
@@ -438,7 +745,12 @@
     <section class="w-full max-w-4xl mx-auto mt-4">
         <button id="quoteToolsToggle" class="w-full flex items-center justify-between rounded-lg bg-slate-800 text-white px-4 py-2 shadow">
             <span class="font-semibold text-sm">Quote Tools</span>
-            <span id="quoteToolsChevron" class="transition-transform">▾</span>
+            <div class="flex items-center gap-2">
+                <div id="switchPromptToggle" class="rounded bg-black/70 px-1.5 py-1">
+                    <input id="hideSwitchPromptCheck" type="checkbox" class="h-3 w-3 align-middle" title="Hide 'Switch to' prompt" aria-label="Hide 'Switch to' prompt" />
+                </div>
+                <span id="quoteToolsChevron" class="transition-transform">▾</span>
+            </div>
         </button>
         <div id="quoteToolsPanel" class="hidden rounded-b-lg bg-slate-900 text-white p-4 space-y-3">
             <div class="flex flex-wrap items-center gap-2 mb-1">
@@ -458,6 +770,10 @@
                     <div class="flex items-start gap-2">
                         <label for="quoteNotesInput" class="text-[11px] text-slate-300 mt-1">Notes</label>
                         <textarea id="quoteNotesInput" rows="2" placeholder="Notes (optional)" class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs"></textarea>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-300">
+                        <input id="pinQuoteCheck" type="checkbox" class="h-3 w-3 rounded border-slate-500 bg-slate-800">
+                        <label for="pinQuoteCheck">Pin/star this quote</label>
                     </div>
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2">
@@ -485,7 +801,9 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-slate-900 font-bold">Saved Quotes</h3>
-                <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+                <div class="flex items-center gap-2">
+                    <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
+                </div>
             </div>
             <!-- Quote name moved to Quote Tools panel -->
             <div class="grid grid-cols-3 gap-2 mb-3">
@@ -497,11 +815,20 @@
                 <select id="monthSelect" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800">
                     <option value="all">All months</option>
                 </select>
-                <input id="searchQuoteInput" type="text" placeholder="Search by name" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm">
+                <input id="searchQuoteInput" type="text" placeholder="Search by name or notes (use #tag)" class="col-span-1 px-2 py-1 rounded border border-slate-300 text-sm bg-white text-slate-800" />
             </div>
-            <div id="quotesList" class="max-h-72 overflow-y-auto border border-slate-200 rounded"></div>
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <div id="tagFilters" class="flex flex-wrap gap-1"></div>
+                    <button id="clearTagFiltersBtn" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200">Clear</button>
+                </div>
+                <label class="flex items-center gap-1 text-xs text-slate-600"><input id="pinnedOnlyCheck" type="checkbox" class="h-3 w-3">Pinned only</label>
+            </div>
+            <div id="quotesList" class="border border-slate-200 rounded"></div>
         </div>
     </div>
+
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -578,12 +905,32 @@
             const summarySwitchLink = document.getElementById('summarySwitchLink');
             const summarySwitchText = document.getElementById('summarySwitchText');
             const summarySwitchPrice = document.getElementById('summarySwitchPrice');
+            const hideSwitchPromptCheck = document.getElementById('hideSwitchPromptCheck');
+            const switchPromptToggle = document.getElementById('switchPromptToggle');
+
+            // Persisted preference: hide/show the "Switch to" prompt
+            const SWITCH_HIDE_KEY = 'hideSwitchPrompt';
+            let hideSwitchPrompt = (localStorage.getItem(SWITCH_HIDE_KEY) === '1');
+            function applySwitchPromptVisibility() {
+                if (summarySwitchLink) summarySwitchLink.style.display = hideSwitchPrompt ? 'none' : 'block';
+                if (hideSwitchPromptCheck) hideSwitchPromptCheck.checked = hideSwitchPrompt;
+            }
+            applySwitchPromptVisibility();
+            hideSwitchPromptCheck?.addEventListener('change', (e) => {
+                hideSwitchPrompt = !!e.target.checked;
+                try { localStorage.setItem(SWITCH_HIDE_KEY, hideSwitchPrompt ? '1' : '0'); } catch {}
+                applySwitchPromptVisibility();
+            });
+            // Prevent toggling the Quote Tools panel when interacting with the checkbox
+            switchPromptToggle?.addEventListener('click', (e) => { e.stopPropagation(); });
+            hideSwitchPromptCheck?.addEventListener('click', (e) => { e.stopPropagation(); });
             // Auth and Cloud elements
             const signInBtn = document.getElementById('signInBtn');
             const signOutBtn = document.getElementById('signOutBtn');
             const userInfo = document.getElementById('userInfo');
             const quoteNameInput = document.getElementById('quoteNameInput');
             const quoteNotesInput = document.getElementById('quoteNotesInput');
+            const pinQuoteCheck = document.getElementById('pinQuoteCheck');
             const saveQuoteBtn = document.getElementById('saveQuoteBtn');
             const manageQuotesBtn = document.getElementById('manageQuotesBtn');
             const exportQuoteBtn = document.getElementById('exportQuoteBtn');
@@ -595,6 +942,16 @@
             const timeRangeSelect = document.getElementById('timeRangeSelect');
             const monthSelect = document.getElementById('monthSelect');
             const searchQuoteInput = document.getElementById('searchQuoteInput');
+            const tagFilters = document.getElementById('tagFilters');
+            const pinnedOnlyCheck = document.getElementById('pinnedOnlyCheck');
+            const historyModal = document.getElementById('historyModal');
+            const closeHistoryModal = document.getElementById('closeHistoryModal');
+            const historyList = document.getElementById('historyList');
+            const clearTagFiltersBtn = document.getElementById('clearTagFiltersBtn');
+
+            // Pagination state
+            let quotesPage = 1; const QUOTES_PAGE_SIZE = 20;
+            const selectedTags = new Set();
 
             // Collapsible Quote Tools
             const quoteToolsToggle = document.getElementById('quoteToolsToggle');
@@ -613,6 +970,276 @@
             });
 
             const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
+            function escapeHtml(str = '') {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function parseTags(notes = '') {
+                const tags = new Set();
+                const re = /#([a-zA-Z0-9_\-]+)/g;
+                let m; while ((m = re.exec(notes)) !== null) { tags.add(m[1].toLowerCase()); }
+                return Array.from(tags);
+            }
+
+            function debounce(fn, wait = 300) {
+                let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
+            }
+
+            // Analytics removed: stub helpers to avoid breaking existing calls
+            function localAnalyticsRead() { return []; }
+            function localAnalyticsWrite(arr) { /* no-op */ }
+
+            async function trackEvent(type, meta = {}) { /* analytics removed */ }
+
+            // Versioning helpers (store previous snapshot when updating existing quotes)
+            function localVersionsRead(id) {
+                try { return JSON.parse(localStorage.getItem(`versions_${id}`) || '[]'); } catch { return []; }
+            }
+            function localVersionsWrite(id, arr) {
+                try { localStorage.setItem(`versions_${id}`, JSON.stringify(arr)); } catch {}
+            }
+            async function saveVersion(prevDoc, nextDoc, action = 'update') {
+                const version = {
+                        ts: Date.now(),
+                        action,
+                        nameBefore: prevDoc?.name ?? null,
+                        nameAfter: nextDoc?.name ?? null,
+                        notesBefore: prevDoc?.notes ?? null,
+                        notesAfter: nextDoc?.notes ?? null,
+                        pinnedBefore: !!prevDoc?.pinned,
+                        pinnedAfter: !!nextDoc?.pinned,
+                        tagsBefore: prevDoc?.tags || [],
+                        tagsAfter: nextDoc?.tags || [],
+                        folder: prevDoc?.folder || nextDoc?.folder || null,
+                        stateBefore: prevDoc?.state ?? null,
+                        stateAfter: nextDoc?.state ?? null,
+                    };
+                if (prevDoc?.id) {
+                    if (db && currentUser) {
+                        try {
+                            await db.collection('quotes').doc(prevDoc.id).collection('versions').add(version);
+                        } catch(e) {
+                            console.warn('saveVersion cloud failed, will still persist locally', e);
+                        }
+                    }
+                    // Always persist locally as well to ensure UI can show immediately
+                    const arr = localVersionsRead(prevDoc.id); arr.unshift(version); localVersionsWrite(prevDoc.id, arr);
+                } else {
+                    console.warn('saveVersion skipped: missing prevDoc.id');
+                }
+            }
+
+            async function generatePdfGlass() {
+                try {
+                    if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
+                    if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
+                    const { jsPDF } = window.jspdf;
+
+                    // Ensure up-to-date values
+                    const state = getCurrentState();
+
+                    // Build a temporary glass-themed container
+                    const root = document.createElement('div');
+                    root.className = 'pdf-glass-root';
+
+                    // Header: centered logo only (no title/subtitle)
+                    const header = document.createElement('div');
+                    header.className = 'glass-header';
+                    header.innerHTML = `
+                        <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="glass-logo" onerror="this.style.display='none'" />
+                    `;
+                    root.appendChild(header);
+
+                    // Collect DOM-derived values so we match on-screen numbers
+                    const summaryTotal = document.getElementById('summaryBigTotal')?.textContent?.trim() || '';
+                    const perMonth = document.getElementById('summaryPerMonth')?.textContent?.trim() || '';
+                    const oneTime = document.getElementById('summaryOneTime')?.textContent?.trim() || '';
+                    const discountRow = document.getElementById('summaryDiscountRow');
+                    const discountText = document.getElementById('summaryDiscount')?.textContent?.trim() || '';
+                    const planTitle = document.getElementById('ceTitle')?.textContent?.trim() || 'Client Engagement Platform';
+                    const planSub = document.getElementById('ceSublabel')?.textContent?.trim() || '';
+                    const isAnnualTxt = state.isAnnual ? 'Annual' : 'Monthly';
+                    const tierTxt = state.isProTier ? 'Pro' : 'Standard';
+
+                    // Modules list from DOM (with friendly name mapping)
+                    const modules = [];
+                    const nameMap = {
+                        'doc_manage': 'Document Management',
+                        'workflow': 'Workflow',
+                        'time_bill': 'Time & Billing',
+                        'tax_res': 'Tax Resolution'
+                    };
+                    document.querySelectorAll('.module-user-input').forEach(input => {
+                        const key = input.dataset.key;
+                        const rawLabel = document.getElementById(`${key}_name`)?.textContent?.trim() || key;
+                        const label = nameMap[key] || rawLabel;
+                        const users = parseInt(input.value) || 0;
+                        const totalEl = document.getElementById(`${key}_total`);
+                        const total = totalEl ? totalEl.textContent.trim() : '';
+                        if (users > 0 || total) modules.push({ label, users, total });
+                    });
+
+                    // Data migration selections
+                    const migrations = Array.from(document.querySelectorAll('#dataMigrationDropdown input[type="checkbox"]:checked')).map(cb => {
+                        const id = cb.value;
+                        const row = cb.closest('div');
+                        const text = row ? row.textContent.trim() : id;
+                        return text;
+                    });
+                    const implFeeText = document.getElementById('implementationFeeInput')?.value || '';
+
+                    // Layout grid inside a centered container
+                    const container = document.createElement('div');
+                    container.className = 'glass-container';
+                    const grid = document.createElement('div');
+                    grid.className = 'glass-grid';
+
+                    // Left: Configuration card
+                    const left = document.createElement('div');
+                    left.className = 'glass-card';
+                    left.innerHTML = `
+                        <div class="card-body">
+                          <div class="glass-pill-wrap"><div class="glass-pill">${planTitle} - ${tierTxt}</div></div>
+                          <div class="glass-muted" style="margin-top:6px;">${planSub}</div>
+                          <div class="glass-line" style="margin-top:10px;"><span class="glass-muted">Billing</span><span>${isAnnualTxt}</span></div>
+                          
+
+                          <div class="glass-section-title">Modules</div>
+                          <table class="glass-table" style="margin-top:4px;">
+                            <colgroup>
+                              <col style="width:auto;" />
+                              <col style="width:80px;" />
+                              <col style="width:120px;" />
+                            </colgroup>
+                            <thead><tr>
+                              <th>Module</th>
+                              <th class="glass-right">Users</th>
+                              <th class="glass-right">Total</th>
+                            </tr></thead>
+                            <tbody id="glassModulesTbody"></tbody>
+                          </table>
+
+                          <div style="margin-top:14px; font-weight:800; color:#0f172a;">Implementation & Migration</div>
+                          <div class="glass-line"><span class="glass-muted">Implementation</span><span>${implFeeText || '-'}</span></div>
+                          <div class="glass-line" style="align-items:flex-start;">
+                            <span class="glass-muted">Data Migration</span>
+                            <span style="text-align:right; max-width:65%;">${(migrations.length ? migrations.join(', ') : 'None')}</span>
+                          </div>
+                        </div>
+                    `;
+
+                    // Populate modules table rows
+                    const tbody = left.querySelector('#glassModulesTbody');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        for (const m of modules) {
+                            const tr = document.createElement('tr');
+                            tr.className = 'glass-row';
+                            tr.innerHTML = `<td class="glass-cell">${m.label}</td><td class="glass-cell glass-right num">${m.users}</td><td class="glass-cell glass-right num">${m.total}</td>`;
+                            tbody.appendChild(tr);
+                        }
+                    }
+
+                    // Right: Totals card
+                    const right = document.createElement('div');
+                    right.className = 'glass-card';
+                    right.innerHTML = `
+                        <div class="card-body">
+                          <div class="glass-pill-wrap"><div class="glass-pill">Summary</div></div>
+                          <div class="glass-total num">${summaryTotal}</div>
+                          <div class="glass-line"><span class="glass-muted">Per Month</span><span class="num">${perMonth}</span></div>
+                          <div class="glass-line"><span class="glass-muted">One-Time</span><span class="num">${oneTime}</span></div>
+                          <div style="margin-top:14px; font-size:11px;" class="glass-muted">All prices in USD. This quote is for discussion purposes and subject to order form terms.</div>
+                        </div>
+                    `;
+
+                    // Assemble grid and container
+                    grid.appendChild(left);
+                    grid.appendChild(right);
+                    container.appendChild(grid);
+                    root.appendChild(container);
+
+                    // Mount into DOM (off-screen container to avoid layout shifts)
+                    const mount = document.createElement('div');
+                    mount.id = 'pdfGlassMount';
+                    mount.style.position = 'fixed';
+                    mount.style.left = '-10000px';
+                    mount.style.top = '0';
+                    mount.style.width = '100%';
+                    mount.appendChild(root);
+                    document.body.appendChild(mount);
+
+                    // Stabilize and wait for assets
+                    document.body.classList.add('pdf-capture-mode');
+                    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
+                    const imgs = Array.from(mount.querySelectorAll('img'));
+                    await Promise.all(imgs.map(img => new Promise(res => { if (img.complete) return res(); img.onload = img.onerror = () => res(); })));
+
+                    // Render only our root
+                    const canvas = await html2canvas(root, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        windowWidth: root.scrollWidth,
+                        windowHeight: root.scrollHeight,
+                        scrollX: 0,
+                        scrollY: 0
+                    });
+
+                    const { width: cW, height: cH } = canvas;
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'pt', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth;
+                    const imgHeight = cH * (imgWidth / cW);
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('Canopy-Quote-Glass.pdf');
+                } catch (err) {
+                    console.error('Glass PDF export failed:', err);
+                    alert('PDF export failed: ' + err.message);
+                } finally {
+                    document.body.classList.remove('pdf-capture-mode');
+                    const mount = document.getElementById('pdfGlassMount');
+                    if (mount) mount.remove();
+                }
+            }
+            async function listVersions(id) {
+                if (db && currentUser) {
+                    try {
+                        const snap = await db.collection('quotes').doc(id).collection('versions').orderBy('ts','desc').limit(50).get();
+                        const cloud = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        // Merge with local if any exist (ensure unique by ts)
+                        const local = localVersionsRead(id);
+                        const byTs = new Map();
+                        [...cloud, ...local].forEach(v => { byTs.set(v.ts, v); });
+                        const merged = Array.from(byTs.values()).sort((a,b)=>b.ts-a.ts).slice(0,50);
+                        return merged;
+                    } catch(e) {
+                        console.warn('listVersions cloud failed, using local', e);
+                        return localVersionsRead(id);
+                    }
+                }
+                return localVersionsRead(id);
+            }
+
+            // Analytics UI removed
 
             function populateDataMigrationOptions() {
                 dataMigrationDropdown.innerHTML = '';
@@ -829,7 +1456,8 @@
                     const paymentDueToday = isAnnual ? currentAnnualTotal + totalOneTimeCharges : currentMonthlyTotal + totalOneTimeCharges;
                     summarySinglePayment.textContent = formatCurrency(paymentDueToday);
                     
-                    summarySwitchLink.style.display = 'block';
+                    // Respect user preference for showing the switch prompt
+                    summarySwitchLink.style.display = hideSwitchPrompt ? 'none' : 'block';
 
                     if (isAnnual) {
                         summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
@@ -1017,8 +1645,8 @@
                 calculateAndRender();
             }
 
-            async function upsertQuote(name, folder, state, existingId = null, notes = '') {
-                const doc = { id: existingId || makeId(), name, folder, state, notes, savedAt: Date.now() };
+            async function upsertQuote(name, folder, state, existingId = null, notes = '', pinned = false, tags = []) {
+                const doc = { id: existingId || makeId(), name, folder, state, notes, pinned: !!pinned, tags: tags || [], savedAt: Date.now() };
                 if (db && currentUser) {
                     const id = await cloudUpsertQuote(doc);
                     return id || doc.id;
@@ -1042,7 +1670,8 @@
 
             async function renderQuotesList() {
                 const all = await listQuotes();
-                const nameFilter = (searchQuoteInput?.value || '').toLowerCase();
+                const rawFilter = (searchQuoteInput?.value || '').toLowerCase().trim();
+                const nameFilter = rawFilter;
                 const rangeVal = timeRangeSelect?.value || 'all';
                 const monthVal = monthSelect?.value || 'all';
 
@@ -1057,27 +1686,80 @@
                 const now = Date.now();
                 const rangeMs = rangeVal === '30' ? 30*24*60*60*1000 : rangeVal === '60' ? 60*24*60*60*1000 : null;
 
+                // Build tag chips from all quotes
+                if (tagFilters) {
+                    const tagCounts = {};
+                    (all||[]).forEach(q => (q.tags && q.tags.length ? q.tags : parseTags(q.notes||'')).forEach(t => { const k=String(t).toLowerCase(); tagCounts[k]=(tagCounts[k]||0)+1; }));
+                    const sorted = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]).slice(0,30);
+                    tagFilters.innerHTML = sorted.map(([t,c]) => `<button data-tag="${escapeHtml(t)}" class="text-[10px] px-1.5 py-0.5 rounded ${selectedTags.has(t)?'bg-slate-800 text-white':'bg-slate-200 text-slate-700'}">#${escapeHtml(t)} (${c})</button>`).join('');
+                }
+
                 const filtered = (all || [])
-                    .filter(q => (nameFilter ? (q.name || '').toLowerCase().includes(nameFilter) : true))
+                    .filter(q => {
+                        if (!nameFilter) return true;
+                        // tag search if starts with '#'
+                        if (nameFilter.startsWith('#')) {
+                            const tag = nameFilter.slice(1);
+                            const tags = (q.tags || parseTags(q.notes || '')).map(t => String(t).toLowerCase());
+                            return tags.includes(tag);
+                        }
+                        const nm = (q.name || '').toLowerCase();
+                        const notes = (q.notes || '').toLowerCase();
+                        return nm.includes(nameFilter) || notes.includes(nameFilter);
+                    })
+                    .filter(q => (selectedTags.size ? (q.tags || parseTags(q.notes || '')).some(t => selectedTags.has(String(t).toLowerCase())) : true))
+                    .filter(q => (pinnedOnlyCheck?.checked ? !!q.pinned : true))
                     .filter(q => (rangeMs ? ((now - (q.savedAt || 0)) <= rangeMs) : true))
                     .filter(q => (monthVal !== 'all' ? ((q.folder || computeCurrentFolder(q.savedAt)) === monthVal) : true))
-                    .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+                    // sort pinned first, then recent
+                    .sort((a, b) => {
+                        const ap = a.pinned ? 1 : 0; const bp = b.pinned ? 1 : 0;
+                        if (bp !== ap) return bp - ap;
+                        return (b.savedAt || 0) - (a.savedAt || 0);
+                    });
                 if (!quotesList) return;
                 if (!filtered || filtered.length === 0) { quotesList.innerHTML = '<div class="p-3 text-sm text-slate-600">No saved quotes.</div>'; return; }
-                quotesList.innerHTML = filtered.map(q => `
+
+                // pagination slice
+                const total = filtered.length;
+                const pages = Math.max(1, Math.ceil(total / QUOTES_PAGE_SIZE));
+                if (quotesPage > pages) quotesPage = pages;
+                const start = (quotesPage - 1) * QUOTES_PAGE_SIZE;
+                const end = start + QUOTES_PAGE_SIZE;
+                const pageItems = filtered.slice(start, end);
+
+                quotesList.innerHTML = pageItems.map(q => `
                     <div class="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
-                        <div>
-                            <div class="font-medium text-slate-800">${q.name}</div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <button data-act="pin" data-id="${q.id}" class="text-xs ${q.pinned ? 'text-amber-500' : 'text-slate-400'} hover:text-amber-500" title="${q.pinned ? 'Unpin' : 'Pin'}">${q.pinned ? '★' : '☆'}</button>
+                                <div class="font-medium text-slate-800 truncate">${escapeHtml(q.name)}</div>
+                            </div>
                             <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
+                            ${q.notes && q.notes.trim() ? `<div class=\"text-xs text-slate-600 truncate\" title=\"${escapeHtml(q.notes)}\">Notes: ${escapeHtml(q.notes)}</div>` : ''}
+                            ${(q.tags && q.tags.length ? q.tags : parseTags(q.notes || '')).map(t => `<span class=\"inline-block text-[10px] px-1.5 py-0.5 mr-1 mt-1 rounded bg-slate-200 text-slate-700\">#${escapeHtml(t)}</span>`).join('')}
                         </div>
                         <div class="flex items-center gap-2">
                             <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>
                             <button data-act="rename" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Rename</button>
+                            <button data-act="history" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">History</button>
                             <button data-act="export" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-700 text-white rounded">Export</button>
                             <button data-act="delete" data-id="${q.id}" class="px-2 py-1 text-xs bg-rose-600 text-white rounded">Delete</button>
                         </div>
                     </div>
                 `).join('');
+
+                // pager footer
+                quotesList.insertAdjacentHTML('beforeend', `
+                    <div class=\"flex items-center justify-between px-3 py-2\">
+                        <div class=\"text-xs text-slate-500\">Showing ${start + 1}-${Math.min(end, total)} of ${total}</div>
+                        <div class=\"flex items-center gap-2\">
+                            <button id=\"quotesPrevPage\" class=\"px-2 py-1 text-xs rounded ${quotesPage<=1?'bg-slate-100 text-slate-400':'bg-slate-200 text-slate-800 hover:bg-slate-300'}\" ${quotesPage<=1?'disabled':''}>Prev</button>
+                            <div class=\"text-xs text-slate-600\">Page ${quotesPage} / ${pages}</div>
+                            <button id=\"quotesNextPage\" class=\"px-2 py-1 text-xs rounded ${quotesPage>=pages?'bg-slate-100 text-slate-400':'bg-slate-200 text-slate-800 hover:bg-slate-300'}\" ${quotesPage>=pages?'disabled':''}>Next</button>
+                        </div>
+                    </div>
+                `);
                 quotesList.querySelectorAll('button').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
                         const id = e.currentTarget.getAttribute('data-id');
@@ -1089,20 +1771,92 @@
                             applyState(item.state);
                             if (quoteNameInput) quoteNameInput.value = item.name;
                             if (quoteNotesInput) quoteNotesInput.value = item.notes ?? '';
+                            if (pinQuoteCheck) pinQuoteCheck.checked = !!item.pinned;
+                            trackEvent('load', { quoteId: item.id, name: item.name });
                         } else if (act === 'rename') {
                             const newName = prompt('New quote name:', item.name) || item.name;
-                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '');
+                            // Save version of previous before rename
+                            await saveVersion(item, { ...item, name: newName }, 'rename');
+                            await upsertQuote(newName, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '', !!item.pinned, item.tags || parseTags(item.notes||''));
+                            trackEvent('rename', { quoteId: item.id, from: item.name, to: newName });
                             renderQuotesList();
+                        } else if (act === 'history') {
+                            // Open history modal and render versions for this item
+                            if (quotesModal) quotesModal.classList.add('hidden');
+                            historyModal?.classList.remove('hidden');
+                            if (historyList) historyList.innerHTML = '<div class="p-3 text-slate-500 text-sm">Loading...</div>';
+                            const versions = await listVersions(item.id);
+                            if (!versions || versions.length === 0) {
+                                if (historyList) historyList.innerHTML = '<div class="p-3 text-slate-500 text-sm">No versions yet.</div>';
+                            } else {
+                                historyList.innerHTML = versions.map(v => `
+                                    <div class=\"px-3 py-2 border-b last:border-b-0\">
+                                        <div class=\"flex items-center justify-between\">
+                                            <div class=\"text-sm\"><b>${new Date(v.ts).toLocaleString()}</b> • ${v.action}</div>
+                                            <div class=\"flex items-center gap-2\">
+                                                <button data-revert-ts=\"${v.ts}\" data-id=\"${item.id}\" class=\"px-2 py-1 text-xs bg-slate-700 text-white rounded\">Revert</button>
+                                            </div>
+                                        </div>
+                                        <div class=\"grid grid-cols-2 gap-2 mt-1 text-xs text-slate-600\">
+                                            <div>
+                                                <div class=\"font-semibold text-slate-700\">Before</div>
+                                                <div>Name: ${escapeHtml(v.nameBefore || '')}</div>
+                                                <div>Notes: ${escapeHtml(v.notesBefore || '')}</div>
+                                            </div>
+                                            <div>
+                                                <div class=\"font-semibold text-slate-700\">After</div>
+                                                <div>Name: ${escapeHtml(v.nameAfter || '')}</div>
+                                                <div>Notes: ${escapeHtml(v.notesAfter || '')}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('');
+                                // bind revert buttons
+                                historyList.querySelectorAll('button[data-revert-ts]')?.forEach(btn => {
+                                    btn.addEventListener('click', async (ev) => {
+                                        const ts = Number(ev.currentTarget.getAttribute('data-revert-ts'));
+                                        const allVers = await listVersions(item.id);
+                                        const v = allVers.find(x => x.ts === ts);
+                                        if (!v) return;
+                                        const prevDoc = { ...item };
+                                        const nextDoc = {
+                                            ...item,
+                                            name: v.nameBefore ?? item.name,
+                                            notes: v.notesBefore ?? item.notes,
+                                            pinned: v.pinnedBefore ?? item.pinned,
+                                            tags: v.tagsBefore || parseTags(v.notesBefore || ''),
+                                            state: v.stateBefore ?? item.state,
+                                        };
+                                        await saveVersion(prevDoc, nextDoc, 'revert');
+                                        await upsertQuote(nextDoc.name, (nextDoc.folder || computeCurrentFolder(item.savedAt)), nextDoc.state, item.id, nextDoc.notes ?? '', !!nextDoc.pinned, nextDoc.tags || parseTags(nextDoc.notes||''));
+                                        trackEvent('revert', { quoteId: item.id, name: item.name, toName: nextDoc.name });
+                                        historyModal?.classList.add('hidden');
+                                        renderQuotesList();
+                                    });
+                                });
+                            }
                         } else if (act === 'export') {
                             const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
                             const blob = new Blob([JSON.stringify(withFolder, null, 2)], { type: 'application/json' });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                            trackEvent('export_item', { quoteId: item.id, name: item.name });
                         } else if (act === 'delete') {
-                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); renderQuotesList(); }
+                            if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); trackEvent('delete', { quoteId: item.id, name: item.name }); renderQuotesList(); }
+                        } else if (act === 'pin') {
+                            await saveVersion(item, { ...item, pinned: !item.pinned }, item.pinned ? 'unpin' : 'pin');
+                            await upsertQuote(item.name, (item.folder || computeCurrentFolder(item.savedAt)), item.state, item.id, item.notes ?? '', !item.pinned, item.tags || parseTags(item.notes||''));
+                            trackEvent(item.pinned ? 'unpin' : 'pin', { quoteId: item.id, name: item.name });
+                            renderQuotesList();
                         }
                     });
                 });
+
+                // pager handlers
+                const prevBtn = document.getElementById('quotesPrevPage');
+                const nextBtn = document.getElementById('quotesNextPage');
+                prevBtn?.addEventListener('click', () => { if (quotesPage > 1) { quotesPage--; renderQuotesList(); } });
+                nextBtn?.addEventListener('click', () => { const pagesCalc = Math.max(1, Math.ceil(filtered.length / QUOTES_PAGE_SIZE)); if (quotesPage < pagesCalc) { quotesPage++; renderQuotesList(); } });
             }
 
             // Bindings
@@ -1118,13 +1872,39 @@
                     const state = getCurrentState();
                     const folder = computeCurrentFolder(state.savedAt);
                     const notes = (quoteNotesInput?.value || '').trim();
-                    // Check existing by name
-                    let existingId = null;
+                    const pinned = !!pinQuoteCheck?.checked;
+                    const tags = parseTags(notes);
                     const items = await listQuotes();
-                    const exists = (items || []).find(q => q.name && q.name.toLowerCase() === name.toLowerCase());
-                    if (exists) existingId = exists.id;
-                    await upsertQuote(name, folder, state, existingId, notes);
+                    // Duplicate detection (same name in same folder)
+                    const dup = (items || []).find(q => (q.name || '').toLowerCase() === name.toLowerCase() && (q.folder || computeCurrentFolder(q.savedAt)) === folder);
+                    let targetName = name;
+                    let existingId = null;
+                    if (dup) {
+                        const replace = confirm(`A quote named "${name}" already exists in ${folder}. Click OK to replace it, or Cancel for more options.`);
+                        if (replace) {
+                            existingId = dup.id;
+                        } else {
+                            const saveCopy = confirm('Save a copy instead? (OK = Save Copy, Cancel = Abort)');
+                            if (!saveCopy) { if (saveStatusMsg) saveStatusMsg.textContent = 'Save canceled.'; return; }
+                            // generate unique copy name
+                            let suffix = 1; let base = name + ' (copy';
+                            let candidate = `${name} (copy)`;
+                            const lowerItems = (items || []).map(q => (q.name || '').toLowerCase());
+                            while (lowerItems.includes(candidate.toLowerCase())) { suffix++; candidate = `${base} ${suffix})`; }
+                            targetName = candidate;
+                        }
+                    }
+                    // If replacing an existing, save a version snapshot before updating
+                    if (existingId) {
+                        const prev = (items||[]).find(q => q.id === existingId) || dup;
+                        if (prev) {
+                            const nextDoc = { ...prev, name: targetName, folder, state, notes, pinned, tags };
+                            await saveVersion(prev, nextDoc, 'update');
+                        }
+                    }
+                    const id = await upsertQuote(targetName, folder, state, existingId, notes, pinned, tags);
                     if (saveStatusMsg) { saveStatusMsg.textContent = `Saved "${name}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                    trackEvent('save', { quoteId: id, name: targetName, folder, pinned, tags });
                 } catch (err) {
                     console.error('Save failed:', err);
                     alert('Save failed: ' + (err && err.message ? err.message : err));
@@ -1132,17 +1912,31 @@
             });
             manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
             closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
-            searchQuoteInput?.addEventListener('input', renderQuotesList);
-            timeRangeSelect?.addEventListener('change', renderQuotesList);
-            monthSelect?.addEventListener('change', renderQuotesList);
+            const debouncedRender = debounce(() => { quotesPage = 1; renderQuotesList(); }, 250);
+            searchQuoteInput?.addEventListener('input', debouncedRender);
+            timeRangeSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
+            monthSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
+            pinnedOnlyCheck?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });
+            clearTagFiltersBtn?.addEventListener('click', () => { selectedTags.clear(); quotesPage = 1; renderQuotesList(); });
+            tagFilters?.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-tag]'); if (!el) return;
+                const tag = el.getAttribute('data-tag');
+                if (selectedTags.has(tag)) { selectedTags.delete(tag); el.classList.remove('bg-slate-800','text-white'); el.classList.add('bg-slate-200','text-slate-700'); }
+                else { selectedTags.add(tag); el.classList.add('bg-slate-800','text-white'); el.classList.remove('bg-slate-200','text-slate-700'); }
+                quotesPage = 1; renderQuotesList();
+            });
+            closeHistoryModal?.addEventListener('click', () => { historyModal?.classList.add('hidden'); if (quotesModal) quotesModal.classList.remove('hidden'); });
             exportQuoteBtn?.addEventListener('click', () => {
                 const name = (quoteNameInput?.value || 'CanopyQuote');
                 const state = getCurrentState();
                 const notes = (quoteNotesInput?.value || '').trim();
-                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, savedAt: state.savedAt };
+                const pinned = !!pinQuoteCheck?.checked;
+                const tags = parseTags(notes);
+                const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, pinned, tags, savedAt: state.savedAt };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                trackEvent('export', { name, pinned, tags });
             });
             importQuoteInput?.addEventListener('change', async (e) => {
                 const file = e.target.files?.[0]; if (!file) return;
@@ -1150,11 +1944,26 @@
                     const text = await file.text(); const obj = JSON.parse(text);
                     if (obj && obj.state) {
                         const folder = obj.folder || computeCurrentFolder(obj.state?.savedAt || obj.savedAt || Date.now());
-                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null, obj.notes || '');
+                        // If this import will overwrite an existing quote, save a version first
+                        const items = await listQuotes();
+                        let prev = null;
+                        if (obj.id) {
+                            prev = (items||[]).find(q => q.id === obj.id) || null;
+                        }
+                        if (!prev) {
+                            prev = (items||[]).find(q => (q.name||'').toLowerCase() === (obj.name||'').toLowerCase() && (q.folder||'') === (folder||'')) || null;
+                        }
+                        if (prev) {
+                            const nextDoc = { ...prev, name: obj.name || prev.name, folder, state: obj.state, notes: obj.notes || '', pinned: !!obj.pinned, tags: obj.tags || parseTags(obj.notes || '') };
+                            await saveVersion(prev, nextDoc, 'import_update');
+                        }
+                        const id = await upsertQuote(obj.name || 'Imported Quote', folder, obj.state, obj.id || null, obj.notes || '', !!obj.pinned, obj.tags || parseTags(obj.notes || ''));
                         applyState(obj.state);
                         if (quoteNameInput) quoteNameInput.value = obj.name || 'Imported Quote';
                         if (quoteNotesInput) quoteNotesInput.value = obj.notes || '';
+                        if (pinQuoteCheck) pinQuoteCheck.checked = !!obj.pinned;
                         if (saveStatusMsg) { saveStatusMsg.textContent = `Imported and loaded "${obj.name || 'Imported Quote'}".`; setTimeout(() => saveStatusMsg.textContent = '', 2500); }
+                        trackEvent('import', { quoteId: id, name: obj.name, folder, pinned: !!obj.pinned, tags: obj.tags || [] });
                     } else { alert('Invalid quote file.'); }
                 } catch (err) { alert('Failed to import: ' + err.message); }
                 finally { e.target.value = ''; }
@@ -1172,137 +1981,75 @@
 
             async function generatePdf() {
                 try {
-                    console.log("Starting PDF generation...");
-                    
-                    // Check if html2canvas is available
-                    if (typeof html2canvas === 'undefined') {
-                        throw new Error("HTML2Canvas library not loaded");
-                    }
-                    
-                    // Check if jsPDF is available
-                    if (typeof window.jspdf === 'undefined') {
-                        throw new Error("jsPDF library not loaded");
-                    }
-                    
+                    // Ensure libraries
+                    if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
+                    if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
                     const { jsPDF } = window.jspdf;
-                    
-                    // Create a temporary container for PDF generation
-                    const tempContainer = document.createElement('div');
-                    tempContainer.id = 'pdfContainer';
-                    tempContainer.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 1200px;
-                        height: 800px;
-                        background: white;
-                        padding: 40px;
-                        font-family: 'Inter', sans-serif;
-                        z-index: 9999;
-                        overflow: hidden;
-                        box-sizing: border-box;
-                    `;
-                    
-                    // Clone the calculator content
-                    const calculatorElement = document.getElementById('calculatorMain');
-                    if (!calculatorElement) {
-                        throw new Error("Calculator element not found");
+
+                    // Capture entire main container (fallback to body)
+                    const target = document.querySelector('.main-container') || document.body;
+
+                    // Stabilize layout during capture
+                    document.body.classList.add('pdf-capture-mode');
+
+                    // Temporarily hide AE discount section in PDF
+                    const aeInput = document.getElementById('aeDiscountInput');
+                    let aeContainer = null; let aePrevDisplay = '';
+                    if (aeInput) {
+                        aeContainer = aeInput.closest('.border-t') || aeInput.parentElement?.parentElement?.parentElement || null;
+                        if (aeContainer) { aePrevDisplay = aeContainer.style.display; aeContainer.style.display = 'none'; }
                     }
-                    
-                    // Create a deep clone and modify it for PDF
-                    const clonedContent = calculatorElement.cloneNode(true);
-                    
-                    // Apply PDF-specific styles to the cloned content
-                    clonedContent.style.cssText = `
-                        width: 100%;
-                        height: 100%;
-                        margin: 0;
-                        padding: 0;
-                        background: white;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
-                    `;
-                    
-                    // Remove any problematic elements
-                    const downloadBtn = clonedContent.querySelector('#downloadPdfBtn');
-                    if (downloadBtn) {
-                        downloadBtn.remove();
-                    }
-                    
-                    tempContainer.appendChild(clonedContent);
-                    document.body.appendChild(tempContainer);
-                    
-                    console.log("Temporary container created, waiting for rendering...");
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                    console.log("Starting HTML2Canvas capture...");
-                    
-                    // Capture the container
-                    const canvas = await html2canvas(tempContainer, {
+
+                    // Wait for fonts and images
+                    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
+                    const imgs = Array.from(document.images);
+                    await Promise.all(imgs.map(img => new Promise(resolve => {
+                        if (img.complete) return resolve();
+                        img.onload = img.onerror = () => resolve();
+                    })));
+
+                    // Render full content as canvas
+                    const canvas = await html2canvas(target, {
                         scale: 2,
                         useCORS: true,
-                        logging: true,
-                        backgroundColor: '#FFFFFF',
-                        allowTaint: true,
-                        foreignObjectRendering: true,
-                        imageTimeout: 30000,
-                        removeContainer: false,
-                        width: 1200,
-                        height: 800,
+                        backgroundColor: '#ffffff',
+                        windowWidth: target.scrollWidth,
+                        windowHeight: target.scrollHeight,
                         scrollX: 0,
-                        scrollY: 0
+                        scrollY: -window.scrollY
                     });
-                    
-                    console.log("Canvas created, dimensions:", canvas.width, "x", canvas.height);
 
-                    if (canvas.width === 0 || canvas.height === 0) {
-                        throw new Error("Canvas is empty - capture failed");
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'pt', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+
+                    const imgWidth = pageWidth;
+                    const imgHeight = canvas.height * (imgWidth / canvas.width);
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight; // negative to move image up
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
                     }
 
-                    const imgData = canvas.toDataURL('image/png', 1.0);
-                    console.log("Image data created, length:", imgData.length);
-                    
-                    const pdf = new jsPDF({ 
-                        orientation: 'landscape',
-                        unit: 'pt', 
-                        format: 'letter' 
-                    });
-                    
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    
-                    console.log("PDF dimensions:", pdfWidth, "x", pdfHeight);
-                    
-                    // Calculate scaling to fit the image properly
-                    const scaleX = pdfWidth / canvas.width;
-                    const scaleY = pdfHeight / canvas.height;
-                    const scale = Math.min(scaleX, scaleY);
-                    
-                    const finalWidth = canvas.width * scale;
-                    const finalHeight = canvas.height * scale;
-                    
-                    // Center the image on the page
-                    const x = (pdfWidth - finalWidth) / 2;
-                    const y = (pdfHeight - finalHeight) / 2;
-                    
-                    console.log("Adding image to PDF...");
-                    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
-                    
-                    console.log("Saving PDF...");
                     pdf.save('Canopy-Quote.pdf');
-                    
-                    console.log("PDF generation completed successfully");
-
-                } catch(err) {
-                    console.error("Failed to generate PDF:", err);
-                    alert("Sorry, there was an error generating the PDF. Please try again. Error: " + err.message);
+                } catch (err) {
+                    console.error('PDF export failed:', err);
+                    alert('PDF export failed: ' + err.message);
                 } finally {
-                    // Clean up the temporary container
-                    const tempContainer = document.querySelector('div[style*="z-index: 9999"]');
-                    if (tempContainer) {
-                        document.body.removeChild(tempContainer);
-                    }
+                    document.body.classList.remove('pdf-capture-mode');
+                    // Restore AE discount section
+                    try {
+                        const aeInput = document.getElementById('aeDiscountInput');
+                        const aeContainer = aeInput?.closest('.border-t') || aeInput?.parentElement?.parentElement?.parentElement;
+                        if (aeContainer) aeContainer.style.display = '';
+                    } catch {}
                 }
             }
 
@@ -1348,9 +2095,10 @@
                 filecabinetClientsInput.addEventListener('input', calculateAndRender);
             }
             aeDiscountInput.addEventListener('input', calculateAndRender);
-            downloadPdfBtn.addEventListener('click', () => {
-                console.log("Download button clicked");
-                generatePdf();
+            downloadPdfBtn.addEventListener('click', (e) => {
+                // Default to new glass export. Hold Alt/Option for legacy export.
+                if (e && (e.altKey || e.metaKey)) { generatePdf(); }
+                else { generatePdfGlass(); }
             });
             
             populateDataMigrationOptions();

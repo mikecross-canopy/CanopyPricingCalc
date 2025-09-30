@@ -1362,6 +1362,11 @@
                             const discountedPricePerUser = basePrice * (1 - discount);
                             moduleAnnualCost = discountedPricePerUser * userCount * 12;
                             displayPricePerUser = discountedPricePerUser;
+                            
+                            // Apply monthly premium if on monthly billing
+                            if (!isAnnual) {
+                                displayPricePerUser *= pricing.monthly_premium_factor;
+                            }
                         }
                         
                         totalAnnualSubscriptionEquiv += moduleAnnualCost;

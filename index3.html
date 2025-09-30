@@ -1352,7 +1352,8 @@
 
                         if (module.no_discount) {
                             moduleAnnualCost = module.annual_price_per_user * userCount;
-                            displayPricePerUser = module.monthly_price_per_user;
+                            // Show the correct per-user rate based on billing cycle
+                            displayPricePerUser = isAnnual ? (module.annual_price_per_user / 12) : module.monthly_price_per_user;
                         } else {
                             let basePrice = module.base_price;
                             if (typeof basePrice === 'object' && basePrice !== null) {

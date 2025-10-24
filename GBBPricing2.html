@@ -269,11 +269,16 @@
         }
         
         #premiumTierBtn.active::before {
-            content: '✨';
+            content: '';
             position: absolute;
-            left: 8px;
-            font-size: 1rem;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(43, 75, 255, 0.1) 0%, transparent 50%);
+            border-radius: 0.5rem;
             animation: sparkle 2s ease-in-out infinite;
+            pointer-events: none;
         }
         
         #premiumTierBtn.active::after {

@@ -1091,7 +1091,7 @@
         <header class="text-center w-full max-w-4xl mx-auto z-10">
             <div class="flex justify-start items-center mb-6">
                 <div class="flex items-center space-x-2">
-                    <img src="canopy-logo-black.png" alt="Canopy Logo" class="mx-auto h-8 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
+                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-12 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
                 </div>
 
     <!-- History Modal -->
@@ -1122,7 +1122,7 @@
                     </button>
                 </div>
 
-                <div class="mt-4 rounded-xl overflow-hidden" style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);">
+                <div class="mt-4 rounded-xl" style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06); overflow: visible;">
                     <div class="p-5 relative overflow-hidden" style="background: linear-gradient(135deg, rgba(43, 75, 255, 0.95) 0%, rgba(11, 230, 199, 0.85) 100%); backdrop-filter: blur(20px);">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                         <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
@@ -1177,7 +1177,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </button>
-                                    <div id="dataMigrationDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-32 overflow-y-auto">
+                                    <div id="dataMigrationDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
                                         <!-- Checkbox options will be populated here -->
                                     </div>
                                 </div>
@@ -1201,14 +1201,19 @@
             <div class="lg:col-span-2 p-6 rounded-xl summary-card flex flex-col">
                 <div class="text-center relative z-10">
                     <p id="summaryBigTotal" class="summary-total-lg">$2,100</p>
+                    <p id="summaryBigTotalLabel" class="text-sm text-slate-400 mt-2 hidden"></p>
                 </div>
                 
                 <div class="mt-6 space-y-3 flex-grow relative z-10">
                     <div class="flex justify-between items-center py-3 summary-line-item">
-                        <span class="summary-label">Per Month</span>
+                        <span id="summaryPerMonthLabel" class="summary-label">Per Month</span>
                         <span id="summaryPerMonth" class="text-lg font-bold summary-value">$175</span>
                     </div>
-                    <div class="flex justify-between items-center py-3 summary-line-item">
+                    <div id="newTotalRow" class="hidden flex justify-between items-center py-3 summary-line-item">
+                        <span class="summary-label">New Total</span>
+                        <span id="newTotal" class="text-lg font-bold summary-value"></span>
+                    </div>
+                    <div id="oneTimeChargesRow" class="flex justify-between items-center py-3 summary-line-item">
                         <span class="summary-label">One-Time Charges</span>
                         <span id="summaryOneTime" class="text-lg font-bold summary-value">$1,500</span>
                     </div>
@@ -1216,7 +1221,7 @@
                         <span class="summary-label">Discount</span>
                         <span id="summaryDiscount" class="text-lg font-bold">0%</span>
                     </div>
-                    <div class="flex justify-between items-center py-3 summary-line-item">
+                    <div id="paymentDueTodayRow" class="flex justify-between items-center py-3 summary-line-item">
                         <span class="summary-label">Payment Due Today</span>
                         <span id="summarySinglePayment" class="text-lg font-bold summary-value">$3,600</span>
                     </div>
@@ -1248,8 +1253,13 @@
                 Quote Tools
             </span>
             <div class="flex items-center gap-2">
-                <div id="switchPromptToggle" class="rounded bg-black/70 px-1.5 py-1">
+                <div id="switchPromptToggle" class="flex items-center gap-1.5 rounded bg-black/70 px-2 py-1">
+                    <label for="hideSwitchPromptCheck" class="text-xs text-white cursor-pointer">Hide Switch Prompt</label>
                     <input id="hideSwitchPromptCheck" type="checkbox" class="h-3 w-3 align-middle" title="Hide 'Switch to' prompt" aria-label="Hide 'Switch to' prompt" />
+                </div>
+                <div class="flex items-center gap-1.5 rounded bg-black/70 px-2 py-1">
+                    <label for="accountManagerCheck" class="text-xs text-white cursor-pointer">Account Manager</label>
+                    <input id="accountManagerCheck" type="checkbox" class="h-3 w-3 align-middle" title="Enable Account Manager mode" aria-label="Enable Account Manager mode" />
                 </div>
                 <span id="quoteToolsChevron" class="transition-transform">▾</span>
             </div>
@@ -1262,6 +1272,19 @@
             </div>
             <div id="quoteToolsLocked" class="text-xs text-slate-300 bg-slate-800/60 rounded p-3">
                 Sign in to save and manage quotes.
+            </div>
+            <div id="accountManagerInputRow" class="hidden mb-3 p-3 rounded-lg" style="background: rgba(11, 230, 199, 0.1); border: 1px solid rgba(11, 230, 199, 0.3);">
+                <label class="text-xs text-cyan-300 block mb-2">Customer's Current Subscription Cost</label>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-slate-300 text-sm">$</span>
+                    <input type="number" id="currentMonthlyInput" min="0" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 rounded bg-slate-800/50 border border-slate-600 text-white text-sm focus:border-cyan-400 focus:outline-none" />
+                    <span class="text-xs text-slate-400">/month</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-300 text-sm">$</span>
+                    <input type="number" id="currentAnnualInput" min="0" step="0.01" placeholder="0.00" class="flex-1 px-3 py-2 rounded bg-slate-800/50 border border-slate-600 text-white text-sm focus:border-cyan-400 focus:outline-none" />
+                    <span class="text-xs text-slate-400">/year</span>
+                </div>
             </div>
             <div id="quoteToolsContent" class="hidden">
                 <div class="flex flex-col gap-2">
@@ -1449,6 +1472,17 @@
             const summarySwitchPrice = document.getElementById('summarySwitchPrice');
             const hideSwitchPromptCheck = document.getElementById('hideSwitchPromptCheck');
             const switchPromptToggle = document.getElementById('switchPromptToggle');
+            
+            // Account Manager mode elements
+            const accountManagerCheck = document.getElementById('accountManagerCheck');
+            const accountManagerInputRow = document.getElementById('accountManagerInputRow');
+            const currentMonthlyInput = document.getElementById('currentMonthlyInput');
+            const currentAnnualInput = document.getElementById('currentAnnualInput');
+            const newTotalRow = document.getElementById('newTotalRow');
+            const newTotal = document.getElementById('newTotal');
+            const summaryBigTotalLabel = document.getElementById('summaryBigTotalLabel');
+            const paymentDueTodayRow = document.getElementById('paymentDueTodayRow');
+            const oneTimeChargesRow = document.getElementById('oneTimeChargesRow');
 
             // Persisted preference: hide/show the "Switch to" prompt
             const SWITCH_HIDE_KEY = 'hideSwitchPrompt';
@@ -1466,6 +1500,37 @@
             // Prevent toggling the Quote Tools panel when interacting with the checkbox
             switchPromptToggle?.addEventListener('click', (e) => { e.stopPropagation(); });
             hideSwitchPromptCheck?.addEventListener('click', (e) => { e.stopPropagation(); });
+            
+            // Account Manager mode toggle
+            let accountManagerMode = false;
+            accountManagerCheck?.addEventListener('change', (e) => {
+                accountManagerMode = e.target.checked;
+                if (accountManagerInputRow) {
+                    accountManagerInputRow.classList.toggle('hidden', !accountManagerMode);
+                }
+                
+                // Set implementation fee to $0 when Account Manager mode is enabled
+                if (accountManagerMode && implementationFeeInput) {
+                    implementationFeeInput.value = '$0';
+                    manualImplFeeSet = true;
+                }
+                
+                // Hide/show Payment Due Today row
+                if (paymentDueTodayRow) {
+                    paymentDueTodayRow.classList.toggle('hidden', accountManagerMode);
+                }
+                
+                calculateAndRender();
+            });
+            accountManagerCheck?.addEventListener('click', (e) => { e.stopPropagation(); });
+            
+            // Update price difference when current subscription changes
+            currentMonthlyInput?.addEventListener('input', () => {
+                calculateAndRender();
+            });
+            currentAnnualInput?.addEventListener('input', () => {
+                calculateAndRender();
+            });
             // Auth and Cloud elements
             const signInBtn = document.getElementById('signInBtn');
             const signOutBtn = document.getElementById('signOutBtn');
@@ -2136,8 +2201,27 @@
                     // Update summary
                     const displayTotal = isAnnual ? subscriptionAnnualEquiv : subscriptionMonthlyTotal;
                     summaryBigTotal.textContent = formatCurrency(displayTotal);
-                    summaryPerMonth.textContent = formatCurrency(subscriptionMonthlyTotal);
+                    
+                    // Update Per Month / Annual Cost row based on billing cycle
+                    const summaryPerMonthLabel = document.getElementById('summaryPerMonthLabel');
+                    if (isAnnual) {
+                        if (summaryPerMonthLabel) summaryPerMonthLabel.textContent = 'Per Month';
+                        summaryPerMonth.textContent = formatCurrency(subscriptionMonthlyTotal);
+                    } else {
+                        if (summaryPerMonthLabel) summaryPerMonthLabel.textContent = 'Annual Cost';
+                        summaryPerMonth.textContent = formatCurrency(subscriptionAnnualEquiv);
+                    }
+                    
                     summaryOneTime.textContent = formatCurrency(totalOneTimeCharges);
+                    
+                    // Hide one-time charges row if $0
+                    if (oneTimeChargesRow) {
+                        if (totalOneTimeCharges === 0) {
+                            oneTimeChargesRow.classList.add('hidden');
+                        } else {
+                            oneTimeChargesRow.classList.remove('hidden');
+                        }
+                    }
                     
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
@@ -2151,6 +2235,82 @@
                     
                     const paymentDueToday = displayTotal + totalOneTimeCharges;
                     summarySinglePayment.textContent = formatCurrency(paymentDueToday);
+                    
+                    // Account Manager mode: show price difference at the top
+                    if (accountManagerMode && (currentMonthlyInput || currentAnnualInput)) {
+                        const currentMonthly = parseFloat(currentMonthlyInput?.value) || 0;
+                        const currentAnnual = parseFloat(currentAnnualInput?.value) || 0;
+                        
+                        let currentPrice = 0;
+                        let newPrice = 0;
+                        let difference = 0;
+                        
+                        if (isAnnual) {
+                            // Viewing annual plan - compare annual costs
+                            if (currentAnnual > 0) {
+                                currentPrice = currentAnnual;
+                                newPrice = subscriptionAnnualEquiv;
+                            } else if (currentMonthly > 0) {
+                                // Convert monthly to annual for comparison
+                                currentPrice = currentMonthly * 12;
+                                newPrice = subscriptionAnnualEquiv;
+                            }
+                        } else {
+                            // Viewing monthly plan - compare monthly costs
+                            if (currentMonthly > 0) {
+                                currentPrice = currentMonthly;
+                                newPrice = subscriptionMonthlyTotal;
+                            } else if (currentAnnual > 0) {
+                                // Convert annual to monthly for comparison
+                                currentPrice = currentAnnual / 12;
+                                newPrice = subscriptionMonthlyTotal;
+                            }
+                        }
+                        
+                        if (currentPrice > 0) {
+                            difference = newPrice - currentPrice;
+                            const isIncrease = difference > 0;
+                            const isSavings = difference < 0;
+                            
+                            // Show difference as the big number at top
+                            if (isIncrease) {
+                                summaryBigTotal.textContent = `+${formatCurrency(Math.abs(difference))}`;
+                                summaryBigTotal.className = 'summary-total-lg text-cyan-400';
+                            } else if (isSavings) {
+                                summaryBigTotal.textContent = `-${formatCurrency(Math.abs(difference))}`;
+                                summaryBigTotal.className = 'summary-total-lg text-emerald-400';
+                            } else {
+                                summaryBigTotal.textContent = formatCurrency(0);
+                                summaryBigTotal.className = 'summary-total-lg text-slate-400';
+                            }
+                            
+                            // Add label to indicate per month or per year
+                            if (summaryBigTotalLabel) {
+                                summaryBigTotalLabel.textContent = isAnnual ? 'per year' : 'per month';
+                                summaryBigTotalLabel.classList.remove('hidden');
+                            }
+                            
+                            // Show new total in the breakdown
+                            newTotalRow.classList.remove('hidden');
+                            if (isAnnual) {
+                                newTotal.textContent = formatCurrency(subscriptionAnnualEquiv);
+                            } else {
+                                newTotal.textContent = formatCurrency(subscriptionMonthlyTotal);
+                            }
+                        } else {
+                            // No current price entered - show normal total
+                            summaryBigTotal.textContent = formatCurrency(displayTotal);
+                            summaryBigTotal.className = 'summary-total-lg';
+                            if (summaryBigTotalLabel) summaryBigTotalLabel.classList.add('hidden');
+                            newTotalRow.classList.add('hidden');
+                        }
+                    } else {
+                        // Normal mode - show regular total
+                        summaryBigTotal.textContent = formatCurrency(displayTotal);
+                        summaryBigTotal.className = 'summary-total-lg';
+                        if (summaryBigTotalLabel) summaryBigTotalLabel.classList.add('hidden');
+                        newTotalRow.classList.add('hidden');
+                    }
                     
                     // Update switch prompt
                     summarySwitchLink.style.display = hideSwitchPrompt ? 'none' : 'block';

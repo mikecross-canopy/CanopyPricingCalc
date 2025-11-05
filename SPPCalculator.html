@@ -1091,7 +1091,7 @@
         <header class="text-center w-full max-w-4xl mx-auto z-10">
             <div class="flex justify-start items-center mb-6">
                 <div class="flex items-center space-x-2">
-                    <img src="canopy-logo-black.png" alt="Canopy Logo" class="mx-auto h-10 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
+                    <img src="Canopy Just logo Black.png" alt="Canopy Logo" class="mx-auto h-12 mb-0" onerror="this.style.display='none'; console.error('Logo image not found.')">
                 </div>
 
     <!-- History Modal -->
@@ -1375,19 +1375,19 @@
                 tiers: {
                     standard: { 
                         name: "Standard", 
-                        monthly_price_per_user: 93, 
+                        monthly_price_per_user: 89, 
                         annual_price_per_user: 888,
                         description: "Everything your firm needs to stay organized and connected—all in one platform."
                     },
                     plus: { 
                         name: "Plus", 
-                        monthly_price_per_user: 136, 
+                        monthly_price_per_user: 131, 
                         annual_price_per_user: 1308,
                         description: "Automation, collaboration, and client experience tools that help your firm scale without adding headcount."
                     },
                     premium: { 
                         name: "Premium", 
-                        monthly_price_per_user: 186, 
+                        monthly_price_per_user: 179, 
                         annual_price_per_user: 1788,
                         description: "Advanced analytics, AI, and governance for firms leading with data."
                     },
@@ -1408,17 +1408,17 @@
                     engagements: {
                         name: "Engagements",
                         pricing_tiers: [
-                            { max_volume: 249, price_per_50: 6 },
-                            { max_volume: 999, price_per_50: 5 },
-                            { max_volume: 2999, price_per_50: 4 }
+                            { max_volume: 249, price_per_25: 3 },
+                            { max_volume: 999, price_per_25: 2.5 },
+                            { max_volume: 2999, price_per_25: 2 }
                         ]
                     },
                     smart_intake: {
                         name: "Smart Intake",
                         pricing_tiers: [
-                            { max_volume: 249, price_per_50: 22 },
-                            { max_volume: 999, price_per_50: 18 },
-                            { max_volume: 2999, price_per_50: 14 }
+                            { max_volume: 249, price_per_25: 11 },
+                            { max_volume: 999, price_per_25: 9 },
+                            { max_volume: 2999, price_per_25: 7 }
                         ]
                     }
                 },
@@ -1993,12 +1993,12 @@
                                 <input type="checkbox" id="${key}_enabled" data-key="${key}" class="h-4 w-4 rounded border-gray-300 ${isSmartIntake ? 'text-purple-500 focus:ring-purple-500' : 'text-teal-500 focus:ring-teal-500'} addon-checkbox" ${currentStates[key]?.checked ? 'checked' : ''}>
                                 <div>
                                     <h4 class="font-bold item-label">${aiIcon}${addon.name}${aiLabel}</h4>
-                                    <p id="${key}_sublabel" class="text-xs item-sublabel">Sold in bundles of 50</p>
+                                    <p id="${key}_sublabel" class="text-xs item-sublabel">Sold in bundles of 25</p>
                                 </div>
                             </div>
                             <div class="item-input-container">
                                 <label class="input-label text-xs block mb-1">Volume</label>
-                                <input type="number" id="${key}_volume" value="${currentStates[key]?.volume || '0'}" min="0" step="50" data-key="${key}" class="item-input addon-volume-input" ${currentStates[key]?.checked ? '' : 'disabled'}>
+                                <input type="number" id="${key}_volume" value="${currentStates[key]?.volume || '0'}" min="0" step="25" data-key="${key}" class="item-input addon-volume-input" ${currentStates[key]?.checked ? '' : 'disabled'}>
                             </div>
                             <div class="item-value">
                                 <p class="input-label text-xs block mb-1">One-Time Cost</p>
@@ -2064,11 +2064,11 @@
                     tier = t; // Use the highest tier if volume exceeds all tiers
                 }
                 
-                // Calculate cost: price is per unit, but sold in bundles of 50
-                // So round up to nearest 50 and multiply by price per unit
-                const bundles = Math.ceil(volume / 50);
-                const actualQuantity = bundles * 50;
-                return actualQuantity * tier.price_per_50;
+                // Calculate cost: price is per unit, but sold in bundles of 25
+                // So round up to nearest 25 and multiply by price per unit
+                const bundles = Math.ceil(volume / 25);
+                const actualQuantity = bundles * 25;
+                return actualQuantity * tier.price_per_25;
             }
 
             function calculateAndRender() {

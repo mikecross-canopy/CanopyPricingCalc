@@ -2141,7 +2141,9 @@
                     let finalMonthlyTotal = subscriptionMonthlyTotal;
                     let finalAnnualEquiv = subscriptionAnnualEquiv;
                     
-                    if (discountPercent > 0) {
+                    // In Account Manager mode, discount applies to difference, not total
+                    // We'll calculate this later after determining the difference
+                    if (discountPercent > 0 && !accountManagerMode) {
                         finalMonthlyTotal *= (1 - (discountPercent / 100));
                         finalAnnualEquiv *= (1 - (discountPercent / 100));
                     }
@@ -2225,9 +2227,35 @@
                     
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
-                        const discountAmount = isAnnual 
-                            ? (subscriptionAnnualEquiv * (discountPercent / 100))
-                            : (subscriptionMonthlyTotal * (discountPercent / 100));
+                        let discountAmount = 0;
+                        
+                        // In Account Manager mode, show discount on the difference
+                        if (accountManagerMode && (currentMonthlyInput || currentAnnualInput)) {
+                            const currentMonthly = parseFloat(currentMonthlyInput?.value) || 0;
+                            const currentAnnual = parseFloat(currentAnnualInput?.value) || 0;
+                            
+                            if (currentMonthly > 0 || currentAnnual > 0) {
+                                let currentPrice = 0;
+                                let newPrice = 0;
+                                
+                                if (isAnnual) {
+                                    currentPrice = currentAnnual > 0 ? currentAnnual : currentMonthly * 12;
+                                    newPrice = subscriptionAnnualEquiv;
+                                } else {
+                                    currentPrice = currentMonthly > 0 ? currentMonthly : currentAnnual / 12;
+                                    newPrice = subscriptionMonthlyTotal;
+                                }
+                                
+                                const difference = newPrice - currentPrice;
+                                discountAmount = Math.abs(difference * (discountPercent / 100));
+                            }
+                        } else {
+                            // Normal mode - discount on total
+                            discountAmount = isAnnual 
+                                ? (subscriptionAnnualEquiv * (discountPercent / 100))
+                                : (subscriptionMonthlyTotal * (discountPercent / 100));
+                        }
+                        
                         summaryDiscount.textContent = `${formatCurrency(discountAmount)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
@@ -2269,15 +2297,33 @@
                         
                         if (currentPrice > 0) {
                             difference = newPrice - currentPrice;
-                            const isIncrease = difference > 0;
-                            const isSavings = difference < 0;
+                            
+                            // Apply discount to the difference in Account Manager mode
+                            let discountedDifference = difference;
+                            let discountedNewPrice = newPrice;
+                            if (discountPercent > 0) {
+                                discountedDifference *= (1 - (discountPercent / 100));
+                                discountedNewPrice = currentPrice + discountedDifference;
+                                
+                                // Update the final totals with discounted values
+                                if (isAnnual) {
+                                    finalAnnualEquiv = discountedNewPrice;
+                                    finalMonthlyTotal = discountedNewPrice / 12;
+                                } else {
+                                    finalMonthlyTotal = discountedNewPrice;
+                                    finalAnnualEquiv = discountedNewPrice * 12;
+                                }
+                            }
+                            
+                            const isIncrease = discountedDifference > 0;
+                            const isSavings = discountedDifference < 0;
                             
                             // Show difference as the big number at top
                             if (isIncrease) {
-                                summaryBigTotal.textContent = `+${formatCurrency(Math.abs(difference))}`;
+                                summaryBigTotal.textContent = `+${formatCurrency(Math.abs(discountedDifference))}`;
                                 summaryBigTotal.className = 'summary-total-lg text-cyan-400';
                             } else if (isSavings) {
-                                summaryBigTotal.textContent = `-${formatCurrency(Math.abs(difference))}`;
+                                summaryBigTotal.textContent = `-${formatCurrency(Math.abs(discountedDifference))}`;
                                 summaryBigTotal.className = 'summary-total-lg text-emerald-400';
                             } else {
                                 summaryBigTotal.textContent = formatCurrency(0);
@@ -2290,12 +2336,12 @@
                                 summaryBigTotalLabel.classList.remove('hidden');
                             }
                             
-                            // Show new total in the breakdown
+                            // Show new total in the breakdown (with discount applied)
                             newTotalRow.classList.remove('hidden');
                             if (isAnnual) {
-                                newTotal.textContent = formatCurrency(subscriptionAnnualEquiv);
+                                newTotal.textContent = formatCurrency(discountedNewPrice);
                             } else {
-                                newTotal.textContent = formatCurrency(subscriptionMonthlyTotal);
+                                newTotal.textContent = formatCurrency(discountedNewPrice);
                             }
                         } else {
                             // No current price entered - show normal total

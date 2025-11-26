@@ -2002,7 +2002,7 @@
                                 <input type="number" id="${key}_volume" value="${currentStates[key]?.volume || '0'}" min="0" step="25" data-key="${key}" class="item-input addon-volume-input" ${currentStates[key]?.checked ? '' : 'disabled'}>
                             </div>
                             <div class="item-value">
-                                <p class="input-label text-xs block mb-1">One-Time Cost</p>
+                                <p class="input-label text-xs block mb-1">Cost</p>
                                 <p id="${key}_total" class="font-bold text-base">$0</p>
                             </div>
                         `;
@@ -2034,7 +2034,7 @@
                         if (addon && !addon.is_user_based) {
                             let value = parseInt(e.target.value) || 0;
                             // Round to nearest 50
-                            value = Math.round(value / 50) * 50;
+                            value = Math.round(value / 25) * 25;
                             e.target.value = value;
                         }
                         // User-based add-ons (like Tax Resolution) can use any number

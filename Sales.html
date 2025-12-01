@@ -862,10 +862,10 @@
                         name: "Smart Intake",
                         type: "volume",
                         pricing_tiers: [
-                            { max_volume: 249, price_per_25: 22 },
-                            { max_volume: 999, price_per_25: 18 },
-                            { max_volume: 2999, price_per_25: 14 },
-                            { max_volume: Infinity, price_per_25: 11 }
+                            { max_volume: 249, price_annual: 22, price_monthly: 26 },
+                            { max_volume: 999, price_annual: 18, price_monthly: 22 },
+                            { max_volume: 2999, price_annual: 14, price_monthly: 17 },
+                            { max_volume: Infinity, price_annual: 11, price_monthly: 13 }
                         ]
                     }
                 },
@@ -1407,19 +1407,44 @@
                     const ceData = pricing.base_client_engagement[ceTierKey];
                     
                     const additionalClients = parseInt(additionalClientsInput.value) || 0;
-                    const additionalClientsAnnualCost = additionalClients * pricing.additional_client_rate * 12;
-
-                    let totalAnnualSubscriptionEquiv = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
                     
+                    // Initialize totals for Annual and Monthly billing modes (Before Discount)
+                    // These represent the ANNUALIZED cost (Annual Mode) and MONTHLY cost (Monthly Mode)
+                    let annualModeAnnualCost = 0; // Cost per year if billed Annually
+                    let monthlyModeMonthlyCost = 0; // Cost per month if billed Monthly
+                    
+                    // 1. Base Platform Cost
+                    // Annual Mode: (MonthlyRate * 12) + (AddClientRate * 12)
+                    const ceAnnualBase = (ceData.monthly_rate * 12) + (additionalClients * pricing.additional_client_rate * 12);
+                    annualModeAnnualCost += ceAnnualBase;
+                    
+                    // Monthly Mode: (MonthlyRate * Premium) + (AddClientRate * Premium)
+                    // Note: additional_client_rate is a monthly rate.
+                    const ceMonthlyBase = (ceData.monthly_rate * pricing.monthly_premium_factor) + (additionalClients * pricing.additional_client_rate * pricing.monthly_premium_factor);
+                    monthlyModeMonthlyCost += ceMonthlyBase;
+
+                    // Update Base Platform UI
+                    const ceDisplayMonthly = isAnnual ? ceData.monthly_rate : (ceData.monthly_rate * pricing.monthly_premium_factor);
+                    ceTitle.textContent = ceData.name;
+                    ceSublabel.textContent = `${formatCurrency(ceDisplayMonthly)} ${ceData.description}`;
+                    // Total for this line item
+                    const ceLineTotal = isAnnual ? ceAnnualBase : ceMonthlyBase;
+                    ceTotal.textContent = isAnnual ? `${formatCurrency(ceLineTotal)}/yr` : `${formatCurrency(ceLineTotal)}/mo`;
+                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total';
+                    
+                    
+                    // 2. Modules Cost
                     document.querySelectorAll('.module-user-input').forEach(input => {
                         const moduleKey = input.dataset.key;
                         const userCount = parseInt(input.value) || 0;
                         const module = pricing.modules[moduleKey];
-                        let moduleAnnualCost = 0;
-                        let displayPricePerUser = 0;
-
+                        
+                        let modAnnualCost = 0; // Cost per year if Annual
+                        let modMonthlyCost = 0; // Cost per month if Monthly
+                        let displaySublabel = "";
+                        
                         if (module.type === 'volume') {
-                             // Handle volume based modules (Smart Intake)
+                             // Smart Intake (Volume based)
                              if (userCount > 0) {
                                  // Find tier
                                  let tier = module.pricing_tiers[0];
@@ -1431,113 +1456,101 @@
                                      tier = t;
                                  }
                                  
-                                 // Calculate monthly cost based on units
+                                 // Calculate bundles (sold in 25s)
                                  const bundles = Math.ceil(userCount / 25);
-                                 const actualQuantity = bundles * 25;
-                                 // Assuming price_per_25 is the price per UNIT (monthly)
-                                 let monthlyCost = actualQuantity * tier.price_per_25;
                                  
-                                 moduleAnnualCost = monthlyCost * 12;
+                                 // Annual Mode: price_annual * bundles * 12
+                                 // Table says "Annual (per credit)" which we interpreted as per bundle.
+                                 modAnnualCost = tier.price_annual * bundles * 12;
+                                 
+                                 // Monthly Mode: price_monthly * bundles
+                                 modMonthlyCost = tier.price_monthly * bundles;
+                                 
+                                 displaySublabel = `Sold in bundles of 25`;
+                             } else {
+                                 displaySublabel = `Sold in bundles of 25`;
                              }
+                        } else if (module.no_discount) {
+                             // Tax Resolution (User based, no volume discount)
+                             modAnnualCost = module.annual_price_per_user * userCount;
+                             modMonthlyCost = module.monthly_price_per_user * userCount;
                              
-                             // Update total display
-                             totalAnnualSubscriptionEquiv += moduleAnnualCost;
-                             
-                             // Sublabel is static for volume modules, but maybe update with tier info?
-                             // Keeping it simple as per design
-                             
-                             const monthlyModuleCost = moduleAnnualCost / 12;
-                             let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
-                             
-                             if (!isAnnual) {
-                                 // Apply monthly premium to volume modules too? 
-                                 // GBB Pricing didn't seem to apply monthly premium to add-ons, or maybe it did?
-                                 // GBB said: if (addon.is_user_based) ... else ...
-                                 // For volume based, it just calculated cost.
-                                 // Assuming NO monthly premium factor for volume add-ons unless specified.
-                                 // But index3 applies it to everything else.
-                                 // Let's apply it for consistency if it's a recurring charge.
-                                 displayPrice *= pricing.monthly_premium_factor;
-                                 moduleAnnualCost *= pricing.monthly_premium_factor; // Update annual cost contribution if on monthly
-                                 
-                                 // Wait, if I update moduleAnnualCost here, it affects totalAnnualSubscriptionEquiv which was already added
-                                 // Correct logic:
-                                 // totalAnnualSubscriptionEquiv should be the annual equivalent base.
-                                 // If monthly billing, we apply premium factor at the end or per item.
-                                 // In the existing code:
-                                 // displayPricePerUser *= pricing.monthly_premium_factor; (lines 1436)
-                                 // totalAnnualSubscriptionEquiv += moduleAnnualCost; (line 1440)
-                                 // moduleAnnualCost was calculated as annual.
-                                 // Then later:
-                                 // currentMonthlyTotal = totalAnnualSubscriptionEquiv / 12 * pricing.monthly_premium_factor;
-                                 
-                                 // So totalAnnualSubscriptionEquiv should be the BASE annual cost (without monthly premium).
-                                 // So I should NOT apply monthly_premium_factor to moduleAnnualCost here.
-                             }
-                             
-                             document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(displayPrice) + (isAnnual ? '/yr' : '/mo');
-
+                             const rate = isAnnual ? (module.annual_price_per_user / 12) : module.monthly_price_per_user;
+                             displaySublabel = `${formatCurrency(rate)} / user / month`;
                         } else {
-                            if (module.no_discount) {
-                                moduleAnnualCost = module.annual_price_per_user * userCount;
-                                // Show the correct per-user rate based on billing cycle
-                                displayPricePerUser = isAnnual ? (module.annual_price_per_user / 12) : module.monthly_price_per_user;
-                            } else {
-                                let basePrice = module.base_price;
-                                if (typeof basePrice === 'object' && basePrice !== null) {
-                                    basePrice = isProTier ? basePrice.pro : basePrice.standard;
-                                }
-                                const discount = getModuleDiscount(userCount);
-                                const discountedPricePerUser = basePrice * (1 - discount);
-                                moduleAnnualCost = discountedPricePerUser * userCount * 12;
-                                displayPricePerUser = discountedPricePerUser;
-                                
-                                // Apply monthly premium if on monthly billing
-                                if (!isAnnual) {
-                                    displayPricePerUser *= pricing.monthly_premium_factor;
-                                }
-                            }
-                            
-                            totalAnnualSubscriptionEquiv += moduleAnnualCost;
-                            document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
-                            const monthlyModuleCost = moduleAnnualCost / 12;
-                            let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
-                            
-                            if (!isAnnual && !module.no_discount) {
-                                displayPrice *= pricing.monthly_premium_factor;
-                            } else if (!isAnnual && module.no_discount) {
-                                displayPrice = module.monthly_price_per_user * userCount;
-                            }
-                            document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(displayPrice) + (isAnnual ? '/yr' : '/mo');
+                             // Standard Modules (User based, volume discount)
+                             let basePrice = module.base_price;
+                             if (typeof basePrice === 'object' && basePrice !== null) {
+                                 basePrice = isProTier ? basePrice.pro : basePrice.standard;
+                             }
+                             
+                             const discount = getModuleDiscount(userCount);
+                             const discountedBase = basePrice * (1 - discount);
+                             
+                             // Annual Mode
+                             modAnnualCost = discountedBase * userCount * 12;
+                             
+                             // Monthly Mode (apply premium)
+                             modMonthlyCost = (discountedBase * pricing.monthly_premium_factor) * userCount;
+                             
+                             const rate = isAnnual ? discountedBase : (discountedBase * pricing.monthly_premium_factor);
+                             displaySublabel = `${formatCurrency(rate, 2)} / user / month`;
                         }
+                        
+                        // Add to totals
+                        annualModeAnnualCost += modAnnualCost;
+                        monthlyModeMonthlyCost += modMonthlyCost;
+                        
+                        // Update Module UI
+                        document.getElementById(`${moduleKey}_sublabel`).textContent = displaySublabel;
+                        const modLineTotal = isAnnual ? modAnnualCost : modMonthlyCost;
+                        document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(modLineTotal) + (isAnnual ? '/yr' : '/mo');
                     });
 
+                    // 3. Discounts
                     const discountPercent = parseFloat(aeDiscountInput.value) || 0;
-                    const totalBeforeDiscount = totalAnnualSubscriptionEquiv;
+                    
+                    // Calculate Discount Amounts
+                    // We calculate what the total would be if we switched modes, for the "Switch" prompt
+                    let finalAnnualBill = annualModeAnnualCost;
+                    let finalMonthlyBill = monthlyModeMonthlyCost;
+                    
                     if (discountPercent > 0) {
-                        totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
+                        finalAnnualBill *= (1 - (discountPercent / 100));
+                        finalMonthlyBill *= (1 - (discountPercent / 100));
                     }
                     
-                    const implementationBase = isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * pricing.monthly_premium_factor;
+                    // 4. Implementation Fee
+                    // Base is the Annual Contract Value (Discounted)
+                    // If Monthly, annualized monthly cost? Or just the Annual Mode cost scaled?
+                    // Previous logic: "isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * premium"
+                    // This implies Impl Fee is based on the "Annual Equivalent" of the plan.
+                    
+                    let implementationBase;
+                    if (isAnnual) {
+                        implementationBase = finalAnnualBill;
+                    } else {
+                        // If monthly, the base is usually the Annualized Monthly bill?
+                        // Or the Annual Cost * Premium?
+                        // Let's use Annualized Monthly Bill (finalMonthlyBill * 12)
+                        implementationBase = finalMonthlyBill * 12;
+                    }
 
                     const isPremiumChecked = premiumOnboardingCheck.checked;
                     const implementationPercent = isPremiumChecked 
                         ? pricing.implementation_premium_percent
                         : pricing.implementation_standard_percent;
                     
-                    // Calculate migration fees from multiple selections
+                    // 5. Data Migration
                     let migrationFee = 0;
                     const selectedOptions = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'))
                         .map(checkbox => checkbox.value);
                     
                     selectedOptions.forEach(optionKey => {
                         const option = pricing.data_migration_options[optionKey];
-                        
                         if (option.price !== undefined) {
-                            // Fixed price option
                             migrationFee += option.price;
                         } else if (option.base_price !== undefined) {
-                            // Tiered pricing (FileCabinet)
                             const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
                             if (clientCount > 0) {
                                 let optionFee = option.base_price;
@@ -1550,6 +1563,7 @@
                         }
                     });
                     
+                    // Calculate Final Impl Fee
                     let percentageBasedFee = implementationBase * implementationPercent;
                     let calculatedImplFee = Math.max(percentageBasedFee, pricing.implementation_minimum_fee);
                     
@@ -1563,46 +1577,65 @@
                     
                     let totalOneTimeCharges = finalImplFee + migrationFee;
 
-                    const currentMonthlyTotal = totalAnnualSubscriptionEquiv / 12 * (isAnnual ? 1 : pricing.monthly_premium_factor);
-                    const currentAnnualTotal = totalAnnualSubscriptionEquiv;
-
-                    const displayedMonthlyRate = isAnnual ? ceData.monthly_rate : ceData.monthly_rate * pricing.monthly_premium_factor;
-                    const ceBaseAnnual = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
-                    const ceBaseMonthly = (ceData.monthly_rate * pricing.monthly_premium_factor) + (additionalClientsAnnualCost / 12 * pricing.monthly_premium_factor);
-
-                    ceTitle.textContent = ceData.name;
-                    ceSublabel.textContent = `${formatCurrency(displayedMonthlyRate)} ${ceData.description}`;
-                    ceTotal.textContent = isAnnual ? `${formatCurrency(ceBaseAnnual)}/yr` : `${formatCurrency(ceBaseMonthly)}/mo`;
-                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total';
-
-
-                    summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
+                    // 6. Final Summary Display
+                    const currentBill = isAnnual ? finalAnnualBill : finalMonthlyBill;
+                    
+                    summaryBigTotal.textContent = formatCurrency(currentBill);
                     summaryOneTime.textContent = formatCurrency(totalOneTimeCharges);
 
+                    // Discount Row
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
-                        const discountAmount = totalBeforeDiscount - totalAnnualSubscriptionEquiv;
-                        const discountAmountDisplay = isAnnual ? discountAmount : discountAmount / 12 * pricing.monthly_premium_factor;
-                        summaryDiscount.textContent = `${formatCurrency(discountAmountDisplay)} (${discountPercent}%)`;
+                        const originalBill = isAnnual ? annualModeAnnualCost : monthlyModeMonthlyCost;
+                        const discountAmount = originalBill - currentBill;
+                        summaryDiscount.textContent = `${formatCurrency(discountAmount)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
                     }
                     
-                    const paymentDueToday = isAnnual ? currentAnnualTotal + totalOneTimeCharges : currentMonthlyTotal + totalOneTimeCharges;
+                    // Payment Due Today
+                    const paymentDueToday = isAnnual ? (currentBill + totalOneTimeCharges) : (currentBill + totalOneTimeCharges);
                     summarySinglePayment.textContent = formatCurrency(paymentDueToday);
                     
-                    // Respect user preference for showing the switch prompt
+                    // Switch Prompt
                     summarySwitchLink.style.display = hideSwitchPrompt ? 'none' : 'block';
 
                     if (isAnnual) {
-                        summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
+                        summaryPerMonth.textContent = formatCurrency(currentBill / 12);
                         summarySwitchText.textContent = 'OR SWITCH TO MONTHLY!';
-                        const switchToMonthlyPrice = totalAnnualSubscriptionEquiv / 12 * pricing.monthly_premium_factor;
-                        summarySwitchPrice.textContent = formatCurrency(switchToMonthlyPrice);
+                        summarySwitchPrice.textContent = formatCurrency(finalMonthlyBill);
                     } else {
-                        summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal);
+                        summaryPerMonth.textContent = formatCurrency(currentBill * 12); // Annualized cost
+                        // Actually usually "Per Month" row shows the monthly cost.
+                        // If isAnnual (showing Annual Total), Per Month = Total / 12.
+                        // If !isAnnual (showing Monthly Total), Per Month = Total.
+                        // Wait, if I am monthly, the big number IS the monthly cost.
+                        // Do I show "Annual Cost" in the small row?
+                        // The label ID is implicitly 'summaryPerMonthLabel' but that element doesn't exist in index3 HTML shown?
+                        // Let's check HTML lines 711: <span class="summary-label">Per Month</span> <span id="summaryPerMonth">...</span>
+                        // If I am monthly, and Big Total is $200. "Per Month" $200 seems redundant.
+                        // Usually in Monthly mode, it might show "Annual Equivalent".
+                        // But looking at the code I replaced:
+                        // if (isAnnual) summaryPerMonth.textContent = ...
+                        // else summaryPerMonth.textContent = ...
+                        
+                        // Let's stick to:
+                        // If Annual: Show Per Month equivalent.
+                        // If Monthly: Show Annual Total equivalent? Or just repeat monthly?
+                        // Previous code:
+                        // if (isAnnual) summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
+                        // else summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal); 
+                        // Wait, if !isAnnual, summaryPerMonth shows the Monthly Total.
+                        // But the Big Total is ALSO the Monthly Total?
+                        // lines 1555: summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
+                        
+                        // So in Monthly mode, Big Total = Monthly Bill.
+                        // And Per Month row = Monthly Bill.
+                        // That's fine.
+                        summaryPerMonth.textContent = formatCurrency(finalMonthlyBill);
+                        
                         summarySwitchText.textContent = 'OR SWITCH TO ANNUAL!';
-                        summarySwitchPrice.textContent = formatCurrency(totalAnnualSubscriptionEquiv);
+                        summarySwitchPrice.textContent = formatCurrency(finalAnnualBill);
                     }
 
                 } catch (error) {

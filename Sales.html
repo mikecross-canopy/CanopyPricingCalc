@@ -1446,25 +1446,28 @@
                         if (module.type === 'volume') {
                              // Smart Intake (Volume based)
                              if (userCount > 0) {
-                                 // Find tier
+                                 // Find tier based on raw user count (or billable? Usually based on raw, but here volume buckets map to credits)
+                                 // The table says "Credit Tier". Usually this is the volume you buy.
+                                 // Let's use the billable volume for tier lookup to be safe, or raw?
+                                 // Usually tier is based on total volume. 
+                                 // Let's calculate billable volume first.
+                                 const billableVolume = Math.ceil(userCount / 25) * 25;
+                                 
                                  let tier = module.pricing_tiers[0];
                                  for (const t of module.pricing_tiers) {
-                                     if (userCount <= t.max_volume) {
+                                     if (billableVolume <= t.max_volume) {
                                          tier = t;
                                          break;
                                      }
                                      tier = t;
                                  }
                                  
-                                 // Calculate bundles (sold in 25s)
-                                 const bundles = Math.ceil(userCount / 25);
+                                 // Annual Mode: BillableVolume * AnnualPricePerCredit
+                                 modAnnualCost = billableVolume * tier.price_annual;
                                  
-                                 // Annual Mode: price_annual * bundles * 12
-                                 // Table says "Annual (per credit)" which we interpreted as per bundle.
-                                 modAnnualCost = tier.price_annual * bundles * 12;
-                                 
-                                 // Monthly Mode: price_monthly * bundles
-                                 modMonthlyCost = tier.price_monthly * bundles;
+                                 // Monthly Mode: (BillableVolume * MonthlyPricePerCredit) / 12
+                                 // Assuming price_monthly is the "Annual Price Per Credit when billed Monthly" (e.g. $26 vs $22)
+                                 modMonthlyCost = (billableVolume * tier.price_monthly) / 12;
                                  
                                  displaySublabel = `Sold in bundles of 25`;
                              } else {

@@ -1317,21 +1317,47 @@
                     if (module.type === 'volume') {
                         // Special rendering for Smart Intake (Volume based)
                         const aiGradient = key === 'smart_intake' ? 'bg-gradient-to-r from-purple-50 to-blue-50' : '';
-                        const aiIcon = key === 'smart_intake' ? '<svg class="w-4 h-4 inline-block mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path d="M13 7H7v6h6V7z"/><path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clip-rule="evenodd"/></svg>' : '';
+                        // Removed AI icon as requested
+                        const aiIcon = ''; 
                         const aiLabel = key === 'smart_intake' ? '<span class="text-xs font-semibold text-purple-600 ml-1">AI-Powered</span>' : '';
                         const isSmartIntake = key === 'smart_intake';
+                        
+                        // Build pricing tooltip
+                        let pricingTooltip = '';
+                        if (module.pricing_tiers) {
+                            let prevMax = 0;
+                            pricingTooltip = '<div class="font-bold mb-1 border-b border-slate-600 pb-1">Pricing Tiers (Annual / Monthly)</div>';
+                            module.pricing_tiers.forEach(t => {
+                                const min = prevMax + 1;
+                                const range = t.max_volume === Infinity ? `${min}+` : `${min}-${t.max_volume}`;
+                                pricingTooltip += `<div class="flex justify-between gap-3"><span>${range}:</span> <span>$${t.price_annual} / $${t.price_monthly}</span></div>`;
+                                prevMax = t.max_volume;
+                            });
+                        }
 
                         div.innerHTML = `
-                            <div class="flex items-center space-x-2 ${aiGradient} ${isSmartIntake ? 'p-2 rounded-lg -ml-2' : ''}">
-                                <input type="checkbox" id="${key}_enabled" data-key="${key}" class="h-4 w-4 rounded border-gray-300 ${isSmartIntake ? 'text-purple-500 focus:ring-purple-500' : 'text-teal-500 focus:ring-teal-500'} module-checkbox">
-                                <div>
-                                    <h4 class="font-bold item-label">${aiIcon}${module.name}${aiLabel}</h4>
-                                    <p id="${key}_sublabel" class="text-xs item-sublabel">Sold in bundles of 25</p>
+                            <div class="${aiGradient} ${isSmartIntake ? 'p-2 rounded-lg -ml-2' : ''}">
+                                <div class="flex items-center space-x-2">
+                                    <div>
+                                        <h4 class="font-bold item-label flex items-center">
+                                            ${aiIcon}${module.name}${aiLabel}
+                                            <div class="group relative ml-2 inline-block">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 hover:text-slate-600 cursor-help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                                <div class="pointer-events-none absolute top-full left-0 mt-1 w-max rounded bg-slate-800 p-2 text-[10px] text-white opacity-0 shadow-lg group-hover:opacity-100 z-50">
+                                                    ${pricingTooltip}
+                                                </div>
+                                            </div>
+                                        </h4>
+                                        <p id="${key}_sublabel" class="text-xs item-sublabel">Sold in bundles of 25</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="number" id="${key}_override" placeholder="" min="0" step="0.01" data-key="${key}" class="item-input module-override-input text-xs h-7 w-14 bg-white/90 border-gray-300">
                                 </div>
                             </div>
                             <div class="item-input-container">
                                 <label class="input-label text-xs block mb-1">Volume</label>
-                                <input type="number" id="${key}_users" value="0" min="0" step="25" data-key="${key}" class="item-input module-user-input" disabled>
+                                <input type="number" id="${key}_users" value="0" min="0" step="25" data-key="${key}" class="item-input module-user-input">
                             </div>
                             <div class="item-value">
                                 <p class="input-label text-xs block mb-1">Total</p>
@@ -1377,6 +1403,10 @@
                             }
                         });
                     }
+                });
+                
+                document.querySelectorAll('.module-override-input').forEach(input => {
+                    input.addEventListener('input', calculateAndRender);
                 });
                 
                 document.querySelectorAll('.module-checkbox').forEach(cb => {
@@ -1463,13 +1493,55 @@
                                  }
                                  
                                  // Annual Mode: BillableVolume * AnnualPricePerCredit
-                                 modAnnualCost = billableVolume * tier.price_annual;
+                                 // Check for override
+                                 const overrideInput = document.getElementById(`${moduleKey}_override`);
+                                 const overridePrice = overrideInput && overrideInput.value ? parseFloat(overrideInput.value) : null;
+                                 
+                                 const annualPricePerCredit = overridePrice !== null ? overridePrice : tier.price_annual;
+                                 
+                                 modAnnualCost = billableVolume * annualPricePerCredit;
                                  
                                  // Monthly Mode: (BillableVolume * MonthlyPricePerCredit) / 12
-                                 // Assuming price_monthly is the "Annual Price Per Credit when billed Monthly" (e.g. $26 vs $22)
-                                 modMonthlyCost = (billableVolume * tier.price_monthly) / 12;
+                                 // If override is present, assume it overrides the Annual Price Per Credit. 
+                                 // For monthly mode, we should ideally have a separate monthly override or assume the same relationship?
+                                 // Or maybe the user enters the "Unit Price" which applies to the current billing mode?
+                                 // "adjust the per-price unit for each Smart Intake" - usually unit price is quoted annually per unit.
+                                 // If I override to $20, that is the $20/unit/year.
+                                 // So monthly cost would be ($20 * volume) / 12? 
+                                 // Or if the user wants to override the Monthly Unit Price ($26 -> $24)?
+                                 // Let's assume the override sets the ANNUAL price per unit, as that's the primary metric.
+                                 // And for monthly, we calculate relative to that or just use it?
+                                 // Given the request doesn't specify, and Annual is default, let's use override as the Annual Price.
+                                 // For Monthly mode derived from override: 
+                                 // If override is provided, we don't have a "Monthly Override". 
+                                 // Let's assume the override IS the price for the current mode?
+                                 // No, that's confusing if they switch toggles.
+                                 // Let's assume override is the ANNUAL price per unit.
+                                 // If they are on monthly, we need a monthly equivalent.
+                                 // Standard tier relationship: Monthly = Annual * (26/22) approx?
+                                 // Or just (Override / 12) * 1.2? 
+                                 // Or just use the override as the base for everything.
+                                 // Let's stick to: Override = Annual Price Per Credit.
+                                 // Monthly Cost = (Override * BillableVolume) / 12 * (PriceMonthly/PriceAnnual ratio)?
+                                 // Simpler: If override is set, use it for Annual. For Monthly, use Override * (tier.price_monthly / tier.price_annual).
                                  
-                                 displaySublabel = `Sold in bundles of 25`;
+                                 if (overridePrice !== null) {
+                                     modAnnualCost = billableVolume * overridePrice;
+                                     // Estimate monthly rate based on ratio of standard pricing
+                                     const ratio = tier.price_monthly / tier.price_annual; 
+                                     // If tier.price_annual is 0 (unlikely), fallback to 1.2
+                                     const safeRatio = tier.price_annual ? ratio : 1.2;
+                                     const derivedMonthlyPrice = overridePrice * safeRatio;
+                                     
+                                     modMonthlyCost = (billableVolume * derivedMonthlyPrice) / 12;
+                                     
+                                     displaySublabel = `Custom Price: ${formatCurrency(overridePrice)}/unit`;
+                                 } else {
+                                     modAnnualCost = billableVolume * tier.price_annual;
+                                     modMonthlyCost = (billableVolume * tier.price_monthly) / 12;
+                                     displaySublabel = `Sold in bundles of 25`;
+                                 }
+                                 
                              } else {
                                  displaySublabel = `Sold in bundles of 25`;
                              }

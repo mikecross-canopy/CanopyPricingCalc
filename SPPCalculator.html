@@ -1416,10 +1416,10 @@
                     smart_intake: {
                         name: "Smart Intake",
                         pricing_tiers: [
-                            { max_volume: 249, price_per_25: 22 },
-                            { max_volume: 999, price_per_25: 18 },
-                            { max_volume: 2999, price_per_25: 14 },
-                            { max_volume: Infinity, price_per_25: 11 }
+                            { max_volume: 249, price_annual: 22, price_monthly: 26 },
+                            { max_volume: 999, price_annual: 18, price_monthly: 22 },
+                            { max_volume: 2999, price_annual: 14, price_monthly: 17 },
+                            { max_volume: Infinity, price_annual: 11, price_monthly: 13 }
                         ]
                     }
                 },
@@ -1964,7 +1964,28 @@
                     const isSmartIntake = key === 'smart_intake';
                     const aiGradient = isSmartIntake ? 'bg-gradient-to-r from-purple-50 to-blue-50' : '';
                     const aiIcon = isSmartIntake ? '<svg class="w-4 h-4 inline-block mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path d="M13 7H7v6h6V7z"/><path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clip-rule="evenodd"/></svg>' : '';
-                    const aiLabel = isSmartIntake ? '<span class="text-xs font-semibold text-purple-600 ml-1">AI-Powered</span>' : '';
+                    const aiLabel = isSmartIntake ? '<span class="text-xs font-semibold text-purple-600 ml-1 whitespace-nowrap">AI-Powered</span>' : '';
+                    
+                    // Build pricing tooltip for Smart Intake
+                    let pricingTooltip = '';
+                    if (isSmartIntake && addon.pricing_tiers) {
+                        let prevMax = 0;
+                        pricingTooltip = '<div class="font-bold mb-1 border-b border-slate-600 pb-1">Pricing Tiers (Annual / Monthly)</div>';
+                        addon.pricing_tiers.forEach(t => {
+                            const min = prevMax + 1;
+                            const range = t.max_volume === Infinity ? `${min}+` : `${min}-${t.max_volume}`;
+                            pricingTooltip += `<div class="flex justify-between gap-3"><span>${range}:</span> <span>$${t.price_annual} / $${t.price_monthly}</span></div>`;
+                            prevMax = t.max_volume;
+                        });
+                    }
+
+                    const tooltipHtml = pricingTooltip ? `
+                        <div class="group relative ml-2 inline-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 hover:text-slate-600 cursor-help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <div class="pointer-events-none absolute top-full left-0 mt-1 w-max rounded bg-slate-800 p-2 text-[10px] text-white opacity-0 shadow-lg group-hover:opacity-100 z-50">
+                                ${pricingTooltip}
+                            </div>
+                        </div>` : '';
                     
                     if (isUserBased) {
                         // User-based add-on (like Tax Resolution)
@@ -1993,7 +2014,7 @@
                             <div class="flex items-center space-x-2 ${aiGradient} ${isSmartIntake ? 'p-2 rounded-lg -m-2' : ''}">
                                 <input type="checkbox" id="${key}_enabled" data-key="${key}" class="h-4 w-4 rounded border-gray-300 ${isSmartIntake ? 'text-purple-500 focus:ring-purple-500' : 'text-teal-500 focus:ring-teal-500'} addon-checkbox" ${currentStates[key]?.checked ? 'checked' : ''}>
                                 <div>
-                                    <h4 class="font-bold item-label">${aiIcon}${addon.name}${aiLabel}</h4>
+                                    <h4 class="font-bold item-label flex items-center whitespace-nowrap">${aiIcon}${addon.name}${aiLabel}${tooltipHtml}</h4>
                                     <p id="${key}_sublabel" class="text-xs item-sublabel">Sold in bundles of 25</p>
                                 </div>
                             </div>
@@ -2069,7 +2090,16 @@
                 // So round up to nearest 25 and multiply by price per unit
                 const bundles = Math.ceil(volume / 25);
                 const actualQuantity = bundles * 25;
-                return actualQuantity * tier.price_per_25;
+                
+                // Determine unit price (handle Smart Intake split pricing vs standard price_per_25)
+                let unitPrice = tier.price_per_25;
+                if (tier.price_annual !== undefined && tier.price_monthly !== undefined) {
+                    unitPrice = isAnnual ? tier.price_annual : tier.price_monthly;
+                    // Return monthly cost for recurring volume-based addons
+                    return (actualQuantity * unitPrice) / 12;
+                }
+                
+                return actualQuantity * unitPrice;
             }
 
             function calculateAndRender() {
@@ -2119,7 +2149,8 @@
                             addonCost = getAddonPrice(key, volume);
                             
                             // Separate user-based (recurring) from volume-based (one-time)
-                            if (addon.is_user_based) {
+                            // Smart Intake is also treated as recurring
+                            if (addon.is_user_based || key === 'smart_intake') {
                                 totalAddonsMonthly += addonCost;
                             } else {
                                 totalAddonsOneTime += addonCost;

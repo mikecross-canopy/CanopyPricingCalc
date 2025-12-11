@@ -1408,9 +1408,9 @@
                     engagements: {
                         name: "Engagements",
                         pricing_tiers: [
-                            { max_volume: 99, price_per_25: 12 },
-                            { max_volume: 249, price_per_25: 10 },
-                            { max_volume: Infinity, price_per_25: 6 }
+                            { max_volume: 99, price_annual: 12, price_monthly: 14 },
+                            { max_volume: 249, price_annual: 10, price_monthly: 12 },
+                            { max_volume: Infinity, price_annual: 6, price_monthly: 7 }
                         ]
                     },
                     smart_intake: {
@@ -1966,9 +1966,9 @@
                     const aiIcon = isSmartIntake ? '<svg class="w-4 h-4 inline-block mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path d="M13 7H7v6h6V7z"/><path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clip-rule="evenodd"/></svg>' : '';
                     const aiLabel = isSmartIntake ? '<span class="text-xs font-semibold text-purple-600 ml-1 whitespace-nowrap">AI-Powered</span>' : '';
                     
-                    // Build pricing tooltip for Smart Intake
+                    // Build pricing tooltip for Smart Intake and Engagements
                     let pricingTooltip = '';
-                    if (isSmartIntake && addon.pricing_tiers) {
+                    if ((isSmartIntake || key === 'engagements') && addon.pricing_tiers) {
                         let prevMax = 0;
                         pricingTooltip = '<div class="font-bold mb-1 border-b border-slate-600 pb-1">Pricing Tiers (Annual / Monthly)</div>';
                         addon.pricing_tiers.forEach(t => {
@@ -2149,8 +2149,8 @@
                             addonCost = getAddonPrice(key, volume);
                             
                             // Separate user-based (recurring) from volume-based (one-time)
-                            // Smart Intake is also treated as recurring
-                            if (addon.is_user_based || key === 'smart_intake') {
+                            // Smart Intake and Engagements are also treated as recurring
+                            if (addon.is_user_based || key === 'smart_intake' || key === 'engagements') {
                                 totalAddonsMonthly += addonCost;
                             } else {
                                 totalAddonsOneTime += addonCost;

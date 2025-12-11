@@ -1491,7 +1491,9 @@
 
             // Persisted preference: hide/show the "Switch to" prompt
             const SWITCH_HIDE_KEY = 'hideSwitchPrompt';
-            let hideSwitchPrompt = (localStorage.getItem(SWITCH_HIDE_KEY) === '1');
+            // Default to true (hide prompt) if not set in local storage
+            let hideSwitchPrompt = (localStorage.getItem(SWITCH_HIDE_KEY) === null) ? true : (localStorage.getItem(SWITCH_HIDE_KEY) === '1');
+            
             function applySwitchPromptVisibility() {
                 if (summarySwitchLink) summarySwitchLink.style.display = hideSwitchPrompt ? 'none' : 'block';
                 if (hideSwitchPromptCheck) hideSwitchPromptCheck.checked = hideSwitchPrompt;

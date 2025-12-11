@@ -1177,7 +1177,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </button>
-                                    <div id="dataMigrationDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
+                                    <div id="dataMigrationDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto" style="bottom: 100%; top: auto;">
                                         <!-- Checkbox options will be populated here -->
                                     </div>
                                 </div>
@@ -1221,6 +1221,9 @@
                         <span class="summary-label">Discount</span>
                         <span id="summaryDiscount" class="text-lg font-bold">0%</span>
                     </div>
+                    <div id="accountManagerBreakdown" class="hidden mt-2 pt-3 border-t border-slate-700/30 text-xs space-y-1">
+                        <!-- Itemized breakdown populated by JS -->
+                    </div>
                     <div id="paymentDueTodayRow" class="flex justify-between items-center py-3 summary-line-item">
                         <span class="summary-label">Payment Due Today</span>
                         <span id="summarySinglePayment" class="text-lg font-bold summary-value">$3,600</span>
@@ -1259,7 +1262,7 @@
                 </div>
                 <div class="flex items-center gap-1.5 rounded bg-black/70 px-2 py-1">
                     <label for="accountManagerCheck" class="text-xs text-white cursor-pointer">Account Manager</label>
-                    <input id="accountManagerCheck" type="checkbox" class="h-3 w-3 align-middle" title="Enable Account Manager mode" aria-label="Enable Account Manager mode" />
+                    <input id="accountManagerCheck" type="checkbox" class="h-3 w-3 align-middle" title="Enable Account Manager mode" aria-label="Enable Account Manager mode" checked />
                 </div>
                 <span id="quoteToolsChevron" class="transition-transform">▾</span>
             </div>
@@ -1484,6 +1487,7 @@
             const summaryBigTotalLabel = document.getElementById('summaryBigTotalLabel');
             const paymentDueTodayRow = document.getElementById('paymentDueTodayRow');
             const oneTimeChargesRow = document.getElementById('oneTimeChargesRow');
+            const accountManagerBreakdown = document.getElementById('accountManagerBreakdown');
 
             // Persisted preference: hide/show the "Switch to" prompt
             const SWITCH_HIDE_KEY = 'hideSwitchPrompt';
@@ -1503,9 +1507,10 @@
             hideSwitchPromptCheck?.addEventListener('click', (e) => { e.stopPropagation(); });
             
             // Account Manager mode toggle
-            let accountManagerMode = false;
-            accountManagerCheck?.addEventListener('change', (e) => {
-                accountManagerMode = e.target.checked;
+            let accountManagerMode = true; // Default to true
+            if (accountManagerCheck) accountManagerCheck.checked = true;
+
+            const updateAccountManagerMode = () => {
                 if (accountManagerInputRow) {
                     accountManagerInputRow.classList.toggle('hidden', !accountManagerMode);
                 }
@@ -1522,6 +1527,14 @@
                 }
                 
                 calculateAndRender();
+            };
+
+            // Initialize default state
+            updateAccountManagerMode();
+
+            accountManagerCheck?.addEventListener('change', (e) => {
+                accountManagerMode = e.target.checked;
+                updateAccountManagerMode();
             });
             accountManagerCheck?.addEventListener('click', (e) => { e.stopPropagation(); });
             
@@ -2393,6 +2406,76 @@
                         summaryBigTotal.className = 'summary-total-lg';
                         if (summaryBigTotalLabel) summaryBigTotalLabel.classList.add('hidden');
                         newTotalRow.classList.add('hidden');
+                    }
+
+                    // Populate Account Manager Breakdown
+                    if (accountManagerMode && accountManagerBreakdown) {
+                        accountManagerBreakdown.innerHTML = '';
+                        accountManagerBreakdown.classList.remove('hidden');
+                        
+                        const createItem = (label, amount) => {
+                            const div = document.createElement('div');
+                            div.className = 'flex justify-between items-center text-slate-400';
+                            div.innerHTML = `<span>${label}</span><span>${formatCurrency(amount)}</span>`;
+                            return div;
+                        };
+                        
+                        // 1. Base Plan
+                        accountManagerBreakdown.appendChild(createItem(`${tierData.name} Plan (${userCount} users)`, baseCost));
+                        
+                        // 2. Add-ons
+                        document.querySelectorAll('.addon-checkbox').forEach(checkbox => {
+                            if (!checkbox.checked) return;
+                            const key = checkbox.dataset.key;
+                            const addon = pricing.addons[key];
+                            const volume = parseInt(document.getElementById(`${key}_volume`)?.value || 0);
+                            
+                            if (volume > 0) {
+                                let cost = getAddonPrice(key, volume);
+                                // For recurring addons, if Annual billing is selected, show the Annual Cost instead of Monthly
+                                if (isAnnual && (addon.is_user_based || key === 'smart_intake' || key === 'engagements')) {
+                                    cost *= 12;
+                                }
+                                
+                                let label = addon.name;
+                                if (key === 'smart_intake' || key === 'engagements') {
+                                    label += ` x ${volume} credits`;
+                                } else {
+                                    label += ` x ${volume}`;
+                                }
+                                
+                                accountManagerBreakdown.appendChild(createItem(label, cost));
+                            }
+                        });
+                        
+                        // 3. Data Migration
+                        const selectedMigrations = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'));
+                        selectedMigrations.forEach(checkbox => {
+                             const optionKey = checkbox.value;
+                             const option = pricing.data_migration_options[optionKey];
+                             let fee = 0;
+                             if (option.price !== undefined) fee = option.price;
+                             else if (option.base_price !== undefined) {
+                                 const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
+                                  if (clientCount > 0) {
+                                    fee = option.base_price;
+                                    if (clientCount > option.base_clients) {
+                                        fee += (clientCount - option.base_clients) * option.additional_client_rate;
+                                    }
+                                  }
+                             }
+                             if (fee > 0) {
+                                 accountManagerBreakdown.appendChild(createItem(`Migration: ${option.name}`, fee));
+                             }
+                        });
+
+                        // 4. Implementation
+                        if (finalImplFee > 0) {
+                             accountManagerBreakdown.appendChild(createItem('Implementation', finalImplFee));
+                        }
+                        
+                    } else if (accountManagerBreakdown) {
+                        accountManagerBreakdown.classList.add('hidden');
                     }
                     
                     // Update switch prompt

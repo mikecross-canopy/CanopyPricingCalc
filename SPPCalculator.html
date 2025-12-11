@@ -2259,10 +2259,14 @@
                     // Update Per Month / Annual Cost row based on billing cycle
                     const summaryPerMonthLabel = document.getElementById('summaryPerMonthLabel');
                     if (isAnnual) {
-                        if (summaryPerMonthLabel) summaryPerMonthLabel.textContent = 'Per Month';
+                        if (summaryPerMonthLabel) {
+                             summaryPerMonthLabel.textContent = accountManagerMode ? 'New Total Per Month' : 'Per Month';
+                        }
                         summaryPerMonth.textContent = formatCurrency(subscriptionMonthlyTotal);
                     } else {
-                        if (summaryPerMonthLabel) summaryPerMonthLabel.textContent = 'Annual Cost';
+                        if (summaryPerMonthLabel) {
+                             summaryPerMonthLabel.textContent = accountManagerMode ? 'New Total Annual Cost' : 'Annual Cost';
+                        }
                         summaryPerMonth.textContent = formatCurrency(subscriptionAnnualEquiv);
                     }
                     
@@ -3036,7 +3040,9 @@
                     stateUpdater();
                     activeBtn.classList.add('active');
                     inactiveBtn.classList.remove('active');
-                    manualImplFeeSet = false;
+                    if (!accountManagerMode) {
+                        manualImplFeeSet = false;
+                    }
                     renderAddons(); // Re-render add-ons to update labels
                     calculateAndRender();
                 };

@@ -2160,7 +2160,12 @@
                         // Update total display for this add-on
                         const totalEl = document.getElementById(`${key}_total`);
                         if (totalEl) {
-                            totalEl.textContent = formatCurrency(addonCost);
+                            let displayCost = addonCost;
+                            // For recurring addons, if Annual billing is selected, show the Annual Cost instead of Monthly
+                            if (isAnnual && (addon.is_user_based || key === 'smart_intake' || key === 'engagements')) {
+                                displayCost = addonCost * 12;
+                            }
+                            totalEl.textContent = formatCurrency(displayCost);
                         }
                     });
                     

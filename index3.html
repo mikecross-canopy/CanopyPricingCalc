@@ -858,6 +858,16 @@
                     workflow: { name: "Workflow", base_price: { standard: 35, pro: 45 } },
                     time_bill: { name: "Time & Billing", base_price: { standard: 25, pro: 35 } },
                     tax_res: { name: "Tax Resolution", annual_price_per_user: 600, monthly_price_per_user: 60, no_discount: true },
+                    smart_intake: {
+                        name: "Smart Intake",
+                        type: "volume",
+                        pricing_tiers: [
+                            { max_volume: 249, price_annual: 22, price_monthly: 26 },
+                            { max_volume: 999, price_annual: 18, price_monthly: 22 },
+                            { max_volume: 2999, price_annual: 14, price_monthly: 17 },
+                            { max_volume: Infinity, price_annual: 11, price_monthly: 13 }
+                        ]
+                    }
                 },
                 module_discounts: [
                     { max_users: 3, discount: 0 },
@@ -1072,7 +1082,8 @@
                         'doc_manage': 'Document Management',
                         'workflow': 'Workflow',
                         'time_bill': 'Time & Billing',
-                        'tax_res': 'Tax Resolution'
+                        'tax_res': 'Tax Resolution',
+                        'smart_intake': 'Smart Intake'
                     };
                     document.querySelectorAll('.module-user-input').forEach(input => {
                         const key = input.dataset.key;
@@ -1303,29 +1314,116 @@
                     const div = document.createElement('div');
                     div.className = 'pricing-item';
                     
-                    let initialPrice = module.base_price;
-                    if (typeof initialPrice === 'object' && initialPrice !== null) {
-                        initialPrice = isProTier ? initialPrice.pro : initialPrice.standard;
-                    }
-                    const perUserPrice = module.no_discount ? formatCurrency(module.monthly_price_per_user, 2) : formatCurrency(initialPrice, 2);
+                    if (module.type === 'volume') {
+                        // Special rendering for Smart Intake (Volume based)
+                        const aiGradient = key === 'smart_intake' ? 'bg-gradient-to-r from-purple-50 to-blue-50' : '';
+                        // Removed AI icon as requested
+                        const aiIcon = ''; 
+                        const aiLabel = key === 'smart_intake' ? '<span class="text-xs font-semibold text-purple-600 ml-1">AI-Powered</span>' : '';
+                        const isSmartIntake = key === 'smart_intake';
+                        
+                        // Build pricing tooltip
+                        let pricingTooltip = '';
+                        if (module.pricing_tiers) {
+                            let prevMax = 0;
+                            pricingTooltip = '<div class="font-bold mb-1 border-b border-slate-600 pb-1">Pricing Tiers (Annual / Monthly)</div>';
+                            module.pricing_tiers.forEach(t => {
+                                const min = prevMax + 1;
+                                const range = t.max_volume === Infinity ? `${min}+` : `${min}-${t.max_volume}`;
+                                pricingTooltip += `<div class="flex justify-between gap-3"><span>${range}:</span> <span>$${t.price_annual} / $${t.price_monthly}</span></div>`;
+                                prevMax = t.max_volume;
+                            });
+                        }
 
-                    div.innerHTML = `
-                        <div>
-                            <h4 class="font-bold item-label">${module.name}</h4>
-                            <p id="${key}_sublabel" class="text-xs item-sublabel">${perUserPrice} / user / month</p>
-                        </div>
-                        <div class="item-input-container">
-                            <label class="input-label text-xs block mb-1">Users</label>
-                            <input type="number" id="${key}_users" value="0" min="0" data-key="${key}" class="item-input module-user-input">
-                        </div>
-                        <div class="item-value">
-                            <p class="input-label text-xs block mb-1">Total</p>
-                            <p id="${key}_total" class="font-bold text-base">$0</p>
-                        </div>
-                    `;
+                        div.innerHTML = `
+                            <div class="${aiGradient} ${isSmartIntake ? 'p-2 rounded-lg -ml-2' : ''}">
+                                <div class="flex items-center space-x-2">
+                                    <div>
+                                        <h4 class="font-bold item-label flex items-center">
+                                            ${aiIcon}${module.name}${aiLabel}
+                                            <div class="group relative ml-2 inline-block">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 hover:text-slate-600 cursor-help"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                                <div class="pointer-events-none absolute top-full left-0 mt-1 w-max rounded bg-slate-800 p-2 text-[10px] text-white opacity-0 shadow-lg group-hover:opacity-100 z-50">
+                                                    ${pricingTooltip}
+                                                </div>
+                                            </div>
+                                        </h4>
+                                        <p id="${key}_sublabel" class="text-xs item-sublabel">Sold in bundles of 25</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="number" id="${key}_override" placeholder="" min="0" step="0.01" data-key="${key}" class="item-input module-override-input text-xs h-7 w-14 bg-white/90 border-gray-300">
+                                </div>
+                            </div>
+                            <div class="item-input-container">
+                                <label class="input-label text-xs block mb-1">Volume</label>
+                                <input type="number" id="${key}_users" value="0" min="0" step="25" data-key="${key}" class="item-input module-user-input">
+                            </div>
+                            <div class="item-value">
+                                <p class="input-label text-xs block mb-1">Total</p>
+                                <p id="${key}_total" class="font-bold text-base">$0</p>
+                            </div>
+                        `;
+                    } else {
+                        let initialPrice = module.base_price;
+                        if (typeof initialPrice === 'object' && initialPrice !== null) {
+                            initialPrice = isProTier ? initialPrice.pro : initialPrice.standard;
+                        }
+                        const perUserPrice = module.no_discount ? formatCurrency(module.monthly_price_per_user, 2) : formatCurrency(initialPrice, 2);
+
+                        div.innerHTML = `
+                            <div>
+                                <h4 class="font-bold item-label">${module.name}</h4>
+                                <p id="${key}_sublabel" class="text-xs item-sublabel">${perUserPrice} / user / month</p>
+                            </div>
+                            <div class="item-input-container">
+                                <label class="input-label text-xs block mb-1">Users</label>
+                                <input type="number" id="${key}_users" value="0" min="0" data-key="${key}" class="item-input module-user-input">
+                            </div>
+                            <div class="item-value">
+                                <p class="input-label text-xs block mb-1">Total</p>
+                                <p id="${key}_total" class="font-bold text-base">$0</p>
+                            </div>
+                        `;
+                    }
                     modulesContainer.appendChild(div);
                 }
-                document.querySelectorAll('.module-user-input').forEach(input => input.addEventListener('input', calculateAndRender));
+                
+                document.querySelectorAll('.module-user-input').forEach(input => {
+                    input.addEventListener('input', calculateAndRender);
+                    // Round volume inputs on blur
+                    if (input.step === "25") {
+                        input.addEventListener('blur', (e) => {
+                            let value = parseInt(e.target.value) || 0;
+                            if (value > 0) {
+                                value = Math.round(value / 25) * 25;
+                                if (value === 0) value = 25; // minimum 25 if they typed something non-zero
+                                e.target.value = value;
+                                calculateAndRender();
+                            }
+                        });
+                    }
+                });
+                
+                document.querySelectorAll('.module-override-input').forEach(input => {
+                    input.addEventListener('input', calculateAndRender);
+                });
+                
+                document.querySelectorAll('.module-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const key = e.target.dataset.key;
+                        const input = document.getElementById(`${key}_users`);
+                        if (input) {
+                            input.disabled = !e.target.checked;
+                            if (!e.target.checked) {
+                                input.value = 0;
+                            } else if (parseInt(input.value) === 0) {
+                                input.value = 25;
+                            }
+                            calculateAndRender();
+                        }
+                    });
+                });
             }
 
             function getModuleDiscount(userCount) {
@@ -1339,76 +1437,195 @@
                     const ceData = pricing.base_client_engagement[ceTierKey];
                     
                     const additionalClients = parseInt(additionalClientsInput.value) || 0;
-                    const additionalClientsAnnualCost = additionalClients * pricing.additional_client_rate * 12;
-
-                    let totalAnnualSubscriptionEquiv = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
                     
+                    // Initialize totals for Annual and Monthly billing modes (Before Discount)
+                    // These represent the ANNUALIZED cost (Annual Mode) and MONTHLY cost (Monthly Mode)
+                    let annualModeAnnualCost = 0; // Cost per year if billed Annually
+                    let monthlyModeMonthlyCost = 0; // Cost per month if billed Monthly
+                    
+                    // 1. Base Platform Cost
+                    // Annual Mode: (MonthlyRate * 12) + (AddClientRate * 12)
+                    const ceAnnualBase = (ceData.monthly_rate * 12) + (additionalClients * pricing.additional_client_rate * 12);
+                    annualModeAnnualCost += ceAnnualBase;
+                    
+                    // Monthly Mode: (MonthlyRate * Premium) + (AddClientRate * Premium)
+                    // Note: additional_client_rate is a monthly rate.
+                    const ceMonthlyBase = (ceData.monthly_rate * pricing.monthly_premium_factor) + (additionalClients * pricing.additional_client_rate * pricing.monthly_premium_factor);
+                    monthlyModeMonthlyCost += ceMonthlyBase;
+
+                    // Update Base Platform UI
+                    const ceDisplayMonthly = isAnnual ? ceData.monthly_rate : (ceData.monthly_rate * pricing.monthly_premium_factor);
+                    ceTitle.textContent = ceData.name;
+                    ceSublabel.textContent = `${formatCurrency(ceDisplayMonthly)} ${ceData.description}`;
+                    // Total for this line item
+                    const ceLineTotal = isAnnual ? ceAnnualBase : ceMonthlyBase;
+                    ceTotal.textContent = isAnnual ? `${formatCurrency(ceLineTotal)}/yr` : `${formatCurrency(ceLineTotal)}/mo`;
+                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total';
+                    
+                    
+                    // 2. Modules Cost
                     document.querySelectorAll('.module-user-input').forEach(input => {
                         const moduleKey = input.dataset.key;
                         const userCount = parseInt(input.value) || 0;
                         const module = pricing.modules[moduleKey];
-                        let moduleAnnualCost = 0;
-                        let displayPricePerUser = 0;
-
-                        if (module.no_discount) {
-                            moduleAnnualCost = module.annual_price_per_user * userCount;
-                            // Show the correct per-user rate based on billing cycle
-                            displayPricePerUser = isAnnual ? (module.annual_price_per_user / 12) : module.monthly_price_per_user;
+                        
+                        let modAnnualCost = 0; // Cost per year if Annual
+                        let modMonthlyCost = 0; // Cost per month if Monthly
+                        let displaySublabel = "";
+                        
+                        if (module.type === 'volume') {
+                             // Smart Intake (Volume based)
+                             if (userCount > 0) {
+                                 // Find tier based on raw user count (or billable? Usually based on raw, but here volume buckets map to credits)
+                                 // The table says "Credit Tier". Usually this is the volume you buy.
+                                 // Let's use the billable volume for tier lookup to be safe, or raw?
+                                 // Usually tier is based on total volume. 
+                                 // Let's calculate billable volume first.
+                                 const billableVolume = Math.ceil(userCount / 25) * 25;
+                                 
+                                 let tier = module.pricing_tiers[0];
+                                 for (const t of module.pricing_tiers) {
+                                     if (billableVolume <= t.max_volume) {
+                                         tier = t;
+                                         break;
+                                     }
+                                     tier = t;
+                                 }
+                                 
+                                 // Annual Mode: BillableVolume * AnnualPricePerCredit
+                                 // Check for override
+                                 const overrideInput = document.getElementById(`${moduleKey}_override`);
+                                 const overridePrice = overrideInput && overrideInput.value ? parseFloat(overrideInput.value) : null;
+                                 
+                                 const annualPricePerCredit = overridePrice !== null ? overridePrice : tier.price_annual;
+                                 
+                                 modAnnualCost = billableVolume * annualPricePerCredit;
+                                 
+                                 // Monthly Mode: (BillableVolume * MonthlyPricePerCredit) / 12
+                                 // If override is present, assume it overrides the Annual Price Per Credit. 
+                                 // For monthly mode, we should ideally have a separate monthly override or assume the same relationship?
+                                 // Or maybe the user enters the "Unit Price" which applies to the current billing mode?
+                                 // "adjust the per-price unit for each Smart Intake" - usually unit price is quoted annually per unit.
+                                 // If I override to $20, that is the $20/unit/year.
+                                 // So monthly cost would be ($20 * volume) / 12? 
+                                 // Or if the user wants to override the Monthly Unit Price ($26 -> $24)?
+                                 // Let's assume the override sets the ANNUAL price per unit, as that's the primary metric.
+                                 // And for monthly, we calculate relative to that or just use it?
+                                 // Given the request doesn't specify, and Annual is default, let's use override as the Annual Price.
+                                 // For Monthly mode derived from override: 
+                                 // If override is provided, we don't have a "Monthly Override". 
+                                 // Let's assume the override IS the price for the current mode?
+                                 // No, that's confusing if they switch toggles.
+                                 // Let's assume override is the ANNUAL price per unit.
+                                 // If they are on monthly, we need a monthly equivalent.
+                                 // Standard tier relationship: Monthly = Annual * (26/22) approx?
+                                 // Or just (Override / 12) * 1.2? 
+                                 // Or just use the override as the base for everything.
+                                 // Let's stick to: Override = Annual Price Per Credit.
+                                 // Monthly Cost = (Override * BillableVolume) / 12 * (PriceMonthly/PriceAnnual ratio)?
+                                 // Simpler: If override is set, use it for Annual. For Monthly, use Override * (tier.price_monthly / tier.price_annual).
+                                 
+                                 if (overridePrice !== null) {
+                                     modAnnualCost = billableVolume * overridePrice;
+                                     // Estimate monthly rate based on ratio of standard pricing
+                                     const ratio = tier.price_monthly / tier.price_annual; 
+                                     // If tier.price_annual is 0 (unlikely), fallback to 1.2
+                                     const safeRatio = tier.price_annual ? ratio : 1.2;
+                                     const derivedMonthlyPrice = overridePrice * safeRatio;
+                                     
+                                     modMonthlyCost = (billableVolume * derivedMonthlyPrice) / 12;
+                                     
+                                     displaySublabel = `Custom Price: ${formatCurrency(overridePrice)}/unit`;
+                                 } else {
+                                     modAnnualCost = billableVolume * tier.price_annual;
+                                     modMonthlyCost = (billableVolume * tier.price_monthly) / 12;
+                                     displaySublabel = `Sold in bundles of 25`;
+                                 }
+                                 
+                             } else {
+                                 displaySublabel = `Sold in bundles of 25`;
+                             }
+                        } else if (module.no_discount) {
+                             // Tax Resolution (User based, no volume discount)
+                             modAnnualCost = module.annual_price_per_user * userCount;
+                             modMonthlyCost = module.monthly_price_per_user * userCount;
+                             
+                             const rate = isAnnual ? (module.annual_price_per_user / 12) : module.monthly_price_per_user;
+                             displaySublabel = `${formatCurrency(rate)} / user / month`;
                         } else {
-                            let basePrice = module.base_price;
-                            if (typeof basePrice === 'object' && basePrice !== null) {
-                                basePrice = isProTier ? basePrice.pro : basePrice.standard;
-                            }
-                            const discount = getModuleDiscount(userCount);
-                            const discountedPricePerUser = basePrice * (1 - discount);
-                            moduleAnnualCost = discountedPricePerUser * userCount * 12;
-                            displayPricePerUser = discountedPricePerUser;
-                            
-                            // Apply monthly premium if on monthly billing
-                            if (!isAnnual) {
-                                displayPricePerUser *= pricing.monthly_premium_factor;
-                            }
+                             // Standard Modules (User based, volume discount)
+                             let basePrice = module.base_price;
+                             if (typeof basePrice === 'object' && basePrice !== null) {
+                                 basePrice = isProTier ? basePrice.pro : basePrice.standard;
+                             }
+                             
+                             const discount = getModuleDiscount(userCount);
+                             const discountedBase = basePrice * (1 - discount);
+                             
+                             // Annual Mode
+                             modAnnualCost = discountedBase * userCount * 12;
+                             
+                             // Monthly Mode (apply premium)
+                             modMonthlyCost = (discountedBase * pricing.monthly_premium_factor) * userCount;
+                             
+                             const rate = isAnnual ? discountedBase : (discountedBase * pricing.monthly_premium_factor);
+                             displaySublabel = `${formatCurrency(rate, 2)} / user / month`;
                         }
                         
-                        totalAnnualSubscriptionEquiv += moduleAnnualCost;
-                        document.getElementById(`${moduleKey}_sublabel`).textContent = `${formatCurrency(displayPricePerUser, 2)} / user / month`;
-                        const monthlyModuleCost = moduleAnnualCost / 12;
-                        let displayPrice = isAnnual ? moduleAnnualCost : monthlyModuleCost;
+                        // Add to totals
+                        annualModeAnnualCost += modAnnualCost;
+                        monthlyModeMonthlyCost += modMonthlyCost;
                         
-                        if (!isAnnual && !module.no_discount) {
-                             displayPrice *= pricing.monthly_premium_factor;
-                        } else if (!isAnnual && module.no_discount) {
-                            displayPrice = module.monthly_price_per_user * userCount;
-                        }
-                        document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(displayPrice) + (isAnnual ? '/yr' : '/mo');
+                        // Update Module UI
+                        document.getElementById(`${moduleKey}_sublabel`).textContent = displaySublabel;
+                        const modLineTotal = isAnnual ? modAnnualCost : modMonthlyCost;
+                        document.getElementById(`${moduleKey}_total`).textContent = formatCurrency(modLineTotal) + (isAnnual ? '/yr' : '/mo');
                     });
 
+                    // 3. Discounts
                     const discountPercent = parseFloat(aeDiscountInput.value) || 0;
-                    const totalBeforeDiscount = totalAnnualSubscriptionEquiv;
+                    
+                    // Calculate Discount Amounts
+                    // We calculate what the total would be if we switched modes, for the "Switch" prompt
+                    let finalAnnualBill = annualModeAnnualCost;
+                    let finalMonthlyBill = monthlyModeMonthlyCost;
+                    
                     if (discountPercent > 0) {
-                        totalAnnualSubscriptionEquiv *= (1 - (discountPercent / 100));
+                        finalAnnualBill *= (1 - (discountPercent / 100));
+                        finalMonthlyBill *= (1 - (discountPercent / 100));
                     }
                     
-                    const implementationBase = isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * pricing.monthly_premium_factor;
+                    // 4. Implementation Fee
+                    // Base is the Annual Contract Value (Discounted)
+                    // If Monthly, annualized monthly cost? Or just the Annual Mode cost scaled?
+                    // Previous logic: "isAnnual ? totalAnnualSubscriptionEquiv : totalAnnualSubscriptionEquiv * premium"
+                    // This implies Impl Fee is based on the "Annual Equivalent" of the plan.
+                    
+                    let implementationBase;
+                    if (isAnnual) {
+                        implementationBase = finalAnnualBill;
+                    } else {
+                        // If monthly, the base is usually the Annualized Monthly bill?
+                        // Or the Annual Cost * Premium?
+                        // Let's use Annualized Monthly Bill (finalMonthlyBill * 12)
+                        implementationBase = finalMonthlyBill * 12;
+                    }
 
                     const isPremiumChecked = premiumOnboardingCheck.checked;
                     const implementationPercent = isPremiumChecked 
                         ? pricing.implementation_premium_percent
                         : pricing.implementation_standard_percent;
                     
-                    // Calculate migration fees from multiple selections
+                    // 5. Data Migration
                     let migrationFee = 0;
                     const selectedOptions = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked'))
                         .map(checkbox => checkbox.value);
                     
                     selectedOptions.forEach(optionKey => {
                         const option = pricing.data_migration_options[optionKey];
-                        
                         if (option.price !== undefined) {
-                            // Fixed price option
                             migrationFee += option.price;
                         } else if (option.base_price !== undefined) {
-                            // Tiered pricing (FileCabinet)
                             const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
                             if (clientCount > 0) {
                                 let optionFee = option.base_price;
@@ -1421,6 +1638,7 @@
                         }
                     });
                     
+                    // Calculate Final Impl Fee
                     let percentageBasedFee = implementationBase * implementationPercent;
                     let calculatedImplFee = Math.max(percentageBasedFee, pricing.implementation_minimum_fee);
                     
@@ -1434,46 +1652,65 @@
                     
                     let totalOneTimeCharges = finalImplFee + migrationFee;
 
-                    const currentMonthlyTotal = totalAnnualSubscriptionEquiv / 12 * (isAnnual ? 1 : pricing.monthly_premium_factor);
-                    const currentAnnualTotal = totalAnnualSubscriptionEquiv;
-
-                    const displayedMonthlyRate = isAnnual ? ceData.monthly_rate : ceData.monthly_rate * pricing.monthly_premium_factor;
-                    const ceBaseAnnual = ceData.monthly_rate * 12 + additionalClientsAnnualCost;
-                    const ceBaseMonthly = (ceData.monthly_rate * pricing.monthly_premium_factor) + (additionalClientsAnnualCost / 12 * pricing.monthly_premium_factor);
-
-                    ceTitle.textContent = ceData.name;
-                    ceSublabel.textContent = `${formatCurrency(displayedMonthlyRate)} ${ceData.description}`;
-                    ceTotal.textContent = isAnnual ? `${formatCurrency(ceBaseAnnual)}/yr` : `${formatCurrency(ceBaseMonthly)}/mo`;
-                    ceTotalLabel.textContent = isAnnual ? 'Annual Total' : 'Monthly Total';
-
-
-                    summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
+                    // 6. Final Summary Display
+                    const currentBill = isAnnual ? finalAnnualBill : finalMonthlyBill;
+                    
+                    summaryBigTotal.textContent = formatCurrency(currentBill);
                     summaryOneTime.textContent = formatCurrency(totalOneTimeCharges);
 
+                    // Discount Row
                     if (discountPercent > 0) {
                         summaryDiscountRow.classList.remove('hidden');
-                        const discountAmount = totalBeforeDiscount - totalAnnualSubscriptionEquiv;
-                        const discountAmountDisplay = isAnnual ? discountAmount : discountAmount / 12 * pricing.monthly_premium_factor;
-                        summaryDiscount.textContent = `${formatCurrency(discountAmountDisplay)} (${discountPercent}%)`;
+                        const originalBill = isAnnual ? annualModeAnnualCost : monthlyModeMonthlyCost;
+                        const discountAmount = originalBill - currentBill;
+                        summaryDiscount.textContent = `${formatCurrency(discountAmount)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
                     }
                     
-                    const paymentDueToday = isAnnual ? currentAnnualTotal + totalOneTimeCharges : currentMonthlyTotal + totalOneTimeCharges;
+                    // Payment Due Today
+                    const paymentDueToday = isAnnual ? (currentBill + totalOneTimeCharges) : (currentBill + totalOneTimeCharges);
                     summarySinglePayment.textContent = formatCurrency(paymentDueToday);
                     
-                    // Respect user preference for showing the switch prompt
+                    // Switch Prompt
                     summarySwitchLink.style.display = hideSwitchPrompt ? 'none' : 'block';
 
                     if (isAnnual) {
-                        summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
+                        summaryPerMonth.textContent = formatCurrency(currentBill / 12);
                         summarySwitchText.textContent = 'OR SWITCH TO MONTHLY!';
-                        const switchToMonthlyPrice = totalAnnualSubscriptionEquiv / 12 * pricing.monthly_premium_factor;
-                        summarySwitchPrice.textContent = formatCurrency(switchToMonthlyPrice);
+                        summarySwitchPrice.textContent = formatCurrency(finalMonthlyBill);
                     } else {
-                        summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal);
+                        summaryPerMonth.textContent = formatCurrency(currentBill * 12); // Annualized cost
+                        // Actually usually "Per Month" row shows the monthly cost.
+                        // If isAnnual (showing Annual Total), Per Month = Total / 12.
+                        // If !isAnnual (showing Monthly Total), Per Month = Total.
+                        // Wait, if I am monthly, the big number IS the monthly cost.
+                        // Do I show "Annual Cost" in the small row?
+                        // The label ID is implicitly 'summaryPerMonthLabel' but that element doesn't exist in index3 HTML shown?
+                        // Let's check HTML lines 711: <span class="summary-label">Per Month</span> <span id="summaryPerMonth">...</span>
+                        // If I am monthly, and Big Total is $200. "Per Month" $200 seems redundant.
+                        // Usually in Monthly mode, it might show "Annual Equivalent".
+                        // But looking at the code I replaced:
+                        // if (isAnnual) summaryPerMonth.textContent = ...
+                        // else summaryPerMonth.textContent = ...
+                        
+                        // Let's stick to:
+                        // If Annual: Show Per Month equivalent.
+                        // If Monthly: Show Annual Total equivalent? Or just repeat monthly?
+                        // Previous code:
+                        // if (isAnnual) summaryPerMonth.textContent = formatCurrency(currentAnnualTotal / 12);
+                        // else summaryPerMonth.textContent = formatCurrency(currentMonthlyTotal); 
+                        // Wait, if !isAnnual, summaryPerMonth shows the Monthly Total.
+                        // But the Big Total is ALSO the Monthly Total?
+                        // lines 1555: summaryBigTotal.textContent = formatCurrency(isAnnual ? currentAnnualTotal : currentMonthlyTotal);
+                        
+                        // So in Monthly mode, Big Total = Monthly Bill.
+                        // And Per Month row = Monthly Bill.
+                        // That's fine.
+                        summaryPerMonth.textContent = formatCurrency(finalMonthlyBill);
+                        
                         summarySwitchText.textContent = 'OR SWITCH TO ANNUAL!';
-                        summarySwitchPrice.textContent = formatCurrency(totalAnnualSubscriptionEquiv);
+                        summarySwitchPrice.textContent = formatCurrency(finalAnnualBill);
                     }
 
                 } catch (error) {

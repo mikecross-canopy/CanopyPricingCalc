@@ -509,12 +509,14 @@
 
         /* === SUMMARY CARD STYLING === */
         .summary-total-lg { 
-            font-size: 4rem; 
+            font-size: 3.25rem; 
             font-weight: 900; 
             line-height: 1;
             color: #FFFFFF;
             text-shadow: 0 2px 20px rgba(11, 230, 199, 0.3);
-            letter-spacing: -0.02em;
+            letter-spacing: -0.01em;
+            padding: 0 0.5rem;
+            white-space: nowrap;
         }
         .summary-line-item { 
             border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
@@ -624,7 +626,7 @@
         .pdf-capture-mode .summary-card .text-center { margin-top: 0 !important; }
         
         .pdf-capture-mode .summary-total-lg {
-            font-size: 4rem !important;
+            font-size: 3.25rem !important;
             line-height: 1 !important;
         }
         
@@ -1519,7 +1521,7 @@
                 
                 // Set implementation fee to $0 when Account Manager mode is enabled
                 if (accountManagerMode && implementationFeeInput) {
-                    implementationFeeInput.value = '$0';
+                    implementationFeeInput.value = '$0.00';
                     manualImplFeeSet = true;
                 }
                 
@@ -1592,7 +1594,7 @@
                 }
             });
 
-            const formatCurrency = (num, decimals = 0) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
+            const formatCurrency = (num, decimals = 2) => `$${num.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}`;
             function escapeHtml(str = '') {
                 return String(str)
                     .replace(/&/g, '&amp;')
@@ -2138,7 +2140,7 @@
                         // Set summary to custom
                         summaryBigTotal.textContent = 'Custom';
                         summaryPerMonth.textContent = 'Custom';
-                        summaryOneTime.textContent = '$0';
+                        summaryOneTime.textContent = formatCurrency(0);
                         summarySinglePayment.textContent = 'Custom';
                         summaryDiscountRow.classList.add('hidden');
                         summarySwitchLink.style.display = 'none';

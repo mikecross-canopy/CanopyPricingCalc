@@ -592,6 +592,23 @@
         #quoteToolsPanel a { color: var(--brand-aqua) !important; }
         #quoteToolsPanel a:hover { text-decoration: underline; }
 
+        /* Manage Quotes modal */
+        #quotesModalPanel {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            touch-action: none;
+        }
+        #quotesModalHeader {
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        #quotesModalHeader.dragging {
+            cursor: grabbing;
+        }
+
     </style>
 </head>
 <body>
@@ -798,8 +815,8 @@
 
     <!-- Quotes Modal -->
     <div id="quotesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
-            <div class="flex items-center justify-between mb-3">
+        <div id="quotesModalPanel" class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4">
+            <div id="quotesModalHeader" class="flex items-center justify-between mb-3">
                 <h3 class="text-slate-900 font-bold">Saved Quotes</h3>
                 <div class="flex items-center gap-2">
                     <button id="closeQuotesModal" class="text-slate-500 hover:text-slate-800">✕</button>
@@ -947,6 +964,8 @@
             const importQuoteInput = document.getElementById('importQuoteInput');
             const saveStatusMsg = document.getElementById('saveStatusMsg');
             const quotesModal = document.getElementById('quotesModal');
+            const quotesModalPanel = document.getElementById('quotesModalPanel');
+            const quotesModalHeader = document.getElementById('quotesModalHeader');
             const closeQuotesModal = document.getElementById('closeQuotesModal');
             const quotesList = document.getElementById('quotesList');
             const timeRangeSelect = document.getElementById('timeRangeSelect');
@@ -962,6 +981,70 @@
             // Pagination state
             let quotesPage = 1; const QUOTES_PAGE_SIZE = 20;
             const selectedTags = new Set();
+
+            // Manage Quotes modal drag helpers
+            const MODAL_EDGE_PADDING = 16;
+            let modalDragActive = false;
+            let modalDragStart = { x: 0, y: 0 };
+            let modalPanelStart = { x: 0, y: 0 };
+
+            function clampModalPosition(left, top) {
+                if (!quotesModalPanel) return;
+                const panelWidth = quotesModalPanel.offsetWidth || quotesModalPanel.clientWidth || 0;
+                const panelHeight = quotesModalPanel.offsetHeight || quotesModalPanel.clientHeight || 0;
+                const maxLeft = Math.max(MODAL_EDGE_PADDING, window.innerWidth - panelWidth - MODAL_EDGE_PADDING);
+                const maxTop = Math.max(MODAL_EDGE_PADDING, window.innerHeight - panelHeight - MODAL_EDGE_PADDING);
+                const clampedLeft = Math.min(Math.max(left, MODAL_EDGE_PADDING), maxLeft);
+                const clampedTop = Math.min(Math.max(top, MODAL_EDGE_PADDING), maxTop);
+                quotesModalPanel.style.left = `${clampedLeft}px`;
+                quotesModalPanel.style.top = `${clampedTop}px`;
+                quotesModalPanel.style.transform = 'translate(0, 0)';
+            }
+
+            function centerQuotesModal() {
+                if (!quotesModalPanel) return;
+                const panelWidth = quotesModalPanel.offsetWidth || quotesModalPanel.clientWidth || 0;
+                const panelHeight = quotesModalPanel.offsetHeight || quotesModalPanel.clientHeight || 0;
+                const left = (window.innerWidth - panelWidth) / 2;
+                const top = (window.innerHeight - panelHeight) / 2;
+                clampModalPosition(left, top);
+            }
+
+            function ensureQuotesModalInView() {
+                if (!quotesModalPanel || quotesModal?.classList.contains('hidden')) return;
+                const rect = quotesModalPanel.getBoundingClientRect();
+                clampModalPosition(rect.left, rect.top);
+            }
+
+            function handleModalPointerDown(e) {
+                if (!quotesModalPanel || e.button !== 0) return;
+                modalDragActive = true;
+                modalDragStart = { x: e.clientX, y: e.clientY };
+                const rect = quotesModalPanel.getBoundingClientRect();
+                modalPanelStart = { x: rect.left, y: rect.top };
+                quotesModalHeader?.classList.add('dragging');
+                quotesModalHeader?.setPointerCapture?.(e.pointerId);
+            }
+
+            function handleModalPointerMove(e) {
+                if (!modalDragActive) return;
+                const deltaX = e.clientX - modalDragStart.x;
+                const deltaY = e.clientY - modalDragStart.y;
+                clampModalPosition(modalPanelStart.x + deltaX, modalPanelStart.y + deltaY);
+            }
+
+            function handleModalPointerUp(e) {
+                if (!modalDragActive) return;
+                modalDragActive = false;
+                quotesModalHeader?.classList.remove('dragging');
+                quotesModalHeader?.releasePointerCapture?.(e.pointerId);
+            }
+
+            quotesModalHeader?.addEventListener('pointerdown', handleModalPointerDown);
+            quotesModalHeader?.addEventListener('pointermove', handleModalPointerMove);
+            quotesModalHeader?.addEventListener('pointerup', handleModalPointerUp);
+            quotesModalHeader?.addEventListener('pointercancel', handleModalPointerUp);
+            window.addEventListener('resize', ensureQuotesModalInView);
 
             // Collapsible Quote Tools
             const quoteToolsToggle = document.getElementById('quoteToolsToggle');
@@ -2153,8 +2236,15 @@
                     alert('Save failed: ' + (err && err.message ? err.message : err));
                 }
             });
-            manageQuotesBtn?.addEventListener('click', () => { quotesModal?.classList.remove('hidden'); renderQuotesList(); });
-            closeQuotesModal?.addEventListener('click', () => quotesModal?.classList.add('hidden'));
+            manageQuotesBtn?.addEventListener('click', () => {
+                quotesModal?.classList.remove('hidden');
+                renderQuotesList();
+                requestAnimationFrame(() => centerQuotesModal());
+            });
+            closeQuotesModal?.addEventListener('click', () => {
+                quotesModal?.classList.add('hidden');
+                centerQuotesModal();
+            });
             const debouncedRender = debounce(() => { quotesPage = 1; renderQuotesList(); }, 250);
             searchQuoteInput?.addEventListener('input', debouncedRender);
             timeRangeSelect?.addEventListener('change', () => { quotesPage = 1; renderQuotesList(); });

@@ -207,6 +207,31 @@
             color: #000000 !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
         }
+        .discount-toggle {
+            background: rgba(248, 250, 252, 0.9);
+            border-radius: 9999px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            padding: 0.12rem;
+            gap: 0.1rem;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .discount-toggle button {
+            height: 28px;
+            padding: 0 12px;
+            font-size: 0.7rem;
+            border: none;
+            color: rgba(71, 85, 105, 0.75);
+            background: transparent;
+            box-shadow: none;
+            letter-spacing: 0.04em;
+        }
+        .discount-toggle button.active {
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #0F172A !important;
+            border: 1px solid rgba(15, 23, 42, 0.15) !important;
+            box-shadow: none !important;
+        }
         
         /* === LIQUID GLASS TIER BUTTONS (Apple-inspired) === */
         .tier-btn {
@@ -1190,10 +1215,14 @@
                             </div>
                         </div>
                         <div class="border-t border-slate-200 mt-4 pt-3">
-                            <div class="flex justify-end">
-                                 <div class="w-1/4">
-                                     <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
-                                 </div>
+                            <div class="flex justify-end items-center gap-3">
+                                <div class="billing-toggle discount-toggle">
+                                    <button type="button" id="discountDiffBtn" class="active">Diff</button>
+                                    <button type="button" id="discountTotalBtn">Total</button>
+                                </div>
+                                <div class="w-1/4">
+                                    <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1463,6 +1492,11 @@
             const aeDiscountInput = document.getElementById('aeDiscountInput');
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             
+            // Discount toggle elements
+            const discountDiffBtn = document.getElementById('discountDiffBtn');
+            const discountTotalBtn = document.getElementById('discountTotalBtn');
+            let discountOnDiff = true; // Default to "Diff" to match initial HTML state
+            
             const ceTitle = document.getElementById('ceTitle');
             const ceSublabel = document.getElementById('ceSublabel');
             const ceTotalLabel = document.getElementById('ceTotalLabel');
@@ -1535,6 +1569,25 @@
 
             // Initialize default state
             updateAccountManagerMode();
+            
+            // Discount toggle event listeners
+            discountDiffBtn?.addEventListener('click', () => {
+                if (!discountOnDiff) {
+                    discountOnDiff = true;
+                    discountDiffBtn.classList.add('active');
+                    discountTotalBtn.classList.remove('active');
+                    calculateAndRender();
+                }
+            });
+            
+            discountTotalBtn?.addEventListener('click', () => {
+                if (discountOnDiff) {
+                    discountOnDiff = false;
+                    discountTotalBtn.classList.add('active');
+                    discountDiffBtn.classList.remove('active');
+                    calculateAndRender();
+                }
+            });
 
             accountManagerCheck?.addEventListener('change', (e) => {
                 accountManagerMode = e.target.checked;
@@ -2195,11 +2248,52 @@
                     let finalMonthlyTotal = subscriptionMonthlyTotal;
                     let finalAnnualEquiv = subscriptionAnnualEquiv;
                     
-                    // In Account Manager mode, discount applies to difference, not total
-                    // We'll calculate this later after determining the difference
-                    if (discountPercent > 0 && !accountManagerMode) {
-                        finalMonthlyTotal *= (1 - (discountPercent / 100));
-                        finalAnnualEquiv *= (1 - (discountPercent / 100));
+                    // Apply discount based on toggle selection
+                    if (discountPercent > 0) {
+                        if (accountManagerMode) {
+                            // In Account Manager mode, discount behavior depends on toggle
+                            const currentMonthly = parseFloat(currentMonthlyInput?.value) || 0;
+                            const currentAnnual = parseFloat(currentAnnualInput?.value) || 0;
+                            
+                            if (currentMonthly > 0 || currentAnnual > 0) {
+                                let currentPrice = 0;
+                                let newPrice = 0;
+                                
+                                if (isAnnual) {
+                                    currentPrice = currentAnnual > 0 ? currentAnnual : currentMonthly * 12;
+                                    newPrice = subscriptionAnnualEquiv;
+                                } else {
+                                    currentPrice = currentMonthly > 0 ? currentMonthly : currentAnnual / 12;
+                                    newPrice = subscriptionMonthlyTotal;
+                                }
+                                
+                                if (discountOnDiff) {
+                                    // Discount on difference only
+                                    const difference = newPrice - currentPrice;
+                                    const discountAmount = difference * (discountPercent / 100);
+                                    
+                                    if (isAnnual) {
+                                        finalAnnualEquiv = currentPrice + (difference - discountAmount);
+                                        finalMonthlyTotal = finalAnnualEquiv / 12;
+                                    } else {
+                                        finalMonthlyTotal = currentPrice + (difference - discountAmount);
+                                        finalAnnualEquiv = finalMonthlyTotal * 12;
+                                    }
+                                } else {
+                                    // Discount on total new price
+                                    finalMonthlyTotal *= (1 - (discountPercent / 100));
+                                    finalAnnualEquiv *= (1 - (discountPercent / 100));
+                                }
+                            } else {
+                                // No current price, discount on total
+                                finalMonthlyTotal *= (1 - (discountPercent / 100));
+                                finalAnnualEquiv *= (1 - (discountPercent / 100));
+                            }
+                        } else {
+                            // Normal mode - always discount on total
+                            finalMonthlyTotal *= (1 - (discountPercent / 100));
+                            finalAnnualEquiv *= (1 - (discountPercent / 100));
+                        }
                     }
                     
                     // Calculate implementation fee
@@ -2287,7 +2381,6 @@
                         summaryDiscountRow.classList.remove('hidden');
                         let discountAmount = 0;
                         
-                        // In Account Manager mode, show discount on the difference
                         if (accountManagerMode && (currentMonthlyInput || currentAnnualInput)) {
                             const currentMonthly = parseFloat(currentMonthlyInput?.value) || 0;
                             const currentAnnual = parseFloat(currentAnnualInput?.value) || 0;
@@ -2304,8 +2397,21 @@
                                     newPrice = subscriptionMonthlyTotal;
                                 }
                                 
-                                const difference = newPrice - currentPrice;
-                                discountAmount = Math.abs(difference * (discountPercent / 100));
+                                if (discountOnDiff) {
+                                    // Show discount on difference
+                                    const difference = newPrice - currentPrice;
+                                    discountAmount = Math.abs(difference * (discountPercent / 100));
+                                } else {
+                                    // Show discount on total
+                                    discountAmount = isAnnual 
+                                        ? (subscriptionAnnualEquiv * (discountPercent / 100))
+                                        : (subscriptionMonthlyTotal * (discountPercent / 100));
+                                }
+                            } else {
+                                // No current price, show discount on total
+                                discountAmount = isAnnual 
+                                    ? (subscriptionAnnualEquiv * (discountPercent / 100))
+                                    : (subscriptionMonthlyTotal * (discountPercent / 100));
                             }
                         } else {
                             // Normal mode - discount on total
@@ -2356,12 +2462,19 @@
                         if (currentPrice > 0) {
                             difference = newPrice - currentPrice;
                             
-                            // Apply discount to the difference in Account Manager mode
+                            // Apply discount based on toggle selection in Account Manager mode
                             let discountedDifference = difference;
                             let discountedNewPrice = newPrice;
                             if (discountPercent > 0) {
-                                discountedDifference *= (1 - (discountPercent / 100));
-                                discountedNewPrice = currentPrice + discountedDifference;
+                                if (discountOnDiff) {
+                                    // Discount on difference only
+                                    discountedDifference *= (1 - (discountPercent / 100));
+                                    discountedNewPrice = currentPrice + discountedDifference;
+                                } else {
+                                    // Discount on total new price
+                                    discountedNewPrice = newPrice * (1 - (discountPercent / 100));
+                                    discountedDifference = discountedNewPrice - currentPrice;
+                                }
                                 
                                 // Update the final totals with discounted values
                                 if (isAnnual) {

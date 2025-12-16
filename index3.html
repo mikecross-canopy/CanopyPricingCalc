@@ -1420,6 +1420,292 @@
                     if (mount) mount.remove();
                 }
             }
+
+            async function generatePdfModern() {
+                try {
+                    if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
+                    const { jsPDF } = window.jspdf;
+
+                    const state = getCurrentState();
+                    const isAnnualTxt = state.isAnnual ? 'Annual' : 'Monthly';
+                    const tierTxt = state.isProTier ? 'Pro' : 'Standard';
+
+                    const quoteName = (quoteNameInput?.value || '').trim();
+                    const summaryTotal = document.getElementById('summaryBigTotal')?.textContent?.trim() || '';
+                    const perMonth = document.getElementById('summaryPerMonth')?.textContent?.trim() || '';
+                    const oneTime = document.getElementById('summaryOneTime')?.textContent?.trim() || '';
+                    const planTitle = document.getElementById('ceTitle')?.textContent?.trim() || 'Client Engagement Platform';
+                    const planSub = document.getElementById('ceSublabel')?.textContent?.trim() || '';
+
+                    const modules = [];
+                    const nameMap = {
+                        'doc_manage': 'Document Management',
+                        'workflow': 'Workflow',
+                        'time_bill': 'Time & Billing',
+                        'tax_res': 'Tax Resolution',
+                        'smart_intake': 'Smart Intake'
+                    };
+                    document.querySelectorAll('.module-user-input').forEach(input => {
+                        const key = input.dataset.key;
+                        const rawLabel = document.getElementById(`${key}_name`)?.textContent?.trim() || key;
+                        const label = nameMap[key] || rawLabel;
+                        const users = parseInt(input.value) || 0;
+                        const total = document.getElementById(`${key}_total`)?.textContent?.trim() || '';
+                        if (users > 0 || total) modules.push({ label, users, total });
+                    });
+
+                    const migrations = Array.from(document.querySelectorAll('#dataMigrationDropdown input[type="checkbox"]:checked')).map(cb => {
+                        const id = cb.value;
+                        const row = cb.closest('div');
+                        const text = row ? row.textContent.trim() : id;
+                        return text;
+                    });
+                    const implFeeText = document.getElementById('implementationFeeInput')?.value || '';
+
+                    const pdf = new jsPDF('p', 'pt', 'a4');
+                    const pageW = pdf.internal.pageSize.getWidth();
+                    const pageH = pdf.internal.pageSize.getHeight();
+                    const m = 48;
+                    const contentW = pageW - m * 2;
+                    const lineH = 14;
+
+                    const COLOR_TEXT = [15, 23, 42];
+                    const COLOR_MUTED = [100, 116, 139];
+                    const COLOR_BLUE = [43, 75, 255];
+                    const COLOR_BG = [248, 250, 252];
+                    const COLOR_CARD = [255, 255, 255];
+                    const COLOR_BORDER = [226, 232, 240];
+
+                    function setFont(size, style = 'normal') {
+                        pdf.setFont('helvetica', style);
+                        pdf.setFontSize(size);
+                    }
+                    function textWrap(text, x, y, maxW, lh = lineH) {
+                        const lines = pdf.splitTextToSize(String(text || ''), maxW);
+                        pdf.text(lines, x, y);
+                        return y + (lines.length * lh);
+                    }
+                    function ensureSpace(y, needed) {
+                        if (y + needed <= pageH - m) return y;
+                        pdf.addPage();
+                        return drawPageChrome();
+                    }
+                    async function loadImageAsDataUrl(url) {
+                        try {
+                            const res = await fetch(url, { cache: 'force-cache' });
+                            if (!res.ok) return null;
+                            const blob = await res.blob();
+                            return await new Promise((resolve, reject) => {
+                                const r = new FileReader();
+                                r.onload = () => resolve(r.result);
+                                r.onerror = reject;
+                                r.readAsDataURL(blob);
+                            });
+                        } catch {
+                            return null;
+                        }
+                    }
+
+                    function drawPageChrome() {
+                        pdf.setFillColor(...COLOR_BG);
+                        pdf.rect(0, 0, pageW, pageH, 'F');
+                        return m;
+                    }
+
+                    function drawPill(x, y, text, opts = {}) {
+                        const padX = opts.padX ?? 10;
+                        const h = opts.h ?? 18;
+                        const radius = h / 2;
+                        const size = opts.size ?? 9;
+                        const fill = opts.fill ?? [240, 249, 255];
+                        const txt = opts.textColor ?? COLOR_TEXT;
+                        setFont(size, opts.bold ? 'bold' : 'normal');
+                        const w = pdf.getTextWidth(String(text || '')) + padX * 2;
+                        pdf.setFillColor(...fill);
+                        pdf.roundedRect(x, y, w, h, radius, radius, 'F');
+                        pdf.setTextColor(...txt);
+                        pdf.text(String(text || ''), x + padX, y + h - 6);
+                        return { w, h };
+                    }
+                    function drawSoftOrb(cx, cy, r, rgb) {
+                        pdf.setDrawColor(...rgb);
+                        pdf.setFillColor(...rgb);
+                        pdf.circle(cx, cy, r, 'F');
+                    }
+
+                    let y = drawPageChrome();
+
+                    drawSoftOrb(pageW * 0.88, 120, 95, [230, 238, 255]);
+                    drawSoftOrb(pageW * 0.18, 220, 120, [226, 252, 248]);
+
+                    const logoUrl = 'Canopy%20Just%20logo%20Black.png';
+                    const logoDataUrl = await loadImageAsDataUrl(logoUrl);
+                    if (logoDataUrl) {
+                        try {
+                            const props = pdf.getImageProperties(logoDataUrl);
+                            const targetH = 24;
+                            const targetW = (props.width / props.height) * targetH;
+                            pdf.addImage(logoDataUrl, 'PNG', m, y + 4, targetW, targetH);
+                        } catch {}
+                    }
+
+                    setFont(16, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Pricing Quote', m, y + 46);
+                    // Removed AI-Ready Quote pill
+
+                    setFont(10, 'normal');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    pdf.text(dateStr, pageW - m, y + 14, { align: 'right' });
+                    const metaTxt = `${isAnnualTxt} • ${tierTxt}`;
+                    pdf.text(metaTxt, pageW - m, y + 32, { align: 'right' });
+                    if (quoteName) pdf.text(quoteName, pageW - m, y + 50, { align: 'right' });
+
+                    y += 86;
+
+                    pdf.setDrawColor(...COLOR_BORDER);
+                    pdf.line(m, y, m + contentW, y);
+                    y += 18;
+
+                    pdf.setFillColor(...COLOR_CARD);
+                    pdf.setDrawColor(...COLOR_BORDER);
+                    pdf.roundedRect(m, y, contentW, 120, 14, 14, 'FD');
+                    pdf.setFillColor(238, 242, 255);
+                    pdf.roundedRect(m, y, contentW, 34, 14, 14, 'F');
+
+                    setFont(11, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Summary', m + 18, y + 22);
+
+                    setFont(24, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(summaryTotal || '-', m + 18, y + 66);
+
+                    setFont(10, 'normal');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text(state.isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 84);
+
+                    setFont(10, 'normal');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text('Per Month', m + 18, y + 104);
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(perMonth || '-', m + 110, y + 104);
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text('One-Time', m + 18, y + 118);
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(oneTime || '-', m + 110, y + 118);
+
+                    y += 120 + 22;
+
+                    // Configuration
+                    y = ensureSpace(y, 140);
+                    pdf.setFillColor(...COLOR_CARD);
+                    pdf.setDrawColor(...COLOR_BORDER);
+                    pdf.roundedRect(m, y, contentW, 0.1, 12, 12, 'S');
+                    setFont(12, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Configuration', m, y);
+                    y += 12;
+
+                    setFont(11, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(planTitle, m, y + 12);
+                    setFont(10, 'normal');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    if (planSub) y = textWrap(planSub, m, y + 28, contentW, 13);
+                    else y += 20;
+
+                    // Recurring items table
+                    y += 8;
+                    y = ensureSpace(y, 120);
+                    setFont(11, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Modules', m, y + 12);
+                    y += 34;
+
+                    const colItem = m;
+                    const colUsers = m + contentW - 150;
+                    const colTotal = m + contentW - 18;
+
+                    pdf.setFillColor(248, 250, 252);
+                    pdf.roundedRect(m, y - 16, contentW, 26, 10, 10, 'F');
+                    setFont(9, 'bold');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text('Item', colItem + 10, y);
+                    pdf.text('Qty', colUsers + 60, y, { align: 'right' });
+                    pdf.text('Total', colTotal, y, { align: 'right' });
+                    y += 16;
+
+                    if (!modules.length) {
+                        setFont(10, 'normal');
+                        pdf.setTextColor(...COLOR_MUTED);
+                        pdf.text('No modules selected.', m, y);
+                        y += 18;
+                    } else {
+                        for (let i = 0; i < modules.length; i++) {
+                            const row = modules[i];
+                            y = ensureSpace(y, 46);
+                            const itemLines = pdf.splitTextToSize(row.label, colUsers - colItem - 20);
+                            const rowH = Math.max(itemLines.length * 13, 14) + 14;
+                            if (i % 2 === 0) {
+                                pdf.setFillColor(250, 252, 255);
+                                pdf.roundedRect(m, y - 12, contentW, rowH, 8, 8, 'F');
+                            }
+
+                            setFont(10, 'normal');
+                            pdf.setTextColor(...COLOR_TEXT);
+                            pdf.text(itemLines, colItem + 10, y);
+
+                            pdf.setTextColor(...COLOR_MUTED);
+                            pdf.text(String(row.users ?? ''), colUsers + 60, y, { align: 'right' });
+
+                            pdf.setTextColor(...COLOR_TEXT);
+                            pdf.text(String(row.total ?? ''), colTotal, y, { align: 'right' });
+                            y += rowH;
+                        }
+                        y += 6;
+                    }
+
+                    // One-time items
+                    y = ensureSpace(y, 90);
+                    setFont(11, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Implementation & Migration', m, y + 12);
+                    y += 24;
+
+                    setFont(10, 'normal');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Implementation', m, y);
+                    pdf.text(implFeeText || '-', colTotal, y, { align: 'right' });
+                    y += 16;
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text('Data Migration', m, y);
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text(migrations.length ? `${migrations.length} item(s)` : 'None', colTotal, y, { align: 'right' });
+                    y += 14;
+                    if (migrations.length) {
+                        y += 4;
+                        setFont(9, 'normal');
+                        pdf.setTextColor(...COLOR_MUTED);
+                        y = textWrap(migrations.join(', '), m, y, contentW, 12);
+                    }
+
+                    // Footer note
+                    y = ensureSpace(y + 14, 80);
+                    setFont(9, 'normal');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions.', m, y + 16, contentW, 12);
+
+                    const date = new Date().toISOString().split('T')[0];
+                    const filenameBase = quoteName ? `Canopy-Quote-${quoteName}-${date}` : `Canopy-Quote-${date}`;
+                    const filename = `${safeFilename(filenameBase, 'Canopy-Quote')}.pdf`;
+                    pdf.save(filename);
+                } catch (err) {
+                    console.error('Modern PDF export failed:', err);
+                    alert('PDF export failed: ' + err.message);
+                }
+            }
             async function listVersions(id) {
                 if (db && currentUser) {
                     try {
@@ -2541,9 +2827,9 @@
             }
             aeDiscountInput.addEventListener('input', scheduleCalculateAndRender);
             downloadPdfBtn.addEventListener('click', (e) => {
-                // Default to new glass export. Hold Alt/Option for legacy export.
-                if (e && (e.altKey || e.metaKey)) { generatePdf(); }
-                else { generatePdfGlass(); }
+                // Default to modern vector PDF. Hold Alt/Option (or Cmd) for legacy glass export.
+                if (e && (e.altKey || e.metaKey)) { generatePdfGlass(); }
+                else { generatePdfModern(); }
             });
             
             populateDataMigrationOptions();

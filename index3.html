@@ -1999,6 +1999,41 @@
                 calculateAndRender();
             }
 
+            function renderQuotePreview(state) {
+                if (!state) return '';
+                const chips = [];
+                const billingLabel = state.isAnnual ? 'Annual' : 'Monthly';
+                const tierLabel = state.isProTier ? 'Pro' : 'Standard';
+                chips.push(`${billingLabel} • ${tierLabel}`);
+                const baselineClients = parseInt(additionalClientsInput?.value || 0);
+                const addl = typeof state.additionalClients === 'number' ? state.additionalClients : baselineClients;
+                if (!isNaN(addl) && addl > 0) {
+                    chips.push(`${addl} addl clients`);
+                }
+                const modules = Object.entries(state.modules || {}).filter(([, users]) => (users || 0) > 0);
+                if (modules.length) {
+                    const names = modules.slice(0, 2).map(([key]) => pricing.modules?.[key]?.name || key);
+                    let label = `Modules: ${names.join(', ')}`;
+                    if (modules.length > 2) label += ` +${modules.length - 2}`;
+                    chips.push(label);
+                }
+                const migrationsCount = (state.dataMigrations || []).length;
+                if (migrationsCount) {
+                    chips.push(`${migrationsCount} migration${migrationsCount === 1 ? '' : 's'}`);
+                }
+                const implFee = (state.implementationFee || '').trim();
+                if (implFee) {
+                    chips.push(`Impl ${implFee}`);
+                }
+                const discount = parseFloat(state.aeDiscount);
+                if (!isNaN(discount) && discount > 0) {
+                    chips.push(`${discount}% discount`);
+                }
+                return chips.length
+                    ? `<div class="mt-1 flex flex-wrap gap-1 text-[11px]">${chips.map(text => `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">${escapeHtml(text)}</span>`).join('')}</div>`
+                    : '';
+            }
+
             async function upsertQuote(name, folder, state, existingId = null, notes = '', pinned = false, tags = []) {
                 const doc = { id: existingId || makeId(), name, folder, state, notes, pinned: !!pinned, tags: tags || [], savedAt: Date.now() };
                 if (db && currentUser) {
@@ -2092,6 +2127,7 @@
                             <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
                             ${q.notes && q.notes.trim() ? `<div class=\"text-xs text-slate-600 truncate\" title=\"${escapeHtml(q.notes)}\">Notes: ${escapeHtml(q.notes)}</div>` : ''}
                             ${(q.tags && q.tags.length ? q.tags : parseTags(q.notes || '')).map(t => `<span class=\"inline-block text-[10px] px-1.5 py-0.5 mr-1 mt-1 rounded bg-slate-200 text-slate-700\">#${escapeHtml(t)}</span>`).join('')}
+                            ${renderQuotePreview(q.state)}
                         </div>
                         <div class="flex items-center gap-2">
                             <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>

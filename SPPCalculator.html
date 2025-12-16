@@ -2928,6 +2928,40 @@
                 calculateAndRender();
             }
 
+            function renderQuotePreview(state) {
+                if (!state) return '';
+                const chips = [];
+                const tierMap = { standard: 'Standard', plus: 'Plus', pro: 'Pro', premium: 'Premium' };
+                const tierLabel = tierMap[state.currentTier] || state.currentTier || (state.isProTier ? 'Plus' : 'Standard');
+                const billingLabel = state.isAnnual ? 'Annual' : 'Monthly';
+                chips.push(`${billingLabel} • ${tierLabel}`);
+                if (typeof state.userCount === 'number') {
+                    chips.push(`${state.userCount} users`);
+                }
+                const enabledAddons = Object.entries(state.addons || {}).filter(([, cfg]) => cfg?.enabled);
+                if (enabledAddons.length) {
+                    const names = enabledAddons.slice(0, 2).map(([key]) => pricing.addons?.[key]?.name || key);
+                    let label = `Add-ons: ${names.join(', ')}`;
+                    if (enabledAddons.length > 2) label += ` +${enabledAddons.length - 2}`;
+                    chips.push(label);
+                }
+                const migrationsCount = (state.dataMigrations || []).length;
+                if (migrationsCount) {
+                    chips.push(`${migrationsCount} migration${migrationsCount === 1 ? '' : 's'}`);
+                }
+                const implFee = (state.implementationFee || '').trim();
+                if (implFee) {
+                    chips.push(`Impl ${implFee}`);
+                }
+                const discount = parseFloat(state.aeDiscount);
+                if (!isNaN(discount) && discount > 0) {
+                    chips.push(`${discount}% discount`);
+                }
+                return chips.length
+                    ? `<div class="mt-1 flex flex-wrap gap-1 text-[11px]">${chips.map(text => `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">${escapeHtml(text)}</span>`).join('')}</div>`
+                    : '';
+            }
+
             async function upsertQuote(name, folder, state, existingId = null, notes = '', pinned = false, tags = []) {
                 const doc = { id: existingId || makeId(), name, folder, state, notes, pinned: !!pinned, tags: tags || [], savedAt: Date.now() };
                 if (db && currentUser) {
@@ -3021,6 +3055,7 @@
                             <div class="text-xs text-slate-500">${new Date(q.savedAt).toLocaleString()} • ${q.folder || computeCurrentFolder(q.savedAt)}</div>
                             ${q.notes && q.notes.trim() ? `<div class=\"text-xs text-slate-600 truncate\" title=\"${escapeHtml(q.notes)}\">Notes: ${escapeHtml(q.notes)}</div>` : ''}
                             ${(q.tags && q.tags.length ? q.tags : parseTags(q.notes || '')).map(t => `<span class=\"inline-block text-[10px] px-1.5 py-0.5 mr-1 mt-1 rounded bg-slate-200 text-slate-700\">#${escapeHtml(t)}</span>`).join('')}
+                            ${renderQuotePreview(q.state)}
                         </div>
                         <div class="flex items-center gap-2">
                             <button data-act="load" data-id="${q.id}" class="px-2 py-1 text-xs bg-slate-200 text-slate-800 rounded">Load</button>

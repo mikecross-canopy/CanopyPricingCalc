@@ -1517,7 +1517,6 @@
             const dataMigrationDropdown = document.getElementById('dataMigrationDropdown');
             const dataMigrationDisplay = document.getElementById('dataMigrationDisplay');
             const premiumOnboardingCheck = document.getElementById('premiumOnboardingCheck');
-            const additionalClientsInput = document.getElementById('additionalClientsInput');
             const aeDiscountInput = document.getElementById('aeDiscountInput');
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             
@@ -3020,8 +3019,16 @@
                     : '';
             }
 
-            async function upsertQuote(name, folder, state, existingId = null, notes = '', pinned = false, tags = []) {
-                const doc = { id: existingId || makeId(), name, folder, state, notes, pinned: !!pinned, tags: tags || [], savedAt: Date.now() };
+            function renderWorkflowTagChips(tags = []) {
+                if (!tags.length) return '';
+                return `<div class="mt-1 flex flex-wrap gap-1 text-[10px]">${tags.map(tagId => {
+                    const label = WORKFLOW_TAG_LOOKUP[tagId] || tagId;
+                    return `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200">${escapeHtml(label)}</span>`;
+                }).join('')}</div>`;
+            }
+
+            async function upsertQuote(name, folder, state, existingId = null, notes = '', pinned = false, tags = [], workflowTags = []) {
+                const doc = { id: existingId || makeId(), name, folder, state, notes, pinned: !!pinned, tags: tags || [], workflowTags: workflowTags || [], savedAt: Date.now() };
                 if (db && currentUser) {
                     const id = await cloudUpsertQuote(doc);
                     return id || doc.id;

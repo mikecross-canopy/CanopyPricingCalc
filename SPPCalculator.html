@@ -2325,7 +2325,7 @@
                     // Summary card
                     pdf.setFillColor(...COLOR_CARD);
                     pdf.setDrawColor(...COLOR_BORDER);
-                    pdf.roundedRect(m, y, contentW, 132, 14, 14, 'FD');
+                    pdf.roundedRect(m, y, contentW, 156, 14, 14, 'FD');
                     pdf.setFillColor(238, 242, 255);
                     pdf.roundedRect(m, y, contentW, 34, 14, 14, 'F');
 
@@ -2334,23 +2334,37 @@
                     pdf.text('Summary', m + 18, y + 22);
 
                     setFont(24, 'bold');
-                    pdf.text(summaryTotal || '-', m + 18, y + 66);
+                    pdf.text(summaryTotal || '-', m + 18, y + 70);
 
                     setFont(10, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text(isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 84);
+                    pdf.text(isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 92);
+
+                    pdf.setDrawColor(...COLOR_BORDER);
+                    pdf.line(m + 18, y + 104, m + contentW - 18, y + 104);
+
+                    const summaryLeftX = m + 18;
+                    const summaryRightX = m + contentW - 18;
+                    const summaryValueX = m + (contentW * 0.58);
+                    const summaryRow1Y = y + 124;
+                    const summaryRow2Y = y + 142;
 
                     setFont(10, 'normal');
-                    pdf.text('Per Month', m + 18, y + 98);
-                    pdf.text(perMonth || '-', m + 110, y + 98);
-                    pdf.text('One-Time', m + 18, y + 114);
-                    pdf.text(oneTime || '-', m + 110, y + 114);
-                    pdf.text('Payment Due Today', pageW - m - 18 - 160, y + 106);
-                    setFont(12, 'bold');
-                    pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(paymentDue || '-', pageW - m - 18, y + 106, { align: 'right' });
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text('Per Month', summaryLeftX, summaryRow1Y);
+                    pdf.text('One-Time', summaryLeftX, summaryRow2Y);
 
-                    y += 132 + 22;
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(perMonth || '-', summaryValueX, summaryRow1Y, { align: 'right' });
+                    pdf.text(oneTime || '-', summaryValueX, summaryRow2Y, { align: 'right' });
+
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text('Payment Due Today', summaryRightX, summaryRow1Y, { align: 'right' });
+                    setFont(13, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(paymentDue || '-', summaryRightX, summaryRow2Y, { align: 'right' });
+
+                    y += 156 + 22;
 
                     // Configuration
                     y = ensureSpace(y, 140);

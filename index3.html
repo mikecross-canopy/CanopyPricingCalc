@@ -1570,7 +1570,7 @@
 
                     pdf.setFillColor(...COLOR_CARD);
                     pdf.setDrawColor(...COLOR_BORDER);
-                    pdf.roundedRect(m, y, contentW, 120, 14, 14, 'FD');
+                    pdf.roundedRect(m, y, contentW, 146, 14, 14, 'FD');
                     pdf.setFillColor(238, 242, 255);
                     pdf.roundedRect(m, y, contentW, 34, 14, 14, 'F');
 
@@ -1580,23 +1580,31 @@
 
                     setFont(24, 'bold');
                     pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(summaryTotal || '-', m + 18, y + 66);
+                    pdf.text(summaryTotal || '-', m + 18, y + 70);
 
                     setFont(10, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text(state.isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 84);
+                    pdf.text(state.isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 92);
+
+                    pdf.setDrawColor(...COLOR_BORDER);
+                    pdf.line(m + 18, y + 104, m + contentW - 18, y + 104);
+
+                    const summaryLeftX = m + 18;
+                    const summaryRightX = m + contentW - 18;
+                    const summaryValueX = m + (contentW * 0.58);
+                    const summaryRow1Y = y + 124;
+                    const summaryRow2Y = y + 142;
 
                     setFont(10, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('Per Month', m + 18, y + 104);
-                    pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(perMonth || '-', m + 110, y + 104);
-                    pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('One-Time', m + 18, y + 118);
-                    pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(oneTime || '-', m + 110, y + 118);
+                    pdf.text('Per Month', summaryLeftX, summaryRow1Y);
+                    pdf.text('One-Time', summaryLeftX, summaryRow2Y);
 
-                    y += 120 + 22;
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(perMonth || '-', summaryValueX, summaryRow1Y, { align: 'right' });
+                    pdf.text(oneTime || '-', summaryValueX, summaryRow2Y, { align: 'right' });
+
+                    y += 146 + 22;
 
                     // Configuration
                     y = ensureSpace(y, 140);

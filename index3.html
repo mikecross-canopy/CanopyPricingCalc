@@ -7,9 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="./config.js"></script>
     <script>
         // Ensure libraries are loaded
         window.addEventListener('load', function() {
+            if (!window.__CANOPY_DEBUG__) return;
             console.log("Window loaded, checking libraries again...");
             console.log("html2canvas available:", typeof html2canvas !== 'undefined');
             console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
@@ -24,15 +26,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
     <script>
         // Provided Firebase config (set on window for compat init below)
-        window.FIREBASE_CONFIG = {
-          apiKey: "AIzaSyBceVpzCfvVY6JnbMCaK1Ye0zsnY9LOyI8",
-          authDomain: "ae-pricing-calculator.firebaseapp.com",
-          projectId: "ae-pricing-calculator",
-          storageBucket: "ae-pricing-calculator.firebasestorage.app",
-          messagingSenderId: "25810838101",
-          appId: "1:25810838101:web:9379152608fe8b8f9e6adc",
-          measurementId: "G-LQ8N00DH40"
-        };
+        window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || (() => {
+          try {
+            return JSON.parse(localStorage.getItem('CANOPY_FIREBASE_CONFIG') || 'null');
+          } catch {
+            return null;
+          }
+        })();
     </script>
     <style>
         body {
@@ -849,10 +849,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            window.__CANOPY_DEBUG__ = window.__CANOPY_DEBUG__ || false;
             // Test if libraries are loaded
-            console.log("DOM loaded, checking libraries...");
-            console.log("html2canvas available:", typeof html2canvas !== 'undefined');
-            console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+            if (window.__CANOPY_DEBUG__) {
+                console.log("DOM loaded, checking libraries...");
+                console.log("html2canvas available:", typeof html2canvas !== 'undefined');
+                console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+            }
             
             if (typeof html2canvas === 'undefined') {
                 console.error("HTML2Canvas not loaded!");
@@ -1138,6 +1141,7 @@
                     if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
                     if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
                     const { jsPDF } = window.jspdf;
+                    const esc = escapeHtml;
 
                     // Ensure up-to-date values
                     const state = getCurrentState();
@@ -1204,9 +1208,9 @@
                     left.className = 'glass-card';
                     left.innerHTML = `
                         <div class="card-body">
-                          <div class="glass-pill-wrap"><div class="glass-pill">${planTitle} - ${tierTxt}</div></div>
-                          <div class="glass-muted" style="margin-top:6px;">${planSub}</div>
-                          <div class="glass-line" style="margin-top:10px;"><span class="glass-muted">Billing</span><span>${isAnnualTxt}</span></div>
+                          <div class="glass-pill-wrap"><div class="glass-pill">${esc(planTitle)} - ${esc(tierTxt)}</div></div>
+                          <div class="glass-muted" style="margin-top:6px;">${esc(planSub)}</div>
+                          <div class="glass-line" style="margin-top:10px;"><span class="glass-muted">Billing</span><span>${esc(isAnnualTxt)}</span></div>
                           
 
                           <div class="glass-section-title">Modules</div>
@@ -1225,10 +1229,10 @@
                           </table>
 
                           <div style="margin-top:14px; font-weight:800; color:#0f172a;">Implementation & Migration</div>
-                          <div class="glass-line"><span class="glass-muted">Implementation</span><span>${implFeeText || '-'}</span></div>
+                          <div class="glass-line"><span class="glass-muted">Implementation</span><span>${esc(implFeeText || '-')}</span></div>
                           <div class="glass-line" style="align-items:flex-start;">
                             <span class="glass-muted">Data Migration</span>
-                            <span style="text-align:right; max-width:65%;">${(migrations.length ? migrations.join(', ') : 'None')}</span>
+                            <span style="text-align:right; max-width:65%;">${esc(migrations.length ? migrations.join(', ') : 'None')}</span>
                           </div>
                         </div>
                     `;
@@ -1240,7 +1244,18 @@
                         for (const m of modules) {
                             const tr = document.createElement('tr');
                             tr.className = 'glass-row';
-                            tr.innerHTML = `<td class="glass-cell">${m.label}</td><td class="glass-cell glass-right num">${m.users}</td><td class="glass-cell glass-right num">${m.total}</td>`;
+                            const td1 = document.createElement('td');
+                            td1.className = 'glass-cell';
+                            td1.textContent = m.label;
+                            const td2 = document.createElement('td');
+                            td2.className = 'glass-cell glass-right num';
+                            td2.textContent = String(m.users);
+                            const td3 = document.createElement('td');
+                            td3.className = 'glass-cell glass-right num';
+                            td3.textContent = m.total;
+                            tr.appendChild(td1);
+                            tr.appendChild(td2);
+                            tr.appendChild(td3);
                             tbody.appendChild(tr);
                         }
                     }
@@ -1251,9 +1266,9 @@
                     right.innerHTML = `
                         <div class="card-body">
                           <div class="glass-pill-wrap"><div class="glass-pill">Summary</div></div>
-                          <div class="glass-total num">${summaryTotal}</div>
-                          <div class="glass-line"><span class="glass-muted">Per Month</span><span class="num">${perMonth}</span></div>
-                          <div class="glass-line"><span class="glass-muted">One-Time</span><span class="num">${oneTime}</span></div>
+                          <div class="glass-total num">${esc(summaryTotal)}</div>
+                          <div class="glass-line"><span class="glass-muted">Per Month</span><span class="num">${esc(perMonth)}</span></div>
+                          <div class="glass-line"><span class="glass-muted">One-Time</span><span class="num">${esc(oneTime)}</span></div>
                           <div style="margin-top:14px; font-size:11px;" class="glass-muted">All prices in USD. This quote is for discussion purposes and subject to order form terms.</div>
                         </div>
                     `;
@@ -1887,7 +1902,29 @@
             const LS_KEY = 'canopy_quotes_v1';
             function localReadAll() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
             function localWriteAll(arr) { localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
-            function makeId() { return 'q_' + Math.random().toString(36).slice(2, 10); }
+            function makeId() {
+                try {
+                    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                        return `q_${crypto.randomUUID()}`;
+                    }
+                    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+                        const bytes = new Uint8Array(16);
+                        crypto.getRandomValues(bytes);
+                        const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+                        return `q_${hex}`;
+                    }
+                } catch {}
+                return 'q_' + Math.random().toString(36).slice(2, 10);
+            }
+            function safeFilename(name, fallback = 'CanopyQuote') {
+                const base = (name || '').toString().trim() || fallback;
+                const cleaned = base
+                    .replace(/[\\/\x00<>:"|?*]+/g, '-')
+                    .replace(/[\r\n\t]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                return cleaned.slice(0, 120) || fallback;
+            }
             function computeCurrentFolder(ts) {
                 const d = ts ? new Date(ts) : new Date();
                 const y = d.getFullYear();
@@ -2229,7 +2266,7 @@
                             const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
                             const blob = new Blob([JSON.stringify(withFolder, null, 2)], { type: 'application/json' });
                             const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                            const a = document.createElement('a'); a.href = url; a.download = `${safeFilename(item.name)}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                             trackEvent('export_item', { quoteId: item.id, name: item.name });
                         } else if (act === 'delete') {
                             if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); trackEvent('delete', { quoteId: item.id, name: item.name }); renderQuotesList(); }
@@ -2332,7 +2369,7 @@
                 const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, pinned, tags, savedAt: state.savedAt };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                const a = document.createElement('a'); a.href = url; a.download = `${safeFilename(name)}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                 trackEvent('export', { name, pinned, tags });
             });
             importQuoteInput?.addEventListener('change', async (e) => {

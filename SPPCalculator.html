@@ -2720,7 +2720,7 @@
                                 <input type="number" id="${key}_volume" value="${currentStates[key]?.volume || '0'}" min="0" step="25" data-key="${key}" class="item-input addon-volume-input" ${currentStates[key]?.checked ? '' : 'disabled'}>
                             </div>
                             <div class="item-value">
-                                <p class="input-label text-xs block mb-1">Cost</p>
+                                <p class="input-label text-xs block mb-1">${isAnnual ? 'Annual Cost' : 'Monthly Cost'}</p>
                                 <p id="${key}_total" class="font-bold text-base">$0</p>
                             </div>
                         `;

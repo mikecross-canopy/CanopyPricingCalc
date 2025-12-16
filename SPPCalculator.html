@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="canopy-preload">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,7 @@
     <script src="./config.js"></script>
     <link rel="icon" type="image/png" href="Canopy%20Just%20logo%20Black.png">
     <link rel="apple-touch-icon" href="Canopy%20Just%20logo%20Black.png">
+    <script>document.addEventListener('DOMContentLoaded', () => { requestAnimationFrame(() => document.documentElement.classList.remove('canopy-preload')); });</script>
     <script>
         // Ensure libraries are loaded
         window.addEventListener('load', function() {
@@ -1127,6 +1128,65 @@
         }
         #quotesModalHeader.dragging {
             cursor: grabbing;
+        }
+
+        html.canopy-preload body {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+        body {
+            transition: opacity 240ms ease, transform 240ms ease;
+        }
+
+        .pricing-card, .summary-card, .glass-card {
+            transition: transform 160ms ease, box-shadow 160ms ease;
+            will-change: transform;
+        }
+        .pricing-card:hover, .summary-card:hover, .glass-card:hover {
+            transform: translateY(-2px);
+        }
+
+        button {
+            transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
+        }
+        button:active {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        .item-input, .item-select, .ce-input, input, select {
+            transition: box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+        }
+        .item-input:focus, .item-select:focus, .ce-input:focus, input:focus, select:focus {
+            transform: translateY(-1px);
+        }
+
+        #dataMigrationDropdown {
+            transform-origin: bottom;
+        }
+        #dataMigrationDropdown:not(.hidden) {
+            animation: canopyFadeUp 140ms ease-out;
+        }
+
+        @keyframes canopyFadeUp {
+            from { opacity: 0; transform: translateY(6px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        .pdf-capture-mode .pricing-card,
+        .pdf-capture-mode .summary-card,
+        .pdf-capture-mode .glass-card {
+            transform: none !important;
+            transition: none !important;
+            animation: none !important;
         }
 
     </style>

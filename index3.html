@@ -1016,8 +1016,14 @@
                 clampModalPosition(rect.left, rect.top);
             }
 
+            function isInteractiveModalTarget(target) {
+                if (!target) return false;
+                return !!target.closest('button, input, textarea, select, a, label');
+            }
+
             function handleModalPointerDown(e) {
                 if (!quotesModalPanel || e.button !== 0) return;
+                if (isInteractiveModalTarget(e.target)) return;
                 modalDragActive = true;
                 modalDragStart = { x: e.clientX, y: e.clientY };
                 const rect = quotesModalPanel.getBoundingClientRect();
@@ -1923,6 +1929,17 @@
                 document.querySelectorAll('.module-user-input').forEach(input => {
                     modulesState[input.dataset.key] = parseInt(input.value) || 0;
                 });
+                const moduleOverrides = {};
+                document.querySelectorAll('.module-override-input').forEach(input => {
+                    const key = input.dataset.key;
+                    if (!key) return;
+                    const raw = input.value;
+                    if (raw === '' || raw === null || typeof raw === 'undefined') return;
+                    const num = parseFloat(raw);
+                    if (!isNaN(num)) {
+                        moduleOverrides[key] = num;
+                    }
+                });
                 const selectedMigrations = Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]'))
                     .filter(cb => cb.checked)
                     .map(cb => cb.value);
@@ -1936,6 +1953,7 @@
                     aeDiscount: parseFloat(aeDiscountInput.value) || 0,
                     filecabinetClients: parseInt(document.getElementById('filecabinet_clients')?.value || 0),
                     modules: modulesState,
+                    moduleOverrides,
                     dataMigrations: selectedMigrations,
                     savedAt: Date.now()
                 };
@@ -1966,6 +1984,16 @@
                 Object.entries(state.modules || {}).forEach(([key, users]) => {
                     const el = document.getElementById(`${key}_users`);
                     if (el) el.value = users;
+                });
+                const overrides = state.moduleOverrides || {};
+                document.querySelectorAll('.module-override-input').forEach(input => {
+                    const key = input.dataset.key;
+                    if (!key) return;
+                    if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+                        input.value = overrides[key];
+                    } else {
+                        input.value = '';
+                    }
                 });
                 if (quoteNotesInput) quoteNotesInput.value = state.notes ?? '';
                 calculateAndRender();

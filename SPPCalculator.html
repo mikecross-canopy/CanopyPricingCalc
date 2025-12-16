@@ -1347,6 +1347,13 @@
                         <label for="quoteNotesInput" class="text-[11px] text-slate-300 mt-1">Notes</label>
                         <textarea id="quoteNotesInput" rows="2" placeholder="Notes (optional)" class="flex-1 min-w-[200px] px-2 py-1 rounded bg-slate-800 border border-slate-600 text-white text-xs"></textarea>
                     </div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] text-slate-300">Workflow Tags</label>
+                            <button id="clearWorkflowTagsBtn" class="text-[10px] text-slate-400 hover:text-white" type="button">Clear</button>
+                        </div>
+                        <div id="workflowTagsContainer" class="mt-1 flex flex-wrap gap-2"></div>
+                    </div>
                     <div class="flex items-center gap-2 text-xs text-slate-300">
                         <input id="pinQuoteCheck" type="checkbox" class="h-3 w-3 rounded border-slate-500 bg-slate-800">
                         <label for="pinQuoteCheck">Pin/star this quote</label>
@@ -1398,7 +1405,12 @@
                     <div id="tagFilters" class="flex flex-wrap gap-1"></div>
                     <button id="clearTagFiltersBtn" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200">Clear</button>
                 </div>
-                <label class="flex items-center gap-1 text-xs text-slate-600"><input id="pinnedOnlyCheck" type="checkbox" class="h-3 w-3">Pinned only</label>
+                <div class="flex items-center gap-2 text-xs text-slate-600">
+                    <label class="flex items-center gap-1"><input id="pinnedOnlyCheck" type="checkbox" class="h-3 w-3">Pinned only</label>
+                    <select id="workflowTagFilter" class="px-2 py-1 rounded border border-slate-300 text-xs bg-white text-slate-800">
+                        <option value="all">All workflow tags</option>
+                    </select>
+                </div>
             </div>
             <div id="quotesList" class="border border-slate-200 rounded"></div>
         </div>
@@ -1645,10 +1657,27 @@
             const closeHistoryModal = document.getElementById('closeHistoryModal');
             const historyList = document.getElementById('historyList');
             const clearTagFiltersBtn = document.getElementById('clearTagFiltersBtn');
+            const workflowTagsContainer = document.getElementById('workflowTagsContainer');
+            const clearWorkflowTagsBtn = document.getElementById('clearWorkflowTagsBtn');
+            const workflowTagFilter = document.getElementById('workflowTagFilter');
 
             // Pagination state
             let quotesPage = 1; const QUOTES_PAGE_SIZE = 20;
             const selectedTags = new Set();
+            const currentWorkflowTags = new Set();
+            const WORKFLOW_TAGS = [
+                { id: 'discovery', label: 'Discovery' },
+                { id: 'pricing_review', label: 'Pricing Review' },
+                { id: 'needs_finance', label: 'Needs Finance Review' },
+                { id: 'legal', label: 'Legal Review' },
+                { id: 'shared_prospect', label: 'Shared with Prospect' },
+                { id: 'pending_signature', label: 'Pending Signature' }
+            ];
+            const WORKFLOW_TAG_LOOKUP = WORKFLOW_TAGS.reduce((acc, tag) => {
+                acc[tag.id] = tag.label;
+                return acc;
+            }, {});
+            let currentWorkflowFilter = 'all';
 
             // Manage Quotes modal drag helpers
             const MODAL_EDGE_PADDING = 16;
@@ -1767,6 +1796,35 @@
 
             function debounce(fn, wait = 300) {
                 let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
+            }
+
+            function renderWorkflowTagButtons() {
+                if (!workflowTagsContainer) return;
+                workflowTagsContainer.innerHTML = WORKFLOW_TAGS.map(tag => {
+                    const active = currentWorkflowTags.has(tag.id);
+                    const base = 'text-[11px] px-2 py-0.5 rounded border transition-colors';
+                    const activeClasses = 'bg-emerald-400 text-slate-900 border-emerald-300';
+                    const inactiveClasses = 'bg-slate-800 text-slate-200 border-slate-600 hover:border-slate-400';
+                    return `<button type="button" data-workflow="${tag.id}" class="${base} ${active ? activeClasses : inactiveClasses}">${escapeHtml(tag.label)}</button>`;
+                }).join('');
+            }
+
+            function setWorkflowTags(tags = []) {
+                currentWorkflowTags.clear();
+                (tags || []).forEach(tag => {
+                    if (WORKFLOW_TAG_LOOKUP[tag]) currentWorkflowTags.add(tag);
+                });
+                renderWorkflowTagButtons();
+            }
+
+            function populateWorkflowTagFilterOptions() {
+                if (!workflowTagFilter) return;
+                workflowTagFilter.innerHTML = '<option value="all">All workflow tags</option>' +
+                    WORKFLOW_TAGS.map(tag => `<option value="${tag.id}">${escapeHtml(tag.label)}</option>`).join('');
+            }
+
+            function getCurrentWorkflowTagsArray() {
+                return Array.from(currentWorkflowTags);
             }
 
 

@@ -7,9 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="./config.js"></script>
     <script>
         // Ensure libraries are loaded
         window.addEventListener('load', function() {
+            if (!window.__CANOPY_DEBUG__) return;
             console.log("Window loaded, checking libraries again...");
             console.log("html2canvas available:", typeof html2canvas !== 'undefined');
             console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
@@ -24,15 +26,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
     <script>
         // Provided Firebase config (set on window for compat init below)
-        window.FIREBASE_CONFIG = {
-          apiKey: "AIzaSyBceVpzCfvVY6JnbMCaK1Ye0zsnY9LOyI8",
-          authDomain: "ae-pricing-calculator.firebaseapp.com",
-          projectId: "ae-pricing-calculator",
-          storageBucket: "ae-pricing-calculator.firebasestorage.app",
-          messagingSenderId: "25810838101",
-          appId: "1:25810838101:web:9379152608fe8b8f9e6adc",
-          measurementId: "G-LQ8N00DH40"
-        };
+        window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || (() => {
+          try {
+            return JSON.parse(localStorage.getItem('CANOPY_FIREBASE_CONFIG') || 'null');
+          } catch {
+            return null;
+          }
+        })();
     </script>
     <style>
         /* === LIQUID GLASS & AI THEME === */
@@ -1420,10 +1420,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            window.__CANOPY_DEBUG__ = window.__CANOPY_DEBUG__ || false;
             // Test if libraries are loaded
-            console.log("DOM loaded, checking libraries...");
-            console.log("html2canvas available:", typeof html2canvas !== 'undefined');
-            console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+            if (window.__CANOPY_DEBUG__) {
+                console.log("DOM loaded, checking libraries...");
+                console.log("html2canvas available:", typeof html2canvas !== 'undefined');
+                console.log("jsPDF available:", typeof window.jspdf !== 'undefined');
+            }
             
             if (typeof html2canvas === 'undefined') {
                 console.error("HTML2Canvas not loaded!");
@@ -1510,8 +1513,10 @@
             const usersInput = document.getElementById('usersInput');
             const addonsContainer = document.getElementById('addonsContainer');
             
-            console.log('usersInput element:', usersInput);
-            console.log('addonsContainer element:', addonsContainer);
+            if (window.__CANOPY_DEBUG__) {
+                console.log('usersInput element:', usersInput);
+                console.log('addonsContainer element:', addonsContainer);
+            }
             const implementationFeeInput = document.getElementById('implementationFeeInput');
             const dataMigrationToggle = document.getElementById('dataMigrationToggle');
             const dataMigrationDropdown = document.getElementById('dataMigrationDropdown');
@@ -1876,6 +1881,7 @@
                     if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
                     if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
                     const { jsPDF } = window.jspdf;
+                    const esc = escapeHtml;
 
                     // Collect current pricing data
                     const userCount = parseInt(document.getElementById('usersInput')?.value || 0);
@@ -1943,42 +1949,42 @@
                     left.className = 'glass-card';
                     left.innerHTML = `
                         <div class="card-body">
-                          <div class="glass-pill-wrap"><div class="glass-pill">${planTitle}</div></div>
-                          <div class="glass-muted" style="margin-bottom: 24px; font-size: 14px; line-height: 1.6;">${planDescription}</div>
+                          <div class="glass-pill-wrap"><div class="glass-pill">${esc(planTitle)}</div></div>
+                          <div class="glass-muted" style="margin-bottom: 24px; font-size: 14px; line-height: 1.6;">${esc(planDescription)}</div>
                           
                           <div style="margin-bottom: 16px; font-weight: 800; font-size: 16px; color: #000000; padding-bottom: 12px; border-bottom: 2px solid rgba(43, 75, 255, 0.1);">Plan Configuration</div>
                           <div class="glass-line">
                             <span class="glass-muted">Users</span>
-                            <span style="font-weight: 800; font-size: 18px; color: #2B4BFF;">${userCount}</span>
+                            <span style="font-weight: 800; font-size: 18px; color: #2B4BFF;">${esc(String(userCount))}</span>
                           </div>
                           <div class="glass-line">
                             <span class="glass-muted">Price per User</span>
-                            <span style="font-weight: 700;">${pricePerUser}</span>
+                            <span style="font-weight: 700;">${esc(pricePerUser)}</span>
                           </div>
                           <div class="glass-line">
                             <span class="glass-muted">Billing Cycle</span>
-                            <span style="font-weight: 700;">${isAnnual ? 'Annual (20% savings)' : 'Monthly'}</span>
+                            <span style="font-weight: 700;">${esc(isAnnual ? 'Annual (20% savings)' : 'Monthly')}</span>
                           </div>
                           
                           ${addons.length > 0 ? `
                           <div style="margin-top: 28px; margin-bottom: 16px; font-weight: 800; font-size: 16px; color: #000000; padding-bottom: 12px; border-bottom: 2px solid rgba(43, 75, 255, 0.1);">Add-ons</div>
                           ${addons.map(addon => `
                             <div class="glass-line">
-                              <span class="glass-muted">${addon.name} <span style="font-size: 13px; opacity: 0.7;">(${addon.volume})</span></span>
-                              <span style="font-weight: 800; color: #2B4BFF;">${addon.total}</span>
+                              <span class="glass-muted">${esc(addon.name)} <span style="font-size: 13px; opacity: 0.7;">(${esc(String(addon.volume))})</span></span>
+                              <span style="font-weight: 800; color: #2B4BFF;">${esc(addon.total)}</span>
                             </div>
                           `).join('')}
                           ` : ''}
 
                           <div style="margin-top: 28px; margin-bottom: 16px; font-weight: 800; font-size: 16px; color: #000000; padding-bottom: 12px; border-bottom: 2px solid rgba(43, 75, 255, 0.1);">Implementation & Migration</div>
                           <div class="glass-line">
-                            <span class="glass-muted">${isPremiumOnboarding ? 'Premium' : 'Standard'} Implementation</span>
-                            <span style="font-weight: 700;">${implFee || 'Included'}</span>
+                            <span class="glass-muted">${esc((isPremiumOnboarding ? 'Premium' : 'Standard') + ' Implementation')}</span>
+                            <span style="font-weight: 700;">${esc(implFee || 'Included')}</span>
                           </div>
                           ${migrations.length > 0 ? `
                           <div class="glass-line" style="align-items:flex-start;">
                             <span class="glass-muted">Data Migration</span>
-                            <span style="text-align:right; max-width:55%; font-size: 13px; line-height: 1.5;">${migrations.join(', ')}</span>
+                            <span style="text-align:right; max-width:55%; font-size: 13px; line-height: 1.5;">${esc(migrations.join(', '))}</span>
                           </div>
                           ` : ''}
                         </div>
@@ -1991,25 +1997,25 @@
                         <div class="card-body">
                           <div class="glass-pill-wrap"><div class="glass-pill">Pricing Summary</div></div>
                           <div style="text-align: center; margin: 24px 0 32px 0;">
-                            <div class="glass-total num">${summaryTotal}</div>
-                            <div style="font-size: 14px; color: #64748b; font-weight: 600; margin-top: 8px;">${isAnnual ? 'Annual Total' : 'Monthly Total'}</div>
+                            <div class="glass-total num">${esc(summaryTotal)}</div>
+                            <div style="font-size: 14px; color: #64748b; font-weight: 600; margin-top: 8px;">${esc(isAnnual ? 'Annual Total' : 'Monthly Total')}</div>
                           </div>
                           
                           <div style="background: rgba(43, 75, 255, 0.05); border: 1px solid rgba(43, 75, 255, 0.1); border-radius: 16px; padding: 24px; margin: 24px 0;">
                             <div class="glass-line" style="border: none; padding: 10px 0;">
                               <span class="glass-muted">Per Month</span>
-                              <span class="num" style="font-weight: 800; font-size: 20px; color: #000000;">${perMonth}</span>
+                              <span class="num" style="font-weight: 800; font-size: 20px; color: #000000;">${esc(perMonth)}</span>
                             </div>
                             <div class="glass-line" style="border-top: 1px solid rgba(0,0,0,0.06); padding: 10px 0;">
                               <span class="glass-muted">One-Time Charges</span>
-                              <span class="num" style="font-weight: 800; font-size: 20px; color: #000000;">${oneTime}</span>
+                              <span class="num" style="font-weight: 800; font-size: 20px; color: #000000;">${esc(oneTime)}</span>
                             </div>
                           </div>
                           
                           <div style="background: #2B4BFF; border-radius: 16px; padding: 24px; margin: 24px 0;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                               <span style="color: #FFFFFF; font-weight: 700; font-size: 16px;">Payment Due Today</span>
-                              <span class="num" style="font-weight: 900; font-size: 28px; color: #FFFFFF;">${paymentDue}</span>
+                              <span class="num" style="font-weight: 900; font-size: 28px; color: #FFFFFF;">${esc(paymentDue)}</span>
                             </div>
                           </div>
                           
@@ -2076,7 +2082,7 @@
 
                     // Generate filename with date
                     const date = new Date().toISOString().split('T')[0];
-                    const filename = `Canopy-Pricing-${planTitle.replace(/\s+/g, '-')}-${date}.pdf`;
+                    const filename = `${safeFilename(`Canopy-Pricing-${planTitle}-${date}`, 'Canopy-Pricing')}.pdf`;
                     pdf.save(filename);
                 } catch (err) {
                     console.error('Glass PDF export failed:', err);
@@ -2333,11 +2339,11 @@
 
             function calculateAndRender() {
                 try {
-                    console.log('calculateAndRender called');
+                    if (window.__CANOPY_DEBUG__) console.log('calculateAndRender called');
                     const tierData = pricing.tiers[currentTier];
                     const userCountElement = document.getElementById('usersInput');
                     const userCount = parseInt(userCountElement?.value || 0);
-                    console.log('User count:', userCount, 'from element:', userCountElement);
+                    if (window.__CANOPY_DEBUG__) console.log('User count:', userCount, 'from element:', userCountElement);
                     
                     // Handle Enterprise tier (custom pricing)
                     if (currentTier === 'enterprise') {
@@ -2855,7 +2861,29 @@
             const LS_KEY = 'canopy_quotes_v1';
             function localReadAll() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
             function localWriteAll(arr) { localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
-            function makeId() { return 'q_' + Math.random().toString(36).slice(2, 10); }
+            function makeId() {
+                try {
+                    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                        return `q_${crypto.randomUUID()}`;
+                    }
+                    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+                        const bytes = new Uint8Array(16);
+                        crypto.getRandomValues(bytes);
+                        const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+                        return `q_${hex}`;
+                    }
+                } catch {}
+                return 'q_' + Math.random().toString(36).slice(2, 10);
+            }
+            function safeFilename(name, fallback = 'CanopyQuote') {
+                const base = (name || '').toString().trim() || fallback;
+                const cleaned = base
+                    .replace(/[\\/\x00<>:"|?*]+/g, '-')
+                    .replace(/[\r\n\t]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                return cleaned.slice(0, 120) || fallback;
+            }
             function computeCurrentFolder(ts) {
                 const d = ts ? new Date(ts) : new Date();
                 const y = d.getFullYear();
@@ -3223,7 +3251,7 @@
                             const withFolder = { ...item, folder: (item.folder || computeCurrentFolder(item.savedAt)) };
                             const blob = new Blob([JSON.stringify(withFolder, null, 2)], { type: 'application/json' });
                             const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a'); a.href = url; a.download = `${item.name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                            const a = document.createElement('a'); a.href = url; a.download = `${safeFilename(item.name)}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                             trackEvent('export_item', { quoteId: item.id, name: item.name });
                         } else if (act === 'delete') {
                             if (confirm(`Delete quote "${item.name}"?`)) { await deleteQuote(id); trackEvent('delete', { quoteId: item.id, name: item.name }); renderQuotesList(); }
@@ -3325,7 +3353,7 @@
                 const payload = { id: makeId(), name, folder: computeCurrentFolder(state.savedAt), state, notes, pinned, tags, savedAt: state.savedAt };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = `${name}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                const a = document.createElement('a'); a.href = url; a.download = `${safeFilename(name)}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
                 trackEvent('export', { name, pinned, tags });
             });
             importQuoteInput?.addEventListener('change', async (e) => {
@@ -3500,21 +3528,21 @@
             
             // Global event listener for all addon volume inputs and other dynamic inputs
             document.addEventListener('input', (e) => {
-                console.log('Input event on:', e.target.id, e.target.className);
+                if (window.__CANOPY_DEBUG__) console.log('Input event on:', e.target.id, e.target.className);
                 if (e.target.classList.contains('addon-volume-input') || 
                     e.target.id === 'usersInput' || 
                     e.target.id === 'filecabinet_clients') {
-                    console.log('Triggering calculateAndRender from input event');
+                    if (window.__CANOPY_DEBUG__) console.log('Triggering calculateAndRender from input event');
                     calculateAndRender();
                 }
             });
             
             document.addEventListener('change', (e) => {
-                console.log('Change event on:', e.target.id, e.target.className);
+                if (window.__CANOPY_DEBUG__) console.log('Change event on:', e.target.id, e.target.className);
                 if (e.target.classList.contains('addon-volume-input') || 
                     e.target.classList.contains('addon-checkbox') ||
                     e.target.id === 'usersInput') {
-                    console.log('Triggering calculateAndRender from change event');
+                    if (window.__CANOPY_DEBUG__) console.log('Triggering calculateAndRender from change event');
                     calculateAndRender();
                 }
             });
@@ -3539,7 +3567,7 @@
             // Force initial calculation after a brief delay to ensure all elements are ready
             setTimeout(() => {
                 calculateAndRender();
-                console.log('Initial calculation complete');
+                if (window.__CANOPY_DEBUG__) console.log('Initial calculation complete');
             }, 100);
         });
     </script>

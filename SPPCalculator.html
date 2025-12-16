@@ -1655,6 +1655,8 @@
             let modalDragActive = false;
             let modalDragStart = { x: 0, y: 0 };
             let modalPanelStart = { x: 0, y: 0 };
+            let modalPointerId = null;
+            const MODAL_DRAG_EXCLUDE = 'button, a, input, select, textarea, [data-no-drag], .no-drag';
 
             function clampModalPosition(left, top) {
                 if (!quotesModalPanel) return;
@@ -1684,14 +1686,27 @@
                 clampModalPosition(rect.left, rect.top);
             }
 
+            function hideQuotesModal() {
+                quotesModal?.classList.add('hidden');
+                modalDragActive = false;
+                if (modalPointerId !== null) {
+                    quotesModalHeader?.releasePointerCapture?.(modalPointerId);
+                    modalPointerId = null;
+                }
+                quotesModalHeader?.classList.remove('dragging');
+                centerQuotesModal();
+            }
+
             function handleModalPointerDown(e) {
                 if (!quotesModalPanel || e.button !== 0) return;
+                if (e.target.closest(MODAL_DRAG_EXCLUDE)) return;
                 modalDragActive = true;
                 modalDragStart = { x: e.clientX, y: e.clientY };
                 const rect = quotesModalPanel.getBoundingClientRect();
                 modalPanelStart = { x: rect.left, y: rect.top };
                 quotesModalHeader?.classList.add('dragging');
-                quotesModalHeader?.setPointerCapture?.(e.pointerId);
+                modalPointerId = e.pointerId;
+                quotesModalHeader?.setPointerCapture?.(modalPointerId);
             }
 
             function handleModalPointerMove(e) {
@@ -1705,7 +1720,10 @@
                 if (!modalDragActive) return;
                 modalDragActive = false;
                 quotesModalHeader?.classList.remove('dragging');
-                quotesModalHeader?.releasePointerCapture?.(e.pointerId);
+                if (modalPointerId !== null) {
+                    quotesModalHeader?.releasePointerCapture?.(modalPointerId);
+                    modalPointerId = null;
+                }
             }
 
             quotesModalHeader?.addEventListener('pointerdown', handleModalPointerDown);
@@ -3037,6 +3055,7 @@
                             if (quoteNotesInput) quoteNotesInput.value = item.notes ?? '';
                             if (pinQuoteCheck) pinQuoteCheck.checked = !!item.pinned;
                             trackEvent('load', { quoteId: item.id, name: item.name });
+                            hideQuotesModal();
                         } else if (act === 'rename') {
                             const newName = prompt('New quote name:', item.name) || item.name;
                             // Save version of previous before rename
@@ -3180,8 +3199,7 @@
                 requestAnimationFrame(() => centerQuotesModal());
             });
             closeQuotesModal?.addEventListener('click', () => {
-                quotesModal?.classList.add('hidden');
-                centerQuotesModal();
+                hideQuotesModal();
             });
             const debouncedRender = debounce(() => { quotesPage = 1; renderQuotesList(); }, 250);
             searchQuoteInput?.addEventListener('input', debouncedRender);

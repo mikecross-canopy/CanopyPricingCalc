@@ -1589,16 +1589,16 @@
                     pdf.setDrawColor(...COLOR_BORDER);
                     pdf.line(m + 18, y + 104, m + contentW - 18, y + 104);
 
-                    const summaryLeftX = m + 18;
                     const summaryRightX = m + contentW - 18;
-                    const summaryValueX = m + (contentW * 0.58);
+                    const summaryLabelX = summaryRightX - 170;
+                    const summaryValueX = summaryRightX;
                     const summaryRow1Y = y + 124;
                     const summaryRow2Y = y + 142;
 
                     setFont(10, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('Per Month', summaryLeftX, summaryRow1Y);
-                    pdf.text('One-Time', summaryLeftX, summaryRow2Y);
+                    pdf.text('Per Month', summaryLabelX, summaryRow1Y);
+                    pdf.text('One-Time', summaryLabelX, summaryRow2Y);
 
                     pdf.setTextColor(...COLOR_TEXT);
                     pdf.text(perMonth || '-', summaryValueX, summaryRow1Y, { align: 'right' });

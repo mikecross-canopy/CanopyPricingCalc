@@ -2325,7 +2325,7 @@
                     // Summary card
                     pdf.setFillColor(...COLOR_CARD);
                     pdf.setDrawColor(...COLOR_BORDER);
-                    pdf.roundedRect(m, y, contentW, 156, 14, 14, 'FD');
+                    pdf.roundedRect(m, y, contentW, 196, 14, 14, 'FD');
                     pdf.setFillColor(238, 242, 255);
                     pdf.roundedRect(m, y, contentW, 34, 14, 14, 'F');
 
@@ -2343,28 +2343,30 @@
                     pdf.setDrawColor(...COLOR_BORDER);
                     pdf.line(m + 18, y + 104, m + contentW - 18, y + 104);
 
-                    const summaryLeftX = m + 18;
                     const summaryRightX = m + contentW - 18;
-                    const summaryValueX = m + (contentW * 0.58);
+                    const summaryLabelX = summaryRightX - 190;
+                    const summaryValueX = summaryRightX;
                     const summaryRow1Y = y + 124;
                     const summaryRow2Y = y + 142;
+                    const summaryRow3LabelY = y + 162;
+                    const summaryRow3ValueY = y + 182;
 
                     setFont(10, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('Per Month', summaryLeftX, summaryRow1Y);
-                    pdf.text('One-Time', summaryLeftX, summaryRow2Y);
+                    pdf.text('Per Month', summaryLabelX, summaryRow1Y);
+                    pdf.text('One-Time', summaryLabelX, summaryRow2Y);
 
                     pdf.setTextColor(...COLOR_TEXT);
                     pdf.text(perMonth || '-', summaryValueX, summaryRow1Y, { align: 'right' });
                     pdf.text(oneTime || '-', summaryValueX, summaryRow2Y, { align: 'right' });
 
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('Payment Due Today', summaryRightX, summaryRow1Y, { align: 'right' });
+                    pdf.text('Payment Due Today', summaryLabelX, summaryRow3LabelY);
                     setFont(13, 'bold');
                     pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(paymentDue || '-', summaryRightX, summaryRow2Y, { align: 'right' });
+                    pdf.text(paymentDue || '-', summaryValueX, summaryRow3ValueY, { align: 'right' });
 
-                    y += 156 + 22;
+                    y += 196 + 22;
 
                     // Configuration
                     y = ensureSpace(y, 140);

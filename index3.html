@@ -278,7 +278,8 @@
             opacity: 0 !important;
         }
         /* Fallback: hide AE discount input in PDF */
-        .pdf-capture-mode #aeDiscountInput { display: none !important; }
+        .pdf-capture-mode #aeDiscountInput,
+        .pdf-capture-mode #freeMonthsInput { display: none !important; }
 
         /* Position the Canopy logo at top-left in PDF only */
         .pdf-capture-mode header { position: relative !important; margin: 0 !important; padding-top: 0.5rem !important; }
@@ -770,10 +771,13 @@
                             </div>
                         </div>
                         <div class="border-t border-slate-200 mt-4 pt-3">
-                            <div class="flex justify-end">
-                                 <div class="w-1/4">
-                                     <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
-                                 </div>
+                            <div class="flex justify-end gap-2">
+                                <div class="w-1/4">
+                                    <input type="number" id="freeMonthsInput" min="0" max="36" value="0" class="item-input discreet-input" placeholder="Free mo">
+                                </div>
+                                <div class="w-1/4">
+                                    <input type="number" id="aeDiscountInput" min="0" max="100" value="0" class="item-input discreet-input" placeholder="%">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -797,6 +801,10 @@
                     <div id="summaryDiscountRow" class="hidden flex justify-between items-center py-3 summary-line-item text-teal-400">
                         <span class="summary-label">Discount</span>
                         <span id="summaryDiscount" class="text-lg font-bold">0%</span>
+                    </div>
+                    <div id="summaryFreeMonthsRow" class="hidden flex justify-between items-center py-3 summary-line-item">
+                        <span class="summary-label">Free Months</span>
+                        <span id="summaryFreeMonths" class="text-lg font-bold summary-value">0</span>
                     </div>
                     <div class="flex justify-between items-center py-3 summary-line-item">
                         <span class="summary-label">Payment Due Today</span>
@@ -981,6 +989,7 @@
             const premiumOnboardingCheck = document.getElementById('premiumOnboardingCheck');
             const additionalClientsInput = document.getElementById('additionalClientsInput');
             const aeDiscountInput = document.getElementById('aeDiscountInput');
+            const freeMonthsInput = document.getElementById('freeMonthsInput');
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             
             const ceTitle = document.getElementById('ceTitle');
@@ -992,6 +1001,8 @@
             const summaryOneTime = document.getElementById('summaryOneTime');
             const summaryDiscountRow = document.getElementById('summaryDiscountRow');
             const summaryDiscount = document.getElementById('summaryDiscount');
+            const summaryFreeMonthsRow = document.getElementById('summaryFreeMonthsRow');
+            const summaryFreeMonths = document.getElementById('summaryFreeMonths');
             const summarySinglePayment = document.getElementById('summarySinglePayment');
             const summarySwitchLink = document.getElementById('summarySwitchLink');
             const summarySwitchText = document.getElementById('summarySwitchText');
@@ -1455,6 +1466,7 @@
                     const oneTime = document.getElementById('summaryOneTime')?.textContent?.trim() || '';
                     const paymentDue = document.getElementById('summarySinglePayment')?.textContent?.trim() || '';
                     const discountText = document.getElementById('summaryDiscount')?.textContent?.trim() || '';
+                    const freeMonthsText = document.getElementById('summaryFreeMonths')?.textContent?.trim() || '';
                     const planTitle = document.getElementById('ceTitle')?.textContent?.trim() || 'Client Engagement Platform';
                     const planSub = document.getElementById('ceSublabel')?.textContent?.trim() || '';
 
@@ -1611,7 +1623,10 @@
                     const discountPercent = Math.max(0, Math.min(100, Number(state.aeDiscount) || 0));
                     const hasDiscount = discountPercent > 0;
                     const discountDisplay = discountText || `${Number.isInteger(discountPercent) ? discountPercent : discountPercent.toFixed(1)}%`;
-                    const summaryCardH = hasDiscount ? 150 : 132;
+                    const freeMonths = Math.max(0, Math.min(36, parseInt(state.freeMonths) || 0));
+                    const hasFreeMonths = freeMonths > 0;
+                    const rowCount = 3 + (hasDiscount ? 1 : 0) + (hasFreeMonths ? 1 : 0);
+                    const summaryCardH = 100 + (rowCount * 16);
 
                     pdf.setFillColor(...COLOR_CARD);
                     pdf.setDrawColor(...COLOR_BORDER);
@@ -1635,10 +1650,14 @@
                     const summaryLabelX = m + contentW * 0.56;
                     const detailsStartY = y + 74;
                     const rowGap = 16;
-                    const perMonthY = detailsStartY;
-                    const oneTimeY = detailsStartY + rowGap;
-                    const discountY = detailsStartY + rowGap * 2;
-                    const totalDueY = detailsStartY + rowGap * (hasDiscount ? 3 : 2);
+                    let rowIndex = 0;
+                    const perMonthY = detailsStartY + (rowIndex++ * rowGap);
+                    const oneTimeY = detailsStartY + (rowIndex++ * rowGap);
+                    const discountY = detailsStartY + (rowIndex * rowGap);
+                    if (hasDiscount) rowIndex++;
+                    const freeMonthsY = detailsStartY + (rowIndex * rowGap);
+                    if (hasFreeMonths) rowIndex++;
+                    const totalDueY = detailsStartY + (rowIndex * rowGap);
 
                     setFont(9, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
@@ -1659,6 +1678,15 @@
                         const discountAvailW = summaryRightX - summaryLabelX - 10;
                         if (pdf.getTextWidth(discountDisplay) > discountAvailW) setFont(9, 'bold');
                         pdf.text(discountDisplay, summaryRightX, discountY, { align: 'right' });
+                    }
+
+                    if (hasFreeMonths) {
+                        setFont(9, 'normal');
+                        pdf.setTextColor(...COLOR_MUTED);
+                        pdf.text('Free Months', summaryLabelX, freeMonthsY);
+                        setFont(11, 'bold');
+                        pdf.setTextColor(...COLOR_TEXT);
+                        pdf.text(`${freeMonths} mo`, summaryRightX, freeMonthsY, { align: 'right' });
                     }
 
                     setFont(9, 'normal');
@@ -2138,6 +2166,8 @@
 
                     // 3. Discounts
                     const discountPercent = clampNumber(parseFloat(aeDiscountInput.value), 0, 100);
+
+                    const freeMonths = Math.max(0, Math.min(36, parseInt(freeMonthsInput?.value || 0) || 0));
                     
                     // Calculate Discount Amounts
                     // We calculate what the total would be if we switched modes, for the "Switch" prompt
@@ -2220,6 +2250,15 @@
                         summaryDiscount.textContent = `${formatCurrency(discountAmount)} (${discountPercent}%)`;
                     } else {
                         summaryDiscountRow.classList.add('hidden');
+                    }
+
+                    if (summaryFreeMonthsRow && summaryFreeMonths) {
+                        if (freeMonths > 0) {
+                            summaryFreeMonthsRow.classList.remove('hidden');
+                            summaryFreeMonths.textContent = `${freeMonths} mo`;
+                        } else {
+                            summaryFreeMonthsRow.classList.add('hidden');
+                        }
                     }
                     
                     // Payment Due Today
@@ -2438,6 +2477,7 @@
                     implementationFee: implementationFeeInput.value,
                     manualImplFeeSet: !!manualImplFeeSet,
                     aeDiscount: parseFloat(aeDiscountInput.value) || 0,
+                    freeMonths: parseInt(freeMonthsInput?.value || 0) || 0,
                     filecabinetClients: parseInt(document.getElementById('filecabinet_clients')?.value || 0),
                     modules: modulesState,
                     moduleOverrides,
@@ -2458,6 +2498,7 @@
                 manualImplFeeSet = !!state.manualImplFeeSet;
                 implementationFeeInput.value = state.implementationFee ?? '';
                 aeDiscountInput.value = state.aeDiscount ?? 0;
+                if (freeMonthsInput) freeMonthsInput.value = state.freeMonths ?? 0;
                 Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]')).forEach(cb => {
                     cb.checked = (state.dataMigrations || []).includes(cb.value);
                 });
@@ -2905,6 +2946,7 @@
                 filecabinetClientsInput.addEventListener('input', scheduleCalculateAndRender);
             }
             aeDiscountInput.addEventListener('input', scheduleCalculateAndRender);
+            if (freeMonthsInput) freeMonthsInput.addEventListener('input', scheduleCalculateAndRender);
             downloadPdfBtn.addEventListener('click', (e) => {
                 // Default to modern vector PDF. Hold Alt/Option (or Cmd) for legacy glass export.
                 if (e && (e.altKey || e.metaKey)) { generatePdfGlass(); }

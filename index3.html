@@ -1280,6 +1280,25 @@
                         const text = row ? row.textContent.trim() : id;
                         return text;
                     });
+                    const migrationKeys = Array.from(document.querySelectorAll('#dataMigrationDropdown input[type="checkbox"]:checked')).map(cb => cb.value);
+                    let migrationFee = 0;
+                    migrationKeys.forEach(optionKey => {
+                        const option = pricing?.data_migration_options?.[optionKey];
+                        if (!option) return;
+                        if (option.price !== undefined) {
+                            migrationFee += option.price;
+                        } else if (option.base_price !== undefined) {
+                            const clientCount = Math.max(0, parseInt(document.getElementById('filecabinet_clients')?.value || 0) || 0);
+                            if (clientCount > 0) {
+                                let optionFee = option.base_price;
+                                if (clientCount > option.base_clients) {
+                                    const additionalClients = clientCount - option.base_clients;
+                                    optionFee += additionalClients * option.additional_client_rate;
+                                }
+                                migrationFee += optionFee;
+                            }
+                        }
+                    });
                     const implFeeText = document.getElementById('implementationFeeInput')?.value || '';
 
                     // Layout grid inside a centered container
@@ -1434,6 +1453,8 @@
                     const summaryTotal = document.getElementById('summaryBigTotal')?.textContent?.trim() || '';
                     const perMonth = document.getElementById('summaryPerMonth')?.textContent?.trim() || '';
                     const oneTime = document.getElementById('summaryOneTime')?.textContent?.trim() || '';
+                    const paymentDue = document.getElementById('summarySinglePayment')?.textContent?.trim() || '';
+                    const discountText = document.getElementById('summaryDiscount')?.textContent?.trim() || '';
                     const planTitle = document.getElementById('ceTitle')?.textContent?.trim() || 'Client Engagement Platform';
                     const planSub = document.getElementById('ceSublabel')?.textContent?.trim() || '';
 
@@ -1459,6 +1480,25 @@
                         const row = cb.closest('div');
                         const text = row ? row.textContent.trim() : id;
                         return text;
+                    });
+                    const migrationKeys = Array.from(document.querySelectorAll('#dataMigrationDropdown input[type="checkbox"]:checked')).map(cb => cb.value);
+                    let migrationFee = 0;
+                    migrationKeys.forEach(optionKey => {
+                        const option = pricing?.data_migration_options?.[optionKey];
+                        if (!option) return;
+                        if (option.price !== undefined) {
+                            migrationFee += option.price;
+                        } else if (option.base_price !== undefined) {
+                            const clientCount = Math.max(0, parseInt(document.getElementById('filecabinet_clients')?.value || 0) || 0);
+                            if (clientCount > 0) {
+                                let optionFee = option.base_price;
+                                if (clientCount > option.base_clients) {
+                                    const additionalClients = clientCount - option.base_clients;
+                                    optionFee += additionalClients * option.additional_client_rate;
+                                }
+                                migrationFee += optionFee;
+                            }
+                        }
                     });
                     const implFeeText = document.getElementById('implementationFeeInput')?.value || '';
 
@@ -1568,9 +1608,14 @@
                     pdf.line(m, y, m + contentW, y);
                     y += 18;
 
+                    const discountPercent = Math.max(0, Math.min(100, Number(state.aeDiscount) || 0));
+                    const hasDiscount = discountPercent > 0;
+                    const discountDisplay = discountText || `${Number.isInteger(discountPercent) ? discountPercent : discountPercent.toFixed(1)}%`;
+                    const summaryCardH = hasDiscount ? 150 : 132;
+
                     pdf.setFillColor(...COLOR_CARD);
                     pdf.setDrawColor(...COLOR_BORDER);
-                    pdf.roundedRect(m, y, contentW, 146, 14, 14, 'FD');
+                    pdf.roundedRect(m, y, contentW, summaryCardH, 14, 14, 'FD');
                     pdf.setFillColor(238, 242, 255);
                     pdf.roundedRect(m, y, contentW, 34, 14, 14, 'F');
 
@@ -1586,25 +1631,44 @@
                     pdf.setTextColor(...COLOR_MUTED);
                     pdf.text(state.isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 92);
 
-                    pdf.setDrawColor(...COLOR_BORDER);
-                    pdf.line(m + 18, y + 104, m + contentW - 18, y + 104);
-
                     const summaryRightX = m + contentW - 18;
-                    const summaryLabelX = summaryRightX - 170;
-                    const summaryValueX = summaryRightX;
-                    const summaryRow1Y = y + 124;
-                    const summaryRow2Y = y + 142;
+                    const summaryLabelX = m + contentW * 0.56;
+                    const detailsStartY = y + 74;
+                    const rowGap = 16;
+                    const perMonthY = detailsStartY;
+                    const oneTimeY = detailsStartY + rowGap;
+                    const discountY = detailsStartY + rowGap * 2;
+                    const totalDueY = detailsStartY + rowGap * (hasDiscount ? 3 : 2);
 
-                    setFont(10, 'normal');
+                    setFont(9, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('Per Month', summaryLabelX, summaryRow1Y);
-                    pdf.text('One-Time', summaryLabelX, summaryRow2Y);
+                    pdf.text('Per Month', summaryLabelX, perMonthY);
+                    pdf.text('One-Time', summaryLabelX, oneTimeY);
 
+                    setFont(11, 'bold');
                     pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(perMonth || '-', summaryValueX, summaryRow1Y, { align: 'right' });
-                    pdf.text(oneTime || '-', summaryValueX, summaryRow2Y, { align: 'right' });
+                    pdf.text(perMonth || '-', summaryRightX, perMonthY, { align: 'right' });
+                    pdf.text(oneTime || '-', summaryRightX, oneTimeY, { align: 'right' });
 
-                    y += 146 + 22;
+                    if (hasDiscount) {
+                        setFont(9, 'normal');
+                        pdf.setTextColor(...COLOR_MUTED);
+                        pdf.text('Discount', summaryLabelX, discountY);
+                        pdf.setTextColor(13, 148, 136);
+                        setFont(11, 'bold');
+                        const discountAvailW = summaryRightX - summaryLabelX - 10;
+                        if (pdf.getTextWidth(discountDisplay) > discountAvailW) setFont(9, 'bold');
+                        pdf.text(discountDisplay, summaryRightX, discountY, { align: 'right' });
+                    }
+
+                    setFont(9, 'normal');
+                    pdf.setTextColor(...COLOR_MUTED);
+                    pdf.text('Total Due Today', summaryLabelX, totalDueY);
+                    setFont(13, 'bold');
+                    pdf.setTextColor(...COLOR_TEXT);
+                    pdf.text(paymentDue || '-', summaryRightX, totalDueY, { align: 'right' });
+
+                    y += summaryCardH + 22;
 
                     // Configuration
                     y = ensureSpace(y, 140);
@@ -1689,21 +1753,28 @@
                     y += 16;
                     pdf.setTextColor(...COLOR_TEXT);
                     pdf.text('Data Migration', m, y);
-                    pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text(migrations.length ? `${migrations.length} item(s)` : 'None', colTotal, y, { align: 'right' });
+                    if (!migrations.length) {
+                        pdf.setTextColor(...COLOR_MUTED);
+                        pdf.text('None', colTotal, y, { align: 'right' });
+                    } else {
+                        pdf.setTextColor(...COLOR_TEXT);
+                        pdf.text(formatCurrency(migrationFee), colTotal, y, { align: 'right' });
+                    }
                     y += 14;
                     if (migrations.length) {
                         y += 4;
                         setFont(9, 'normal');
                         pdf.setTextColor(...COLOR_MUTED);
-                        y = textWrap(migrations.join(', '), m, y, contentW, 12);
+                        const migrationList = migrations.length > 2 ? `${migrations.slice(0, 2).join(', ')} +${migrations.length - 2} more` : migrations.join(', ');
+                        y = textWrap(migrationList, m, y, contentW, 12);
                     }
 
                     // Footer note
-                    y = ensureSpace(y + 14, 80);
-                    setFont(9, 'normal');
-                    pdf.setTextColor(...COLOR_MUTED);
-                    y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions.', m, y + 16, contentW, 12);
+                    if (y + 60 <= pageH - m) {
+                        setFont(9, 'normal');
+                        pdf.setTextColor(...COLOR_MUTED);
+                        y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions.', m, y + 16, contentW, 12);
+                    }
 
                     const date = new Date().toISOString().split('T')[0];
                     const filenameBase = quoteName ? `Canopy-Quote-${quoteName}-${date}` : `Canopy-Quote-${date}`;

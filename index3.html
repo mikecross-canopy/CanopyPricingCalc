@@ -809,45 +809,6 @@
                     </div>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-1">Tip: Use Manage Quotes to filter and manage saved quotes.</p>
-                <div id="snapshotTools" class="mt-4 pt-4 border-t border-white/10 space-y-3">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                        <div>
-                            <h4 class="text-sm font-semibold text-white">Saved Snapshots</h4>
-                            <p class="text-[11px] text-slate-400">Capture the current quote and compare changes.</p>
-                        </div>
-                        <button id="createSnapshotBtn" class="text-xs px-3 py-1 rounded bg-sky-500 text-white hover:bg-sky-400 transition">
-                            Save Snapshot
-                        </button>
-                    </div>
-                    <div class="grid md:grid-cols-2 gap-2">
-                        <div>
-                            <label for="snapshotLabelInput" class="text-[11px] text-slate-300 uppercase tracking-wide">Label</label>
-                            <input id="snapshotLabelInput" type="text" placeholder="e.g., Baseline" class="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-600 text-xs text-white focus:outline-none focus:border-teal-400" />
-                        </div>
-                        <div>
-                            <label for="snapshotNoteInput" class="text-[11px] text-slate-300 uppercase tracking-wide">Notes</label>
-                            <input id="snapshotNoteInput" type="text" placeholder="Optional context" class="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-600 text-xs text-white focus:outline-none focus:border-teal-400" />
-                        </div>
-                    </div>
-                    <div class="grid md:grid-cols-2 gap-2">
-                        <div>
-                            <label class="text-[11px] text-slate-300 uppercase tracking-wide">Compare A</label>
-                            <select id="snapshotSelectA" class="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-600 text-xs text-white focus:outline-none focus:border-teal-400">
-                                <option value="">Select snapshot...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[11px] text-slate-300 uppercase tracking-wide">Compare B</label>
-                            <select id="snapshotSelectB" class="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-600 text-xs text-white focus:outline-none focus:border-teal-400">
-                                <option value="">Select snapshot...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="snapshotList" class="space-y-2 max-h-48 overflow-auto rounded-lg bg-slate-800/60 border border-slate-700/60 px-3 py-2 text-xs text-slate-200">
-                        <div class="text-slate-400 text-[11px]">No snapshots yet. Save one to get started.</div>
-                    </div>
-                    <div id="snapshotDiff" class="hidden rounded-lg border border-slate-700/60 bg-black/20 p-3 text-[11px] text-slate-200 space-y-2"></div>
-                </div>
             </div>
         </div>
     </section>
@@ -1128,107 +1089,13 @@
                 let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
             }
 
-            // Snapshot helpers
-            const SNAPSHOT_STORE_KEY = 'canopy_snapshot_store_v1';
-            const SNAPSHOT_LIMIT = 100;
-
-            function parseCurrencyValue(text = '') {
-                if (!text) return 0;
-                const cleaned = text.replace(/[^0-9.-]/g, '');
-                return Number(cleaned) || 0;
-            }
-
-            function snapshotOwnerKey() {
-                return currentUser?.uid ? `user_${currentUser.uid}` : 'local';
-            }
-
-            function snapshotStoreRead() {
-                try {
-                    return JSON.parse(localStorage.getItem(SNAPSHOT_STORE_KEY)) || {};
-                } catch {
-                    return {};
-                }
-            }
-
-            function snapshotStoreWrite(store) {
-                try {
-                    localStorage.setItem(SNAPSHOT_STORE_KEY, JSON.stringify(store));
-                } catch {}
-            }
-
-            function loadSnapshots() {
-                const store = snapshotStoreRead();
-                const owner = snapshotOwnerKey();
-                const list = store[owner];
-                return Array.isArray(list) ? list : [];
-            }
-
-            function saveSnapshots(list) {
-                const store = snapshotStoreRead();
-                store[snapshotOwnerKey()] = list;
-                snapshotStoreWrite(store);
-            }
-
-            function captureModuleSnapshot() {
-                const items = [];
-                document.querySelectorAll('.module-user-input').forEach(input => {
-                    const key = input.dataset.key;
-                    if (!key) return;
-                    const nameEl = document.getElementById(`${key}_name`);
-                    items.push({
-                        key,
-                        name: nameEl?.textContent?.trim() || key,
-                        enabled: true,
-                        volume: parseInt(input.value) || 0,
-                        totalText: document.getElementById(`${key}_total`)?.textContent?.trim() || '$0',
-                        totalValue: parseCurrencyValue(document.getElementById(`${key}_total`)?.textContent || '')
-                    });
-                });
-                return items;
-            }
-
-            function captureMigrationSnapshot() {
-                return Array.from(dataMigrationDropdown.querySelectorAll('input[type="checkbox"]:checked')).map(cb => {
-                    const option = pricing.data_migration_options[cb.value];
-                    return option?.name || cb.value;
-                });
-            }
-
-            function captureSummarySnapshot() {
-                return {
-                    totalText: summaryBigTotal?.textContent?.trim() || '',
-                    totalValue: parseCurrencyValue(summaryBigTotal?.textContent || ''),
-                    perMonthText: summaryPerMonth?.textContent?.trim() || '',
-                    perMonthValue: parseCurrencyValue(summaryPerMonth?.textContent || ''),
-                    oneTimeText: summaryOneTime?.textContent?.trim() || '',
-                    oneTimeValue: parseCurrencyValue(summaryOneTime?.textContent || ''),
-                    dueTodayText: summarySinglePayment?.textContent?.trim() || '',
-                    dueTodayValue: parseCurrencyValue(summarySinglePayment?.textContent || '')
-                };
-            }
-
-            function captureSnapshotPayload(label, note) {
-                return {
-                    id: makeId(),
-                    ts: Date.now(),
-                    label: label || 'Snapshot',
-                    note: note || '',
-                    quoteName: (quoteNameInput?.value || '').trim() || 'Untitled Quote',
-                    owner: snapshotOwnerKey(),
-                    summary: captureSummarySnapshot(),
-                    modules: captureModuleSnapshot(),
-                    migrations: captureMigrationSnapshot(),
-                    state: getCurrentState()
-                };
-            }
-
             // Analytics removed: stub helpers to avoid breaking existing calls
             function localAnalyticsRead() { return []; }
             function localAnalyticsWrite(arr) { /* no-op */ }
 
             async function trackEvent(type, meta = {}) { /* analytics removed */ }
 
-            // Versioning helpers (store previous snapshot when updating existing quotes)
+            // Versioning helpers (store previous version when updating existing quotes)
             function localVersionsRead(id) {
                 try { return JSON.parse(localStorage.getItem(`versions_${id}`) || '[]'); } catch { return []; }
             }
@@ -2471,80 +2338,6 @@
                     manualImplFeeSet = false;
                     calculateAndRender();
                 };
-            }
-
-            async function generatePdf() {
-                try {
-                    // Ensure libraries
-                    if (typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
-                    if (typeof window.jspdf === 'undefined') throw new Error('jsPDF not loaded');
-                    const { jsPDF } = window.jspdf;
-
-                    // Capture entire main container (fallback to body)
-                    const target = document.querySelector('.main-container') || document.body;
-
-                    // Stabilize layout during capture
-                    document.body.classList.add('pdf-capture-mode');
-
-                    // Temporarily hide AE discount section in PDF
-                    const aeInput = document.getElementById('aeDiscountInput');
-                    let aeContainer = null; let aePrevDisplay = '';
-                    if (aeInput) {
-                        aeContainer = aeInput.closest('.border-t') || aeInput.parentElement?.parentElement?.parentElement || null;
-                        if (aeContainer) { aePrevDisplay = aeContainer.style.display; aeContainer.style.display = 'none'; }
-                    }
-
-                    // Wait for fonts and images
-                    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
-                    const imgs = Array.from(document.images);
-                    await Promise.all(imgs.map(img => new Promise(resolve => {
-                        if (img.complete) return resolve();
-                        img.onload = img.onerror = () => resolve();
-                    })));
-
-                    // Render full content as canvas
-                    const canvas = await html2canvas(target, {
-                        scale: 2,
-                        useCORS: true,
-                        backgroundColor: '#ffffff',
-                        windowWidth: target.scrollWidth,
-                        windowHeight: target.scrollHeight,
-                        scrollX: 0,
-                        scrollY: -window.scrollY
-                    });
-
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF('p', 'pt', 'a4');
-                    const pageWidth = pdf.internal.pageSize.getWidth();
-                    const pageHeight = pdf.internal.pageSize.getHeight();
-
-                    const imgWidth = pageWidth;
-                    const imgHeight = canvas.height * (imgWidth / canvas.width);
-                    let heightLeft = imgHeight;
-                    let position = 0;
-
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                    while (heightLeft > 0) {
-                        position = heightLeft - imgHeight; // negative to move image up
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-
-                    pdf.save('Canopy-Quote.pdf');
-                } catch (err) {
-                    console.error('PDF export failed:', err);
-                    alert('PDF export failed: ' + err.message);
-                } finally {
-                    document.body.classList.remove('pdf-capture-mode');
-                    // Restore AE discount section
-                    try {
-                        const aeInput = document.getElementById('aeDiscountInput');
-                        const aeContainer = aeInput?.closest('.border-t') || aeInput?.parentElement?.parentElement?.parentElement;
-                        if (aeContainer) aeContainer.style.display = '';
-                    } catch {}
-                }
             }
 
             annualBtn.addEventListener('click', createToggleHandler(() => isAnnual = true, annualBtn, monthlyBtn));

@@ -1791,6 +1791,30 @@
                     .replace(/'/g, '&#039;');
             }
 
+            function clampNumber(n, min, max) {
+                const num = Number(n);
+                if (!Number.isFinite(num)) return min;
+                return Math.min(Math.max(num, min), max);
+            }
+            function toNonNegativeInt(value) {
+                const n = parseInt(value);
+                return Number.isFinite(n) && n > 0 ? n : 0;
+            }
+            function toNonNegativeFloat(value) {
+                const n = parseFloat(value);
+                return Number.isFinite(n) && n > 0 ? n : 0;
+            }
+
+            let __calcScheduled = false;
+            function scheduleCalculateAndRender() {
+                if (__calcScheduled) return;
+                __calcScheduled = true;
+                requestAnimationFrame(() => {
+                    __calcScheduled = false;
+                    calculateAndRender();
+                });
+            }
+
             function parseTags(notes = '') {
                 const tags = new Set();
                 const re = /#([a-zA-Z0-9_\-]+)/g;
@@ -2052,7 +2076,6 @@
                     const canvas = await html2canvas(root, {
                         scale: 2,
                         useCORS: true,
-                        allowTaint: true,
                         backgroundColor: '#ffffff',
                         windowWidth: root.scrollWidth,
                         windowHeight: root.scrollHeight,
@@ -2342,7 +2365,7 @@
                     if (window.__CANOPY_DEBUG__) console.log('calculateAndRender called');
                     const tierData = pricing.tiers[currentTier];
                     const userCountElement = document.getElementById('usersInput');
-                    const userCount = parseInt(userCountElement?.value || 0);
+                    const userCount = toNonNegativeInt(userCountElement?.value || 0);
                     if (window.__CANOPY_DEBUG__) console.log('User count:', userCount, 'from element:', userCountElement);
                     
                     // Handle Enterprise tier (custom pricing)
@@ -2376,7 +2399,7 @@
                     document.querySelectorAll('.addon-checkbox').forEach(checkbox => {
                         const key = checkbox.dataset.key;
                         const enabled = checkbox.checked;
-                        const volume = parseInt(document.getElementById(`${key}_volume`)?.value || 0);
+                        const volume = toNonNegativeInt(document.getElementById(`${key}_volume`)?.value || 0);
                         const addon = pricing.addons[key];
                         
                         let addonCost = 0;
@@ -2409,7 +2432,7 @@
                     const subscriptionAnnualEquiv = (isAnnual ? baseCost : baseCost * 12) + (totalAddonsMonthly * 12);
                     
                     // Apply AE discount if any
-                    const discountPercent = parseFloat(aeDiscountInput.value) || 0;
+                    const discountPercent = clampNumber(parseFloat(aeDiscountInput.value), 0, 100);
                     let finalMonthlyTotal = subscriptionMonthlyTotal;
                     let finalAnnualEquiv = subscriptionAnnualEquiv;
                     
@@ -2417,8 +2440,8 @@
                     if (discountPercent > 0) {
                         if (accountManagerMode) {
                             // In Account Manager mode, discount behavior depends on toggle
-                            const currentMonthly = parseFloat(currentMonthlyInput?.value) || 0;
-                            const currentAnnual = parseFloat(currentAnnualInput?.value) || 0;
+                            const currentMonthly = toNonNegativeFloat(currentMonthlyInput?.value);
+                            const currentAnnual = toNonNegativeFloat(currentAnnualInput?.value);
                             
                             if (currentMonthly > 0 || currentAnnual > 0) {
                                 let currentPrice = 0;
@@ -2473,7 +2496,7 @@
                     
                     let finalImplFee;
                     if (manualImplFeeSet) {
-                        finalImplFee = parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0;
+                        finalImplFee = Math.max(0, parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0);
                     } else {
                         finalImplFee = calculatedImplFee; 
                         implementationFeeInput.value = formatCurrency(finalImplFee);
@@ -2490,7 +2513,7 @@
                         if (option.price !== undefined) {
                             migrationFee += option.price;
                         } else if (option.base_price !== undefined) {
-                            const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
+                            const clientCount = toNonNegativeInt(document.getElementById('filecabinet_clients')?.value || 0);
                             if (clientCount > 0) {
                                 let optionFee = option.base_price;
                                 if (clientCount > option.base_clients) {
@@ -3517,13 +3540,13 @@
             
             premiumOnboardingCheck.addEventListener('change', () => {
                 manualImplFeeSet = false;
-                calculateAndRender();
+                scheduleCalculateAndRender();
             });
             
             // Event listener for users input
             if (usersInput) {
-                usersInput.addEventListener('input', calculateAndRender);
-                usersInput.addEventListener('change', calculateAndRender);
+                usersInput.addEventListener('input', scheduleCalculateAndRender);
+                usersInput.addEventListener('change', scheduleCalculateAndRender);
             }
             
             // Global event listener for all addon volume inputs and other dynamic inputs
@@ -3533,7 +3556,7 @@
                     e.target.id === 'usersInput' || 
                     e.target.id === 'filecabinet_clients') {
                     if (window.__CANOPY_DEBUG__) console.log('Triggering calculateAndRender from input event');
-                    calculateAndRender();
+                    scheduleCalculateAndRender();
                 }
             });
             
@@ -3543,17 +3566,17 @@
                     e.target.classList.contains('addon-checkbox') ||
                     e.target.id === 'usersInput') {
                     if (window.__CANOPY_DEBUG__) console.log('Triggering calculateAndRender from change event');
-                    calculateAndRender();
+                    scheduleCalculateAndRender();
                 }
             });
             
             // Add event listener for FileCabinet client input
             const filecabinetClientsInput = document.getElementById('filecabinet_clients');
             if (filecabinetClientsInput) {
-                filecabinetClientsInput.addEventListener('input', calculateAndRender);
+                filecabinetClientsInput.addEventListener('input', scheduleCalculateAndRender);
             }
             
-            aeDiscountInput.addEventListener('input', calculateAndRender);
+            aeDiscountInput.addEventListener('input', scheduleCalculateAndRender);
             
             downloadPdfBtn.addEventListener('click', (e) => {
                 // Default to new glass export. Hold Alt/Option for legacy export.
@@ -3566,7 +3589,7 @@
             
             // Force initial calculation after a brief delay to ensure all elements are ready
             setTimeout(() => {
-                calculateAndRender();
+                scheduleCalculateAndRender();
                 if (window.__CANOPY_DEBUG__) console.log('Initial calculation complete');
             }, 100);
         });

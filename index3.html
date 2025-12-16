@@ -1081,6 +1081,30 @@
                     .replace(/'/g, '&#039;');
             }
 
+            function clampNumber(n, min, max) {
+                const num = Number(n);
+                if (!Number.isFinite(num)) return min;
+                return Math.min(Math.max(num, min), max);
+            }
+            function toNonNegativeInt(value) {
+                const n = parseInt(value);
+                return Number.isFinite(n) && n > 0 ? n : 0;
+            }
+            function toNonNegativeFloat(value) {
+                const n = parseFloat(value);
+                return Number.isFinite(n) && n > 0 ? n : 0;
+            }
+
+            let __calcScheduled = false;
+            function scheduleCalculateAndRender() {
+                if (__calcScheduled) return;
+                __calcScheduled = true;
+                requestAnimationFrame(() => {
+                    __calcScheduled = false;
+                    calculateAndRender();
+                });
+            }
+
             function parseTags(notes = '') {
                 const tags = new Set();
                 const re = /#([a-zA-Z0-9_\-]+)/g;
@@ -1391,7 +1415,7 @@
                         if (filecabinetInput) {
                             filecabinetInput.style.display = filecabinetSelected ? 'block' : 'none';
                         }
-                        calculateAndRender();
+                        scheduleCalculateAndRender();
                     });
                     
                     dataMigrationDropdown.appendChild(div);
@@ -1494,7 +1518,7 @@
                 }
                 
                 document.querySelectorAll('.module-user-input').forEach(input => {
-                    input.addEventListener('input', calculateAndRender);
+                    input.addEventListener('input', scheduleCalculateAndRender);
                     // Round volume inputs on blur
                     if (input.step === "25") {
                         input.addEventListener('blur', (e) => {
@@ -1503,14 +1527,14 @@
                                 value = Math.round(value / 25) * 25;
                                 if (value === 0) value = 25; // minimum 25 if they typed something non-zero
                                 e.target.value = value;
-                                calculateAndRender();
+                                scheduleCalculateAndRender();
                             }
                         });
                     }
                 });
                 
                 document.querySelectorAll('.module-override-input').forEach(input => {
-                    input.addEventListener('input', calculateAndRender);
+                    input.addEventListener('input', scheduleCalculateAndRender);
                 });
                 
                 document.querySelectorAll('.module-checkbox').forEach(cb => {
@@ -1524,7 +1548,7 @@
                             } else if (parseInt(input.value) === 0) {
                                 input.value = 25;
                             }
-                            calculateAndRender();
+                            scheduleCalculateAndRender();
                         }
                     });
                 });
@@ -1540,7 +1564,7 @@
                     const ceTierKey = isProTier ? 'pro' : 'standard';
                     const ceData = pricing.base_client_engagement[ceTierKey];
                     
-                    const additionalClients = parseInt(additionalClientsInput.value) || 0;
+                    const additionalClients = toNonNegativeInt(additionalClientsInput.value);
                     
                     // Initialize totals for Annual and Monthly billing modes (Before Discount)
                     // These represent the ANNUALIZED cost (Annual Mode) and MONTHLY cost (Monthly Mode)
@@ -1570,7 +1594,7 @@
                     // 2. Modules Cost
                     document.querySelectorAll('.module-user-input').forEach(input => {
                         const moduleKey = input.dataset.key;
-                        const userCount = parseInt(input.value) || 0;
+                        const userCount = toNonNegativeInt(input.value);
                         const module = pricing.modules[moduleKey];
                         
                         let modAnnualCost = 0; // Cost per year if Annual
@@ -1687,7 +1711,7 @@
                     });
 
                     // 3. Discounts
-                    const discountPercent = parseFloat(aeDiscountInput.value) || 0;
+                    const discountPercent = clampNumber(parseFloat(aeDiscountInput.value), 0, 100);
                     
                     // Calculate Discount Amounts
                     // We calculate what the total would be if we switched modes, for the "Switch" prompt
@@ -1730,7 +1754,7 @@
                         if (option.price !== undefined) {
                             migrationFee += option.price;
                         } else if (option.base_price !== undefined) {
-                            const clientCount = parseInt(document.getElementById('filecabinet_clients')?.value || 0);
+                            const clientCount = toNonNegativeInt(document.getElementById('filecabinet_clients')?.value || 0);
                             if (clientCount > 0) {
                                 let optionFee = option.base_price;
                                 if (clientCount > option.base_clients) {
@@ -1748,7 +1772,7 @@
                     
                     let finalImplFee;
                     if (manualImplFeeSet) {
-                        finalImplFee = parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0;
+                        finalImplFee = Math.max(0, parseFloat(implementationFeeInput.value.replace(/[^0-9.]/g, '')) || 0);
                     } else {
                         finalImplFee = calculatedImplFee; 
                         implementationFeeInput.value = formatCurrency(finalImplFee);
@@ -2033,7 +2057,7 @@
                     }
                 });
                 if (quoteNotesInput) quoteNotesInput.value = state.notes ?? '';
-                calculateAndRender();
+                scheduleCalculateAndRender();
             }
 
             function renderQuotePreview(state) {
@@ -2409,7 +2433,7 @@
                     activeBtn.classList.add('active');
                     inactiveBtn.classList.remove('active');
                     manualImplFeeSet = false;
-                    calculateAndRender();
+                    scheduleCalculateAndRender();
                 };
             }
 
@@ -2418,14 +2442,14 @@
             
             // --- CHANGE IS HERE ---
             // Removed renderModules() from the tier change handlers to preserve input values.
-            proTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = true; calculateAndRender(); }, proTierBtn, standardTierBtn));
-            standardTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = false; calculateAndRender(); }, standardTierBtn, proTierBtn));
+            proTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = true; scheduleCalculateAndRender(); }, proTierBtn, standardTierBtn));
+            standardTierBtn.addEventListener('click', createToggleHandler(() => { isProTier = false; scheduleCalculateAndRender(); }, standardTierBtn, proTierBtn));
             // --- END OF CHANGE ---
 
 
             implementationFeeInput.addEventListener('input', () => {
                 manualImplFeeSet = true;
-                calculateAndRender();
+                scheduleCalculateAndRender();
             });
             implementationFeeInput.addEventListener('blur', (e) => {
                 const numericValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
@@ -2445,16 +2469,16 @@
             });
             premiumOnboardingCheck.addEventListener('change', () => {
                 manualImplFeeSet = false;
-                calculateAndRender();
+                scheduleCalculateAndRender();
             });
-            additionalClientsInput.addEventListener('input', calculateAndRender);
+            additionalClientsInput.addEventListener('input', scheduleCalculateAndRender);
             
             // Add event listener for FileCabinet client input
             const filecabinetClientsInput = document.getElementById('filecabinet_clients');
             if (filecabinetClientsInput) {
-                filecabinetClientsInput.addEventListener('input', calculateAndRender);
+                filecabinetClientsInput.addEventListener('input', scheduleCalculateAndRender);
             }
-            aeDiscountInput.addEventListener('input', calculateAndRender);
+            aeDiscountInput.addEventListener('input', scheduleCalculateAndRender);
             downloadPdfBtn.addEventListener('click', (e) => {
                 // Default to new glass export. Hold Alt/Option for legacy export.
                 if (e && (e.altKey || e.metaKey)) { generatePdf(); }
@@ -2463,7 +2487,7 @@
             
             populateDataMigrationOptions();
             renderModules();
-            calculateAndRender();
+            scheduleCalculateAndRender();
         });
     </script>
 </body>

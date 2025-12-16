@@ -2347,11 +2347,19 @@
 
                     y += 96 + 18;
 
+                    const accountManagerMode = !!accountManagerCheck?.checked;
+                    const currentMonthly = parseFloat(currentMonthlyInput?.value) || 0;
+                    const currentAnnual = parseFloat(currentAnnualInput?.value) || 0;
+                    const isDeltaMode = accountManagerMode && (currentMonthly > 0 || currentAnnual > 0);
+                    const newTotalText = document.getElementById('newTotal')?.textContent?.trim() || '';
+                    const hasNewTotal = isDeltaMode && !!newTotalText;
+
                     const discountPercent = Math.max(0, Math.min(100, parseFloat(aeDiscountInput?.value || '0') || 0));
                     const hasDiscount = discountPercent > 0;
                     const discountModeLabel = (typeof discountOnDiff !== 'undefined') ? (discountOnDiff ? 'Discount (Diff)' : 'Discount (Total)') : 'Discount';
                     const discountDisplay = discountText || `${Number.isInteger(discountPercent) ? discountPercent : discountPercent.toFixed(1)}%`;
-                    const summaryCardH = hasDiscount ? 150 : 132;
+                    const rowCount = (isDeltaMode ? 2 : 3) + (hasDiscount ? 1 : 0);
+                    const summaryCardH = Math.max(132, (100 + (rowCount * 16) + (hasNewTotal ? 22 : 0)));
 
                     // Summary card
                     pdf.setFillColor(...COLOR_CARD);
@@ -2369,16 +2377,32 @@
 
                     setFont(10, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text(isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 92);
+                    if (isDeltaMode) {
+                        pdf.text(isAnnual ? 'annually' : 'monthly', m + 18, y + 92);
+                        if (hasNewTotal) {
+                            const newTotalLabelY = y + 110;
+                            const newTotalValueY = y + 126;
+                            setFont(9, 'normal');
+                            pdf.setTextColor(...COLOR_MUTED);
+                            pdf.text(`New ${isAnnual ? 'Annual' : 'Monthly'} Total`, m + 18, newTotalLabelY);
+                            setFont(13, 'bold');
+                            pdf.setTextColor(...COLOR_TEXT);
+                            pdf.text(newTotalText, m + 18, newTotalValueY);
+                        }
+                    } else {
+                        pdf.text(isAnnual ? 'Annual Total' : 'Monthly Total', m + 18, y + 92);
+                    }
 
                     const summaryRightX = m + contentW - 18;
                     const summaryLabelX = m + contentW * 0.56;
                     const detailsStartY = y + 74;
                     const rowGap = 16;
-                    const perMonthY = detailsStartY;
-                    const oneTimeY = detailsStartY + rowGap;
-                    const discountY = detailsStartY + rowGap * 2;
-                    const totalDueY = detailsStartY + rowGap * (hasDiscount ? 3 : 2);
+                    let rowIndex = 0;
+                    const perMonthY = detailsStartY + (rowIndex++ * rowGap);
+                    const oneTimeY = detailsStartY + (rowIndex++ * rowGap);
+                    const discountY = detailsStartY + (rowIndex * rowGap);
+                    if (hasDiscount) rowIndex++;
+                    const totalDueY = detailsStartY + (rowIndex * rowGap);
 
                     setFont(9, 'normal');
                     pdf.setTextColor(...COLOR_MUTED);
@@ -2401,12 +2425,14 @@
                         pdf.text(discountDisplay, summaryRightX, discountY, { align: 'right' });
                     }
 
-                    setFont(9, 'normal');
-                    pdf.setTextColor(...COLOR_MUTED);
-                    pdf.text('Total Due Today', summaryLabelX, totalDueY);
-                    setFont(13, 'bold');
-                    pdf.setTextColor(...COLOR_TEXT);
-                    pdf.text(paymentDue || '-', summaryRightX, totalDueY, { align: 'right' });
+                    if (!isDeltaMode) {
+                        setFont(9, 'normal');
+                        pdf.setTextColor(...COLOR_MUTED);
+                        pdf.text('Total Due Today', summaryLabelX, totalDueY);
+                        setFont(13, 'bold');
+                        pdf.setTextColor(...COLOR_TEXT);
+                        pdf.text(paymentDue || '-', summaryRightX, totalDueY, { align: 'right' });
+                    }
 
                     y += summaryCardH + 22;
 

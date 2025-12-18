@@ -1384,7 +1384,7 @@
                           <div class="glass-total num">${esc(summaryTotal)}</div>
                           <div class="glass-line"><span class="glass-muted">Per Month</span><span class="num">${esc(perMonth)}</span></div>
                           <div class="glass-line"><span class="glass-muted">One-Time</span><span class="num">${esc(oneTime)}</span></div>
-                          <div style="margin-top:14px; font-size:11px;" class="glass-muted">All prices in USD. This quote is for discussion purposes and subject to order form terms.</div>
+                          <div style="margin-top:14px; font-size:11px;" class="glass-muted">All prices in USD. This quote is for discussion purposes and subject to order form terms. This does not reflect any sales tax that may be collected.</div>
                         </div>
                     `;
 
@@ -1801,7 +1801,7 @@
                     if (y + 60 <= pageH - m) {
                         setFont(9, 'normal');
                         pdf.setTextColor(...COLOR_MUTED);
-                        y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions.', m, y + 16, contentW, 12);
+                        y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions. This does not reflect any sales tax that may be collected.', m, y + 16, contentW, 12);
                     }
 
                     const date = new Date().toISOString().split('T')[0];

@@ -2108,7 +2108,7 @@
                           
                           <div style="margin-top:24px; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 12px; font-size:12px; line-height: 1.6; color: #64748b;">
                             <div style="color: #000000; font-weight: 700; margin-bottom: 6px;">Important Note</div>
-                            All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions.
+                            All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions. This does not reflect any sales tax that may be collected.
                           </div>
                         </div>
                     `;
@@ -2569,7 +2569,7 @@
                     if (y + 60 <= pageH - m) {
                         setFont(9, 'normal');
                         pdf.setTextColor(...COLOR_MUTED);
-                        y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions.', m, y + 16, contentW, 12);
+                        y = textWrap('All prices in USD. This quote is for discussion purposes and subject to final order form terms and conditions. This does not reflect any sales tax that may be collected.', m, y + 16, contentW, 12);
                     }
 
                     const date = new Date().toISOString().split('T')[0];
